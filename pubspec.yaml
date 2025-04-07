@@ -26,6 +26,15 @@ dependencies:
   flutter_svg: ^2.0.16
   sensors_plus: ^6.1.1
   flutter_tts: ^4.2.1
+  flutter_compass: ^0.8.1
+  tflite_flutter: ^0.11.0
+  image_picker: ^1.1.2
+  flutter_tesseract_ocr: ^0.4.26
+#  image: ^4.0.17
+  image: ^4.5.3
+  camera: ^0.11.1
+  tflite_v2: ^1.0.0
+#  ultralytics_yolo: ^0.0.3
 
 dev_dependencies:
   flutter_test:
@@ -61,3 +70,5 @@ flutter:
     - assets/icons/
     - assets/logo/
     - assets/intro/
+    - assets/yolov8/
+    - assets/yolov5/

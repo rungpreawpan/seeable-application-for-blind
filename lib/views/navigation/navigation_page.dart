@@ -62,21 +62,16 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   _startTimer() async {
-    await _bleController.connectDevice(widget.device);
+    _timer ??= Timer.periodic(
+      const Duration(seconds: 3),
+      (Timer t) async {
+        await _bleController.scanDevices();
 
-    // _timer ??= Timer.periodic(
-    //   const Duration(seconds: 3),
-    //   (Timer t) async {
-    //     await _bleController.scanDevices();
-    //
-    //     await _bleController.calculateRssi(
-    //       _bleController.deviceList,
-    //       widget.device,
-    //     );
-    //
-    //     setState(() {});
-    //   },
-    // );
+        await _bleController.calculateRssi(_bleController.deviceList);
+
+        setState(() {});
+      },
+    );
   }
 
   _trackOrientation() {
@@ -123,6 +118,7 @@ class _NavigationPageState extends State<NavigationPage> {
         leading: InkWell(
           onTap: () async {
             await _bleController.disconnectDevice(widget.device);
+            _bleController.clearData();
             _timer?.cancel();
             _magnetometerSubscription?.cancel();
             _gyroscopeSubscription?.cancel();
@@ -192,13 +188,10 @@ class _NavigationPageState extends State<NavigationPage> {
             // _provideNavigationInstruction();
             _timer ??= Timer.periodic(
               const Duration(seconds: 3),
-                  (Timer t) async {
+              (Timer t) async {
                 await _bleController.scanDevices();
 
-                await _bleController.calculateRssi(
-                  _bleController.deviceList,
-                  widget.device,
-                );
+                await _bleController.calculateRssi(_bleController.deviceList);
 
                 setState(() {});
               },
@@ -236,117 +229,124 @@ class _NavigationPageState extends State<NavigationPage> {
 
   _navigation() {
     // return Obx(() {
-    return SizedBox(
-      width: Get.width,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(
-            width: 330.0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // TextFontStyle('angle: $angle'),
+        // const SizedBox(height: marginX2),
+        SizedBox(
+          width: Get.width,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                width: 330.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    TextFontStyle('(0.0,2.6)'),
-                    TextFontStyle('Ruuvi BAAD'),
+                    Column(
+                      children: [
+                        TextFontStyle('(0.0,2.6)'),
+                        TextFontStyle('Ruuvi BAAD'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        TextFontStyle('(2.65,2.6)'),
+                        TextFontStyle('Ruuvi 2559'),
+                      ],
+                    ),
                   ],
                 ),
-                Column(
+              ),
+              Container(
+                height: 260.0,
+                width: 330.0,
+                color: primaryColor,
+                child: Stack(
                   children: [
-                    TextFontStyle('(2.65,2.6)'),
-                    TextFontStyle('Ruuvi 2559'),
+                    const Stack(
+                      children: [
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Icon(
+                            Icons.circle,
+                            color: Colors.white,
+                            size: 16.0,
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 65,
+                          child: Icon(
+                            Icons.circle,
+                            color: Colors.white,
+                            size: 16.0,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          child: Icon(
+                            Icons.circle,
+                            color: Colors.white,
+                            size: 16.0,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 125,
+                          right: 0,
+                          child: Icon(
+                            Icons.circle,
+                            color: Colors.white,
+                            size: 16.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // TODO:
+                    // phone
+                    Positioned(
+                      bottom: _bleController.calculateY != null
+                          ? _bleController.calculateY! * 100
+                          : 0,
+                      left: _bleController.calculateX != null
+                          ? _bleController.calculateX! * 100
+                          : 0,
+                      child: const Icon(
+                        Icons.phone_android_rounded,
+                        color: Colors.black,
+                        size: 16.0,
+                      ),
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(
+                width: 330.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      children: [
+                        TextFontStyle('(0.0,0.0)'),
+                        TextFontStyle('Ruuvi 30E9'),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        TextFontStyle('(3.3,1.25)'),
+                        TextFontStyle('Ruuvi 862F'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Container(
-            height: 260.0,
-            width: 330.0,
-            color: primaryColor,
-            child: Stack(
-              children: [
-                const Stack(
-                  children: [
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      child: Icon(
-                        Icons.circle,
-                        color: Colors.white,
-                        size: 16.0,
-                      ),
-                    ),
-                    Positioned(
-                      top: 0,
-                      right: 65,
-                      child: Icon(
-                        Icons.circle,
-                        color: Colors.white,
-                        size: 16.0,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      child: Icon(
-                        Icons.circle,
-                        color: Colors.white,
-                        size: 16.0,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 125,
-                      right: 0,
-                      child: Icon(
-                        Icons.circle,
-                        color: Colors.white,
-                        size: 16.0,
-                      ),
-                    ),
-                  ],
-                ),
-                // TODO:
-                // phone
-                Positioned(
-                  bottom: _bleController.calculateY != null
-                      ? _bleController.calculateY! * 100
-                      : 0,
-                  left: _bleController.calculateX != null
-                      ? _bleController.calculateX! * 100
-                      : 0,
-                  child: const Icon(
-                    Icons.phone_android_rounded,
-                    color: Colors.black,
-                    size: 16.0,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            width: 330.0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  children: [
-                    TextFontStyle('(0.0,0.0)'),
-                    TextFontStyle('Ruuvi 30E9'),
-                  ],
-                ),
-                Column(
-                  children: [
-                    TextFontStyle('(3.3,1.25)'),
-                    TextFontStyle('Ruuvi 862F'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
     // });
     // return Column(
