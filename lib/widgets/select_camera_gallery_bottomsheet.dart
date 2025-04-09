@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class SelectCameraGalleryBottomSheet extends StatelessWidget {
-  final Function() getImageFromCamera;
-  final Function() getImageFromGallery;
+  final double? imageHeight;
+  final double? imageWidth;
+  final int? imageQuality;
 
   const SelectCameraGalleryBottomSheet({
     super.key,
-    required this.getImageFromCamera,
-    required this.getImageFromGallery,
+    this.imageHeight,
+    this.imageWidth,
+    this.imageQuality,
   });
 
   @override
@@ -20,12 +25,30 @@ class SelectCameraGalleryBottomSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _card(
-              onTap: getImageFromCamera,
+              onTap: () async {
+                final file = await ImagePicker().pickImage(
+                  source: ImageSource.camera,
+                  maxHeight: imageHeight,
+                  maxWidth: imageWidth,
+                  imageQuality: imageQuality,
+                );
+
+                Get.back(result: file);
+              },
               icon: Icons.camera_alt_rounded,
               title: 'กล้อง',
             ),
             _card(
-              onTap: getImageFromGallery,
+              onTap: () async {
+                final file = await ImagePicker().pickImage(
+                  source: ImageSource.gallery,
+                  maxHeight: imageHeight,
+                  maxWidth: imageWidth,
+                  imageQuality: imageQuality,
+                );
+
+                Get.back(result: file);
+              },
               icon: Icons.photo,
               title: 'แกลเลอรี่',
             ),
@@ -43,7 +66,10 @@ class SelectCameraGalleryBottomSheet extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: Icon(icon),
-      title: TextFontStyle(title),
+      title: TextFontStyle(
+        title,
+        size: fontSizeM,
+      ),
     );
   }
 }

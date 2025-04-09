@@ -3,16 +3,10 @@ import 'package:get/get.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/navigation/select_building_page.dart';
 import 'package:seeable/views/object_detection/object_detection_page.dart';
-import 'package:seeable/views/object_detection/object_detection_work.dart';
-import 'package:seeable/views/object_detection/test/detection_page.dart';
-import 'package:seeable/views/object_detection/test/gemini_object_detect.dart';
-import 'package:seeable/views/object_detection/test_object.dart';
-import 'package:seeable/views/object_detection/yolo_detector.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/views/settings/settings_page.dart';
-import 'package:seeable/views/tflite/tflite_run_model.dart';
 import 'package:seeable/widgets/listview_button.dart';
-import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/navigation_main_template.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,7 +30,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MainTemplate(
+    return NavigationMainTemplate(
       appBarTitle: '',
       items: featuresList,
       itemWidget: (context, index) {
@@ -47,11 +41,7 @@ class _HomePageState extends State<HomePage> {
             if (item['title'] == 'navigation'.tr) {
               Get.to(() => const SelectBuildingPage());
             } else if (item['title'] == 'object detection'.tr) {
-              Get.to(() => const YoloDetectionPage());
-              // Get.to(() => const TfliteRunModel()); // yolo2
-              // // Get.to(() => const DetectionPage());
-              // // Get.to(() => const ObjectDetection());
-              // // Get.to(() => const ObjectDetectionPage());
+              Get.to(() => const ObjectDetectionPage());
             } else if (item['title'] == 'scan text'.tr) {
               Get.to(() => const ScanTextPage());
             } else if (item['title'] == 'settings'.tr) {

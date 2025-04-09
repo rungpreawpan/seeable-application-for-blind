@@ -4,20 +4,20 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
-class MainTemplate extends StatelessWidget {
+class NavigationMainTemplate extends StatelessWidget {
   final String appBarTitle;
   final Function()? onBack;
   final List<Widget>? actions;
-  final Widget? body;
-  final Widget? floatingActionButton;
+  final List items;
+  final Widget? Function(BuildContext, int) itemWidget;
 
-  const MainTemplate({
+  const NavigationMainTemplate({
     super.key,
     this.appBarTitle = '',
     this.onBack,
     this.actions,
-    this.body,
-    this.floatingActionButton,
+    required this.itemWidget,
+    required this.items,
   });
 
   @override
@@ -71,8 +71,22 @@ class MainTemplate extends StatelessWidget {
         toolbarHeight: 90.0,
         elevation: 0.0,
       ),
-      body: body,
-      floatingActionButton: floatingActionButton,
+      body: items.isNotEmpty
+          ? ListView.separated(
+              padding: const EdgeInsets.all(marginX2),
+              physics: const BouncingScrollPhysics(),
+              itemCount: items.length,
+              itemBuilder: itemWidget,
+              separatorBuilder: (context, index) {
+                return const SizedBox(height: marginX2);
+              },
+            )
+          : Center(
+              child: TextFontStyle(
+                'data not found'.tr,
+                size: fontSizeM,
+              ),
+            ),
     );
   }
 }

@@ -11,7 +11,7 @@ import 'package:seeable/views/navigation/test_compass.dart';
 import 'package:seeable/views/navigation/test_navigation_page.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/listview_button.dart';
-import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/navigation_main_template.dart';
 import 'dart:math';
 
 class PlaceListPage extends StatefulWidget {
@@ -92,7 +92,7 @@ class _PlaceListPageState extends State<PlaceListPage> {
     // );
       return Stack(
         children: [
-          MainTemplate(
+          NavigationMainTemplate(
             appBarTitle: widget.appBarTitle,
             onBack: () {
               _timer?.cancel();

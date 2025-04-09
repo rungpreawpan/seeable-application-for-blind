@@ -72,3 +72,5 @@ flutter:
     - assets/intro/
     - assets/yolov8/
     - assets/yolov5/
+    - assets/yolov8_small/
+    - assets/yolov8_full/

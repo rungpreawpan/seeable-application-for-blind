@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/views/navigation/select_category_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
-import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/navigation_main_template.dart';
 
 class SelectBuildingPage extends StatefulWidget {
   const SelectBuildingPage({super.key});
@@ -20,7 +20,7 @@ class _SelectBuildingPageState extends State<SelectBuildingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MainTemplate(
+    return NavigationMainTemplate(
       appBarTitle: 'navigation'.tr,
       items: buildingList,
       itemWidget: (context, index) {

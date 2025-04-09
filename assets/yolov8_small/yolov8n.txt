@@ -1,0 +1,13 @@
+person
+handbag
+chair
+couch
+table
+toilet
+tv
+laptop
+mouse
+keyboard
+cellphone
+book
+clock

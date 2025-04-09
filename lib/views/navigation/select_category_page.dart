@@ -5,7 +5,7 @@ import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/navigation/level_page.dart';
 import 'package:seeable/views/navigation/place_list_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
-import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/navigation_main_template.dart';
 
 class SelectCategoryPage extends StatefulWidget {
   final String appBarTitle;
@@ -54,7 +54,7 @@ class _SelectCategoryPageState extends State<SelectCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return MainTemplate(
+    return NavigationMainTemplate(
       appBarTitle: widget.appBarTitle,
       items: categoryList,
       itemWidget: (context, index) {

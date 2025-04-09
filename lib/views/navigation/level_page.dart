@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:seeable/widgets/listview_button.dart';
-import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/navigation_main_template.dart';
 
 class LevelPage extends StatelessWidget {
   final String appBarTitle;
@@ -12,7 +12,7 @@ class LevelPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MainTemplate(
+    return NavigationMainTemplate(
       appBarTitle: appBarTitle,
       items: [],
       itemWidget: (context, index) {
