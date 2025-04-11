@@ -30,11 +30,8 @@ dependencies:
   tflite_flutter: ^0.11.0
   image_picker: ^1.1.2
   flutter_tesseract_ocr: ^0.4.26
-#  image: ^4.0.17
   image: ^4.5.3
   camera: ^0.11.1
-  tflite_v2: ^1.0.0
-#  ultralytics_yolo: ^0.0.3
 
 dev_dependencies:
   flutter_test:
@@ -44,15 +41,17 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.2
 
 flutter_launcher_icons:
-  android: "ic_launcher"
+  android: true
   ios: true
   image_path: "assets/logo/logo.png"
+  adaptive_icon_background: "#FFFFFF"  # Add adaptive icon settings for Android 8+
+  adaptive_icon_foreground: "assets/logo/logo.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   web:
     generate: true
     image_path: "assets/logo/logo.png"
-    background_color: "#hexcode"
-    theme_color: "#hexcode"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
   windows:
     generate: true
     image_path: "assets/logo/logo.png"

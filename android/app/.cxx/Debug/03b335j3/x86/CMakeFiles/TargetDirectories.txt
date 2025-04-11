@@ -1,0 +1,2 @@
+/Users/preawpansiriphalangkanont/StudioProjects/seeable/android/app/.cxx/Debug/03b335j3/x86/CMakeFiles/edit_cache.dir
+/Users/preawpansiriphalangkanont/StudioProjects/seeable/android/app/.cxx/Debug/03b335j3/x86/CMakeFiles/rebuild_cache.dir

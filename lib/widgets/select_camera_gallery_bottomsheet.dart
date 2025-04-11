@@ -36,7 +36,7 @@ class SelectCameraGalleryBottomSheet extends StatelessWidget {
                 Get.back(result: file);
               },
               icon: Icons.camera_alt_rounded,
-              title: 'กล้อง',
+              title: 'camera'.tr,
             ),
             _card(
               onTap: () async {
@@ -50,7 +50,7 @@ class SelectCameraGalleryBottomSheet extends StatelessWidget {
                 Get.back(result: file);
               },
               icon: Icons.photo,
-              title: 'แกลเลอรี่',
+              title: 'gallery'.tr,
             ),
           ],
         ),

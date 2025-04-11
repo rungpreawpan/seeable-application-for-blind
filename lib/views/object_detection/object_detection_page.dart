@@ -3,10 +3,12 @@ import 'dart:io';
 import 'dart:math' hide log;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/object_detection/components/object_detection_view.dart';
+import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
@@ -42,8 +44,6 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       // Load YOLOv8n model
       _interpreter =
           await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
-
-      // Debug info
       log('Input Shape: ${_interpreter.getInputTensor(0).shape}');
       log('Output Shape: ${_interpreter.getOutputTensor(0).shape}');
 
@@ -73,6 +73,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     } catch (e) {
       log('Error picking image: $e');
     } finally {
+      Get.back();
       setState(() {
         _isLoading = false;
       });
@@ -381,11 +382,37 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           children: [
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const CustomLoading()
                   : _imageFile == null
-                      ? const Center(
-                          child: TextFontStyle(
-                              'No image selected. Please select an image.'),
+                      ? InkWell(
+                          onTap: _isLoading
+                              ? null
+                              : () async {
+                                  XFile? result = await Get.bottomSheet(
+                                      const SelectCameraGalleryBottomSheet());
+
+                                  if (result != null) {
+                                    _getImage(result);
+                                  }
+                                },
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/gallery_icon.svg',
+                                  color: primaryColor,
+                                  height: 100.0,
+                                ),
+                                const SizedBox(height: margin),
+                                TextFontStyle(
+                                  'upload photo'.tr,
+                                  size: fontSizeXL,
+                                  color: primaryColor,
+                                ),
+                              ],
+                            ),
+                          ),
                         )
                       : ObjectDetectionView(
                           imageFile: _imageFile!,
@@ -406,9 +433,10 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
                     final recognition = _recognitions[index];
                     return ListTile(
                       dense: true,
-                      title: Text(
+                      title: TextFontStyle(
                         '${recognition['label']}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        size: fontSizeM,
+                        weight: FontWeight.bold,
                       ),
                       subtitle: TextFontStyle(
                           'Confidence: ${(recognition['confidence'] * 100).toStringAsFixed(1)}%'),
@@ -425,19 +453,26 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _isLoading
-            ? null
-            : () async {
-                XFile? result = await Get.bottomSheet(
-                    const SelectCameraGalleryBottomSheet());
+      floatingActionButton: Visibility(
+        visible: _imageFile != null,
+        child: FloatingActionButton(
+          onPressed: _isLoading
+              ? null
+              : () async {
+                  XFile? result = await Get.bottomSheet(
+                      const SelectCameraGalleryBottomSheet());
 
-                if (result != null) {
-                  _getImage(result);
-                }
-              },
-        backgroundColor: primaryColor,
-        child: const Icon(Icons.image),
+                  if (result != null) {
+                    _getImage(result);
+                  }
+                },
+          backgroundColor: primaryColor,
+          child: SvgPicture.asset(
+            'assets/icons/gallery_icon.svg',
+            color: Colors.white,
+            height: 28.0,
+          ),
+        ),
       ),
     );
   }

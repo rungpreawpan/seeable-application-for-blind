@@ -46,4 +46,11 @@ const Map<String, String> en = {
   'straight ahead': 'Go Ahead',
   'turn left': 'Turn Left',
   'turn right': 'Turn Right',
+
+  // object detection
+  'upload photo': 'Upload Photo',
+
+  // widget
+  'camera': 'Camera',
+  'gallery': 'Gallery',
 };

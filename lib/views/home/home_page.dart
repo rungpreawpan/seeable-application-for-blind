@@ -42,6 +42,7 @@ class _HomePageState extends State<HomePage> {
               Get.to(() => const SelectBuildingPage());
             } else if (item['title'] == 'object detection'.tr) {
               Get.to(() => const ObjectDetectionPage());
+              // Get.to(() => const CameraDetectionPage());
             } else if (item['title'] == 'scan text'.tr) {
               Get.to(() => const ScanTextPage());
             } else if (item['title'] == 'settings'.tr) {

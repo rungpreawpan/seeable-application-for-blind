@@ -46,4 +46,11 @@ const Map<String, String> th = {
   'straight ahead': 'ตรงไป',
   'turn left': 'เลี้ยวซ้าย',
   'turn right': 'เลี้ยวขวา',
+
+  // object detection
+  'upload photo': 'อัพโหลดรูปภาพ',
+
+  // widget
+  'camera': 'กล้อง',
+  'gallery': 'คลังรูปภาพ',
 };
