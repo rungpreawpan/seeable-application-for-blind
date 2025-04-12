@@ -79,91 +79,6 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     }
   }
 
-  // Future<void> _runObjectDetection() async {
-  //   if (_imageFile == null) return;
-  //
-  //   try {
-  //     // Read and decode image
-  //     final imageData = await _imageFile!.readAsBytes();
-  //     final image = img.decodeImage(imageData);
-  //     imageHeight = image?.height;
-  //     imageWidth = image?.width;
-  //     if (image == null) return;
-  //
-  //     // Get model shapes
-  //     final inputShape = _interpreter.getInputTensor(0).shape;
-  //     final outputShape = _interpreter.getOutputTensor(0).shape;
-  //
-  //     // Resize image to model input size
-  //     final resizedImage = img.copyResize(
-  //       image,
-  //       width: inputSize,
-  //       height: inputSize,
-  //       interpolation: img.Interpolation.cubic,
-  //     );
-  //
-  //     // Prepare input data - determine if NCHW or NHWC
-  //     List<List<List<List<double>>>> inputData;
-  //     if (inputShape.length == 4 && inputShape[1] == 3) {
-  //       // NCHW format [batch, channels, height, width]
-  //       inputData = _prepareInputNCHW(resizedImage);
-  //     } else {
-  //       // NHWC format [batch, height, width, channels]
-  //       inputData = _prepareInputNHWC(resizedImage);
-  //     }
-  //
-  //     // Create output container based on shape
-  //     List<dynamic> outputData = [];
-  //
-  //     if (outputShape.length == 3) {
-  //       if (outputShape[1] == 84) {
-  //         // Format [1, 84, 8400]
-  //         var output = List.generate(
-  //           outputShape[0],
-  //           (_) => List.generate(
-  //             outputShape[1],
-  //             (_) => List<double>.filled(outputShape[2], 0.0),
-  //           ),
-  //         );
-  //         outputData = output;
-  //       } else if (outputShape[2] == 84) {
-  //         // Format [1, 8400, 84]
-  //         var output = List.generate(
-  //           outputShape[0],
-  //           (_) => List.generate(
-  //             outputShape[1],
-  //             (_) => List<double>.filled(outputShape[2], 0.0),
-  //           ),
-  //         );
-  //         outputData = output;
-  //       } else {
-  //         log('Unsupported output shape: $outputShape');
-  //         return;
-  //       }
-  //     } else {
-  //       log('Unsupported output shape: $outputShape');
-  //       return;
-  //     }
-  //
-  //     // Run inference
-  //     _interpreter.run(inputData, outputData);
-  //
-  //     // Process results
-  //     final results =
-  //         _processOutputs(outputData, outputShape, image.width, image.height);
-  //     setState(() {
-  //       _recognitions = results;
-  //       log('Found ${_recognitions.length} objects');
-  //       // Debug output for the first detection
-  //       if (_recognitions.isNotEmpty) {
-  //         log('First detection: ${_recognitions[0]}');
-  //       }
-  //     });
-  //   } catch (e) {
-  //     log('Error running object detection: $e');
-  //   }
-  // }
-
   Future<void> _runObjectDetection() async {
     if (_imageFile == null) return;
 
@@ -336,119 +251,6 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     );
   }
 
-  // List<Map<String, dynamic>> _processOutputs(List<dynamic> outputData,
-  //     List<int> outputShape, int sourceWidth, int sourceHeight) {
-  //   const confidenceThreshold = 0.25;
-  //   const iouThreshold = 0.45;
-  //   List<Map<String, dynamic>> detections = [];
-  //
-  //   try {
-  //     // Option 1: Transpose-style output (shape [1, 84, 8400])
-  //     if (outputShape.length == 3 && outputShape[1] == 84) {
-  //       final numClasses = outputShape[1] - 4;
-  //       final numBoxes = outputShape[2];
-  //
-  //       for (int i = 0; i < numBoxes; i++) {
-  //         try {
-  //           // Get bbox coordinates
-  //           final x = outputData[0][0][i] as double; // Center x
-  //           final y = outputData[0][1][i] as double; // Center y
-  //           final w = outputData[0][2][i] as double; // Width
-  //           final h = outputData[0][3][i] as double; // Height
-  //
-  //           // Find class with highest confidence
-  //           double maxConfidence = 0;
-  //           int classId = 0;
-  //
-  //           for (int c = 0; c < numClasses && c < 80; c++) {
-  //             final confidence = outputData[0][4 + c][i] as double;
-  //             if (confidence > maxConfidence) {
-  //               maxConfidence = confidence;
-  //               classId = c;
-  //             }
-  //           }
-  //
-  //           // Filter by confidence threshold
-  //           if (maxConfidence > confidenceThreshold) {
-  //             final label =
-  //                 classId < _labels.length ? _labels[classId] : 'Unknown';
-  //
-  //             // Convert normalized coordinates to actual pixel values
-  //             final xmin = ((x - w / 2) * sourceWidth).round();
-  //             final ymin = ((y - h / 2) * sourceHeight).round();
-  //             final xmax = ((x + w / 2) * sourceWidth).round();
-  //             final ymax = ((y + h / 2) * sourceHeight).round();
-  //
-  //             detections.add({
-  //               'bbox': [xmin, ymin, xmax, ymax],
-  //               'confidence': maxConfidence,
-  //               'class': classId,
-  //               'label': label,
-  //             });
-  //           }
-  //         } catch (e) {
-  //           log('Error processing detection $i: $e');
-  //         }
-  //       }
-  //     }
-  //     // Option 2: Box-first output (shape [1, 8400, 84])
-  //     else if (outputShape.length == 3 && outputShape[2] == 84) {
-  //       final numBoxes = outputShape[1];
-  //       final numClasses = min(outputShape[2] - 4, 80); // Cap at 80 classes
-  //
-  //       for (int i = 0; i < numBoxes; i++) {
-  //         try {
-  //           // Get bbox coordinates
-  //           final x = outputData[0][i][0] as double; // Center x
-  //           final y = outputData[0][i][1] as double; // Center y
-  //           final w = outputData[0][i][2] as double; // Width
-  //           final h = outputData[0][i][3] as double; // Height
-  //
-  //           // Find class with highest confidence
-  //           double maxConfidence = 0;
-  //           int classId = 0;
-  //
-  //           for (int c = 0; c < numClasses; c++) {
-  //             final confidence = outputData[0][i][4 + c] as double;
-  //             if (confidence > maxConfidence) {
-  //               maxConfidence = confidence;
-  //               classId = c;
-  //             }
-  //           }
-  //
-  //           // Filter by confidence threshold
-  //           if (maxConfidence > confidenceThreshold) {
-  //             final label =
-  //                 classId < _labels.length ? _labels[classId] : 'Unknown';
-  //
-  //             // Convert normalized coordinates to actual pixel values
-  //             final xmin = ((x - w / 2) * sourceWidth).round();
-  //             final ymin = ((y - h / 2) * sourceHeight).round();
-  //             final xmax = ((x + w / 2) * sourceWidth).round();
-  //             final ymax = ((y + h / 2) * sourceHeight).round();
-  //
-  //             detections.add({
-  //               'bbox': [xmin, ymin, xmax, ymax],
-  //               'confidence': maxConfidence,
-  //               'class': classId,
-  //               'label': label,
-  //             });
-  //           }
-  //         } catch (e) {
-  //           log('Error processing detection $i: $e');
-  //         }
-  //       }
-  //     }
-  //   } catch (e) {
-  //     log('Error processing detections: $e');
-  //   }
-  //
-  //   // Apply non-maximum suppression
-  //   final filteredDetections = _nonMaxSuppression(detections, iouThreshold);
-  //
-  //   return filteredDetections;
-  // }
-
   List<Map<String, dynamic>> _processOutputs(List<dynamic> outputData,
       List<int> outputShape, int sourceWidth, int sourceHeight) {
     const confidenceThreshold = 0.25;
@@ -491,7 +293,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
-                  classId < _labels.length ? _labels[classId] : 'Unknown';
+              classId < _labels.length ? _labels[classId] : 'Unknown';
+
+              // Skip unknown labels
+              if (label == 'Unknown') {
+                log('Skipping Unknown label detection');
+                continue;
+              }
 
               // YOLOv8 outputs normalized coordinates (0-1)
               // Determine if coordinates are normalized (0-1) or absolute
@@ -536,13 +344,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
 
               // Convert normalized coordinates to pixel values on the original image
               final xmin =
-                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
+              ((normalizedX - normalizedW / 2) * sourceWidth).round();
               final ymin =
-                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
+              ((normalizedY - normalizedH / 2) * sourceHeight).round();
               final xmax =
-                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
+              ((normalizedX + normalizedW / 2) * sourceWidth).round();
               final ymax =
-                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
+              ((normalizedY + normalizedH / 2) * sourceHeight).round();
 
               // Clamp values to ensure they're within image boundaries
               final finalXmin = xmin.clamp(0, sourceWidth - 1);
@@ -602,7 +410,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
-                  classId < _labels.length ? _labels[classId] : 'Unknown';
+              classId < _labels.length ? _labels[classId] : 'Unknown';
+
+              // Skip unknown labels
+              if (label == 'Unknown') {
+                log('Skipping Unknown label detection');
+                continue;
+              }
 
               // Determine if coordinates are normalized (0-1) or absolute
               double normalizedX = x;
@@ -646,13 +460,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
 
               // Convert normalized coordinates to pixel values on the original image
               final xmin =
-                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
+              ((normalizedX - normalizedW / 2) * sourceWidth).round();
               final ymin =
-                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
+              ((normalizedY - normalizedH / 2) * sourceHeight).round();
               final xmax =
-                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
+              ((normalizedX + normalizedW / 2) * sourceWidth).round();
               final ymax =
-                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
+              ((normalizedY + normalizedH / 2) * sourceHeight).round();
 
               // Clamp values to ensure they're within image boundaries
               final finalXmin = xmin.clamp(0, sourceWidth - 1);
@@ -746,53 +560,56 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _isLoading
-                ? const CustomLoading()
-                : _imageFile == null
-                    ? InkWell(
-                        onTap: _isLoading
-                            ? null
-                            : () async {
-                                XFile? result = await Get.bottomSheet(
-                                    const SelectCameraGalleryBottomSheet());
+            Expanded(
+              child: _isLoading
+                  ? const CustomLoading()
+                  : _imageFile == null
+                      ? InkWell(
+                          onTap: _isLoading
+                              ? null
+                              : () async {
+                                  XFile? result = await Get.bottomSheet(
+                                      const SelectCameraGalleryBottomSheet());
 
-                                if (result != null) {
-                                  _getImage(result);
-                                }
-                              },
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SvgPicture.asset(
-                                'assets/icons/gallery_icon.svg',
-                                color: primaryColor,
-                                height: 100.0,
-                              ),
-                              const SizedBox(height: margin),
-                              TextFontStyle(
-                                'upload photo'.tr,
-                                size: fontSizeXL,
-                                color: primaryColor,
-                              ),
-                            ],
+                                  if (result != null) {
+                                    _getImage(result);
+                                  }
+                                },
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/gallery_icon.svg',
+                                  color: primaryColor,
+                                  height: 100.0,
+                                ),
+                                const SizedBox(height: margin),
+                                TextFontStyle(
+                                  'upload photo'.tr,
+                                  size: fontSizeXL,
+                                  color: primaryColor,
+                                ),
+                              ],
+                            ),
                           ),
+                        )
+                      : ObjectDetectionView(
+                          imageFile: _imageFile!,
+                          imageHeight: imageHeight!,
+                          imageWidth: imageWidth!,
+                          recognitions: _recognitions,
                         ),
-                      )
-                    : ObjectDetectionView(
-                        imageFile: _imageFile!,
-                        imageHeight: imageHeight!,
-                        imageWidth: imageWidth!,
-                        recognitions: _recognitions,
-                      ),
+            ),
 
             // Detection results
             if (_recognitions.isNotEmpty)
               Container(
+                height: 200.0,
                 padding: const EdgeInsets.all(8),
                 child: ListView.builder(
-                  shrinkWrap: true,
                   itemCount: _recognitions.length,
+                  physics: const BouncingScrollPhysics(),
                   itemBuilder: (context, index) {
                     final recognition = _recognitions[index];
                     return ListTile(
