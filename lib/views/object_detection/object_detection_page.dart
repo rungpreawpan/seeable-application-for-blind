@@ -73,12 +73,96 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     } catch (e) {
       log('Error picking image: $e');
     } finally {
-      Get.back();
       setState(() {
         _isLoading = false;
       });
     }
   }
+
+  // Future<void> _runObjectDetection() async {
+  //   if (_imageFile == null) return;
+  //
+  //   try {
+  //     // Read and decode image
+  //     final imageData = await _imageFile!.readAsBytes();
+  //     final image = img.decodeImage(imageData);
+  //     imageHeight = image?.height;
+  //     imageWidth = image?.width;
+  //     if (image == null) return;
+  //
+  //     // Get model shapes
+  //     final inputShape = _interpreter.getInputTensor(0).shape;
+  //     final outputShape = _interpreter.getOutputTensor(0).shape;
+  //
+  //     // Resize image to model input size
+  //     final resizedImage = img.copyResize(
+  //       image,
+  //       width: inputSize,
+  //       height: inputSize,
+  //       interpolation: img.Interpolation.cubic,
+  //     );
+  //
+  //     // Prepare input data - determine if NCHW or NHWC
+  //     List<List<List<List<double>>>> inputData;
+  //     if (inputShape.length == 4 && inputShape[1] == 3) {
+  //       // NCHW format [batch, channels, height, width]
+  //       inputData = _prepareInputNCHW(resizedImage);
+  //     } else {
+  //       // NHWC format [batch, height, width, channels]
+  //       inputData = _prepareInputNHWC(resizedImage);
+  //     }
+  //
+  //     // Create output container based on shape
+  //     List<dynamic> outputData = [];
+  //
+  //     if (outputShape.length == 3) {
+  //       if (outputShape[1] == 84) {
+  //         // Format [1, 84, 8400]
+  //         var output = List.generate(
+  //           outputShape[0],
+  //           (_) => List.generate(
+  //             outputShape[1],
+  //             (_) => List<double>.filled(outputShape[2], 0.0),
+  //           ),
+  //         );
+  //         outputData = output;
+  //       } else if (outputShape[2] == 84) {
+  //         // Format [1, 8400, 84]
+  //         var output = List.generate(
+  //           outputShape[0],
+  //           (_) => List.generate(
+  //             outputShape[1],
+  //             (_) => List<double>.filled(outputShape[2], 0.0),
+  //           ),
+  //         );
+  //         outputData = output;
+  //       } else {
+  //         log('Unsupported output shape: $outputShape');
+  //         return;
+  //       }
+  //     } else {
+  //       log('Unsupported output shape: $outputShape');
+  //       return;
+  //     }
+  //
+  //     // Run inference
+  //     _interpreter.run(inputData, outputData);
+  //
+  //     // Process results
+  //     final results =
+  //         _processOutputs(outputData, outputShape, image.width, image.height);
+  //     setState(() {
+  //       _recognitions = results;
+  //       log('Found ${_recognitions.length} objects');
+  //       // Debug output for the first detection
+  //       if (_recognitions.isNotEmpty) {
+  //         log('First detection: ${_recognitions[0]}');
+  //       }
+  //     });
+  //   } catch (e) {
+  //     log('Error running object detection: $e');
+  //   }
+  // }
 
   Future<void> _runObjectDetection() async {
     if (_imageFile == null) return;
@@ -87,13 +171,21 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       // Read and decode image
       final imageData = await _imageFile!.readAsBytes();
       final image = img.decodeImage(imageData);
-      imageHeight = image?.height;
-      imageWidth = image?.width;
-      if (image == null) return;
+      if (image == null) {
+        log('Failed to decode image');
+        return;
+      }
+
+      // Store original dimensions
+      imageHeight = image.height;
+      imageWidth = image.width;
+      log('Original image dimensions: ${imageWidth}x${imageHeight}');
 
       // Get model shapes
       final inputShape = _interpreter.getInputTensor(0).shape;
       final outputShape = _interpreter.getOutputTensor(0).shape;
+      log('Model input shape: $inputShape');
+      log('Model output shape: $outputShape');
 
       // Resize image to model input size
       final resizedImage = img.copyResize(
@@ -102,14 +194,17 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
         height: inputSize,
         interpolation: img.Interpolation.cubic,
       );
+      log('Resized to: ${resizedImage.width}x${resizedImage.height}');
 
-      // Prepare input data - determine if NCHW or NHWC
+      // Determine input format (NCHW or NHWC) and prepare input
       List<List<List<List<double>>>> inputData;
       if (inputShape.length == 4 && inputShape[1] == 3) {
         // NCHW format [batch, channels, height, width]
+        log('Using NCHW input format');
         inputData = _prepareInputNCHW(resizedImage);
       } else {
         // NHWC format [batch, height, width, channels]
+        log('Using NHWC input format');
         inputData = _prepareInputNHWC(resizedImage);
       }
 
@@ -119,6 +214,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       if (outputShape.length == 3) {
         if (outputShape[1] == 84) {
           // Format [1, 84, 8400]
+          log('Output format: [1, 84, 8400]');
           var output = List.generate(
             outputShape[0],
             (_) => List.generate(
@@ -129,6 +225,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           outputData = output;
         } else if (outputShape[2] == 84) {
           // Format [1, 8400, 84]
+          log('Output format: [1, 8400, 84]');
           var output = List.generate(
             outputShape[0],
             (_) => List.generate(
@@ -147,13 +244,43 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       }
 
       // Run inference
+      log('Running inference...');
       _interpreter.run(inputData, outputData);
+
+      // For debugging: log a sample of the raw output
+      if (outputShape[1] == 84) {
+        log('Sample output [0][0][0]: ${outputData[0][0][0]}');
+        log('Sample output [0][1][0]: ${outputData[0][1][0]}');
+        log('Sample output [0][2][0]: ${outputData[0][2][0]}');
+        log('Sample output [0][3][0]: ${outputData[0][3][0]}');
+      } else if (outputShape[2] == 84) {
+        log('Sample output [0][0][0]: ${outputData[0][0][0]}');
+        log('Sample output [0][0][1]: ${outputData[0][0][1]}');
+        log('Sample output [0][0][2]: ${outputData[0][0][2]}');
+        log('Sample output [0][0][3]: ${outputData[0][0][3]}');
+      }
 
       // Process results
       final results =
-          _processOutputs(outputData, outputShape, image.width, image.height);
+          _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
+
+      // Apply scaling factor if the detection was performed on a resized image
+      final List<Map<String, dynamic>> scaledResults = results.map((detection) {
+        final List<int> bbox = List<int>.from(detection['bbox']);
+
+        // Log the original bounding box
+        log('Original bbox: $bbox');
+
+        return {
+          'bbox': bbox,
+          'confidence': detection['confidence'],
+          'class': detection['class'],
+          'label': detection['label'],
+        };
+      }).toList();
+
       setState(() {
-        _recognitions = results;
+        _recognitions = scaledResults;
         log('Found ${_recognitions.length} objects');
         // Debug output for the first detection
         if (_recognitions.isNotEmpty) {
@@ -209,6 +336,119 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     );
   }
 
+  // List<Map<String, dynamic>> _processOutputs(List<dynamic> outputData,
+  //     List<int> outputShape, int sourceWidth, int sourceHeight) {
+  //   const confidenceThreshold = 0.25;
+  //   const iouThreshold = 0.45;
+  //   List<Map<String, dynamic>> detections = [];
+  //
+  //   try {
+  //     // Option 1: Transpose-style output (shape [1, 84, 8400])
+  //     if (outputShape.length == 3 && outputShape[1] == 84) {
+  //       final numClasses = outputShape[1] - 4;
+  //       final numBoxes = outputShape[2];
+  //
+  //       for (int i = 0; i < numBoxes; i++) {
+  //         try {
+  //           // Get bbox coordinates
+  //           final x = outputData[0][0][i] as double; // Center x
+  //           final y = outputData[0][1][i] as double; // Center y
+  //           final w = outputData[0][2][i] as double; // Width
+  //           final h = outputData[0][3][i] as double; // Height
+  //
+  //           // Find class with highest confidence
+  //           double maxConfidence = 0;
+  //           int classId = 0;
+  //
+  //           for (int c = 0; c < numClasses && c < 80; c++) {
+  //             final confidence = outputData[0][4 + c][i] as double;
+  //             if (confidence > maxConfidence) {
+  //               maxConfidence = confidence;
+  //               classId = c;
+  //             }
+  //           }
+  //
+  //           // Filter by confidence threshold
+  //           if (maxConfidence > confidenceThreshold) {
+  //             final label =
+  //                 classId < _labels.length ? _labels[classId] : 'Unknown';
+  //
+  //             // Convert normalized coordinates to actual pixel values
+  //             final xmin = ((x - w / 2) * sourceWidth).round();
+  //             final ymin = ((y - h / 2) * sourceHeight).round();
+  //             final xmax = ((x + w / 2) * sourceWidth).round();
+  //             final ymax = ((y + h / 2) * sourceHeight).round();
+  //
+  //             detections.add({
+  //               'bbox': [xmin, ymin, xmax, ymax],
+  //               'confidence': maxConfidence,
+  //               'class': classId,
+  //               'label': label,
+  //             });
+  //           }
+  //         } catch (e) {
+  //           log('Error processing detection $i: $e');
+  //         }
+  //       }
+  //     }
+  //     // Option 2: Box-first output (shape [1, 8400, 84])
+  //     else if (outputShape.length == 3 && outputShape[2] == 84) {
+  //       final numBoxes = outputShape[1];
+  //       final numClasses = min(outputShape[2] - 4, 80); // Cap at 80 classes
+  //
+  //       for (int i = 0; i < numBoxes; i++) {
+  //         try {
+  //           // Get bbox coordinates
+  //           final x = outputData[0][i][0] as double; // Center x
+  //           final y = outputData[0][i][1] as double; // Center y
+  //           final w = outputData[0][i][2] as double; // Width
+  //           final h = outputData[0][i][3] as double; // Height
+  //
+  //           // Find class with highest confidence
+  //           double maxConfidence = 0;
+  //           int classId = 0;
+  //
+  //           for (int c = 0; c < numClasses; c++) {
+  //             final confidence = outputData[0][i][4 + c] as double;
+  //             if (confidence > maxConfidence) {
+  //               maxConfidence = confidence;
+  //               classId = c;
+  //             }
+  //           }
+  //
+  //           // Filter by confidence threshold
+  //           if (maxConfidence > confidenceThreshold) {
+  //             final label =
+  //                 classId < _labels.length ? _labels[classId] : 'Unknown';
+  //
+  //             // Convert normalized coordinates to actual pixel values
+  //             final xmin = ((x - w / 2) * sourceWidth).round();
+  //             final ymin = ((y - h / 2) * sourceHeight).round();
+  //             final xmax = ((x + w / 2) * sourceWidth).round();
+  //             final ymax = ((y + h / 2) * sourceHeight).round();
+  //
+  //             detections.add({
+  //               'bbox': [xmin, ymin, xmax, ymax],
+  //               'confidence': maxConfidence,
+  //               'class': classId,
+  //               'label': label,
+  //             });
+  //           }
+  //         } catch (e) {
+  //           log('Error processing detection $i: $e');
+  //         }
+  //       }
+  //     }
+  //   } catch (e) {
+  //     log('Error processing detections: $e');
+  //   }
+  //
+  //   // Apply non-maximum suppression
+  //   final filteredDetections = _nonMaxSuppression(detections, iouThreshold);
+  //
+  //   return filteredDetections;
+  // }
+
   List<Map<String, dynamic>> _processOutputs(List<dynamic> outputData,
       List<int> outputShape, int sourceWidth, int sourceHeight) {
     const confidenceThreshold = 0.25;
@@ -218,8 +458,10 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     try {
       // Option 1: Transpose-style output (shape [1, 84, 8400])
       if (outputShape.length == 3 && outputShape[1] == 84) {
-        final numClasses = outputShape[1] - 4;
+        final numClasses = min(outputShape[1] - 4, 80); // Cap at 80 classes
         final numBoxes = outputShape[2];
+
+        log('Processing transpose-style output: $numBoxes boxes, $numClasses classes');
 
         for (int i = 0; i < numBoxes; i++) {
           try {
@@ -233,7 +475,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
             double maxConfidence = 0;
             int classId = 0;
 
-            for (int c = 0; c < numClasses && c < 80; c++) {
+            for (int c = 0; c < numClasses; c++) {
               final confidence = outputData[0][4 + c][i] as double;
               if (confidence > maxConfidence) {
                 maxConfidence = confidence;
@@ -241,19 +483,80 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
               }
             }
 
+            // Log some samples for debugging
+            if (i < 3 && maxConfidence > confidenceThreshold) {
+              log('Sample detection $i: x=$x, y=$y, w=$w, h=$h, conf=$maxConfidence, class=$classId');
+            }
+
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
                   classId < _labels.length ? _labels[classId] : 'Unknown';
 
-              // Convert normalized coordinates to actual pixel values
-              final xmin = ((x - w / 2) * sourceWidth).round();
-              final ymin = ((y - h / 2) * sourceHeight).round();
-              final xmax = ((x + w / 2) * sourceWidth).round();
-              final ymax = ((y + h / 2) * sourceHeight).round();
+              // YOLOv8 outputs normalized coordinates (0-1)
+              // Determine if coordinates are normalized (0-1) or absolute
+              double normalizedX = x;
+              double normalizedY = y;
+              double normalizedW = w;
+              double normalizedH = h;
+
+              // Check if inputs might be in input size coordinates (0-640)
+              if (x > 1.0 || y > 1.0 || w > 1.0 || h > 1.0) {
+                if (x <= inputSize &&
+                    y <= inputSize &&
+                    w <= inputSize &&
+                    h <= inputSize) {
+                  // Values are probably in input size space (0-640)
+                  normalizedX = x / inputSize;
+                  normalizedY = y / inputSize;
+                  normalizedW = w / inputSize;
+                  normalizedH = h / inputSize;
+                  log('Normalizing from input size space: $x,$y,$w,$h -> $normalizedX,$normalizedY,$normalizedW,$normalizedH');
+                } else if (x <= sourceWidth && y <= sourceHeight) {
+                  // Values might be in source image space
+                  normalizedX = x / sourceWidth;
+                  normalizedY = y / sourceHeight;
+                  normalizedW = w / sourceWidth;
+                  normalizedH = h / sourceHeight;
+                  log('Normalizing from source image space');
+                } else {
+                  // Values are using some other scale we don't understand
+                  // Use a different approach - try to estimate the scale
+                  double estimatedScale = max(
+                    max(x, y) / max(sourceWidth, sourceHeight),
+                    max(w, h) / max(sourceWidth, sourceHeight),
+                  );
+                  normalizedX = x / (estimatedScale * sourceWidth);
+                  normalizedY = y / (estimatedScale * sourceHeight);
+                  normalizedW = w / (estimatedScale * sourceWidth);
+                  normalizedH = h / (estimatedScale * sourceHeight);
+                  log('Using estimated scale normalization: $estimatedScale');
+                }
+              }
+
+              // Convert normalized coordinates to pixel values on the original image
+              final xmin =
+                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
+              final ymin =
+                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
+              final xmax =
+                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
+              final ymax =
+                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
+
+              // Clamp values to ensure they're within image boundaries
+              final finalXmin = xmin.clamp(0, sourceWidth - 1);
+              final finalYmin = ymin.clamp(0, sourceHeight - 1);
+              final finalXmax = xmax.clamp(0, sourceWidth - 1);
+              final finalYmax = ymax.clamp(0, sourceHeight - 1);
+
+              // Log the bbox conversion for the first few detections
+              if (i < 3) {
+                log('BBox conversion: [$normalizedX, $normalizedY, $normalizedW, $normalizedH] -> [$finalXmin, $finalYmin, $finalXmax, $finalYmax]');
+              }
 
               detections.add({
-                'bbox': [xmin, ymin, xmax, ymax],
+                'bbox': [finalXmin, finalYmin, finalXmax, finalYmax],
                 'confidence': maxConfidence,
                 'class': classId,
                 'label': label,
@@ -268,6 +571,8 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       else if (outputShape.length == 3 && outputShape[2] == 84) {
         final numBoxes = outputShape[1];
         final numClasses = min(outputShape[2] - 4, 80); // Cap at 80 classes
+
+        log('Processing box-first output: $numBoxes boxes, $numClasses classes');
 
         for (int i = 0; i < numBoxes; i++) {
           try {
@@ -289,19 +594,79 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
               }
             }
 
+            // Log some samples for debugging
+            if (i < 3 && maxConfidence > confidenceThreshold) {
+              log('Sample detection $i: x=$x, y=$y, w=$w, h=$h, conf=$maxConfidence, class=$classId');
+            }
+
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
                   classId < _labels.length ? _labels[classId] : 'Unknown';
 
-              // Convert normalized coordinates to actual pixel values
-              final xmin = ((x - w / 2) * sourceWidth).round();
-              final ymin = ((y - h / 2) * sourceHeight).round();
-              final xmax = ((x + w / 2) * sourceWidth).round();
-              final ymax = ((y + h / 2) * sourceHeight).round();
+              // Determine if coordinates are normalized (0-1) or absolute
+              double normalizedX = x;
+              double normalizedY = y;
+              double normalizedW = w;
+              double normalizedH = h;
+
+              // Check if inputs might be in input size coordinates (0-640)
+              if (x > 1.0 || y > 1.0 || w > 1.0 || h > 1.0) {
+                if (x <= inputSize &&
+                    y <= inputSize &&
+                    w <= inputSize &&
+                    h <= inputSize) {
+                  // Values are probably in input size space (0-640)
+                  normalizedX = x / inputSize;
+                  normalizedY = y / inputSize;
+                  normalizedW = w / inputSize;
+                  normalizedH = h / inputSize;
+                  log('Normalizing from input size space: $x,$y,$w,$h -> $normalizedX,$normalizedY,$normalizedW,$normalizedH');
+                } else if (x <= sourceWidth && y <= sourceHeight) {
+                  // Values might be in source image space
+                  normalizedX = x / sourceWidth;
+                  normalizedY = y / sourceHeight;
+                  normalizedW = w / sourceWidth;
+                  normalizedH = h / sourceHeight;
+                  log('Normalizing from source image space');
+                } else {
+                  // Values are using some other scale we don't understand
+                  // Use a different approach - try to estimate the scale
+                  double estimatedScale = max(
+                    max(x, y) / max(sourceWidth, sourceHeight),
+                    max(w, h) / max(sourceWidth, sourceHeight),
+                  );
+                  normalizedX = x / (estimatedScale * sourceWidth);
+                  normalizedY = y / (estimatedScale * sourceHeight);
+                  normalizedW = w / (estimatedScale * sourceWidth);
+                  normalizedH = h / (estimatedScale * sourceHeight);
+                  log('Using estimated scale normalization: $estimatedScale');
+                }
+              }
+
+              // Convert normalized coordinates to pixel values on the original image
+              final xmin =
+                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
+              final ymin =
+                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
+              final xmax =
+                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
+              final ymax =
+                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
+
+              // Clamp values to ensure they're within image boundaries
+              final finalXmin = xmin.clamp(0, sourceWidth - 1);
+              final finalYmin = ymin.clamp(0, sourceHeight - 1);
+              final finalXmax = xmax.clamp(0, sourceWidth - 1);
+              final finalYmax = ymax.clamp(0, sourceHeight - 1);
+
+              // Log the bbox conversion for the first few detections
+              if (i < 3) {
+                log('BBox conversion: [$normalizedX, $normalizedY, $normalizedW, $normalizedH] -> [$finalXmin, $finalYmin, $finalXmax, $finalYmax]');
+              }
 
               detections.add({
-                'bbox': [xmin, ymin, xmax, ymax],
+                'bbox': [finalXmin, finalYmin, finalXmax, finalYmax],
                 'confidence': maxConfidence,
                 'class': classId,
                 'label': label,
@@ -318,6 +683,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
 
     // Apply non-maximum suppression
     final filteredDetections = _nonMaxSuppression(detections, iouThreshold);
+    log('After NMS: ${filteredDetections.length} detections remaining');
 
     return filteredDetections;
   }
@@ -380,54 +746,52 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: _isLoading
-                  ? const CustomLoading()
-                  : _imageFile == null
-                      ? InkWell(
-                          onTap: _isLoading
-                              ? null
-                              : () async {
-                                  XFile? result = await Get.bottomSheet(
-                                      const SelectCameraGalleryBottomSheet());
+            _isLoading
+                ? const CustomLoading()
+                : _imageFile == null
+                    ? InkWell(
+                        onTap: _isLoading
+                            ? null
+                            : () async {
+                                XFile? result = await Get.bottomSheet(
+                                    const SelectCameraGalleryBottomSheet());
 
-                                  if (result != null) {
-                                    _getImage(result);
-                                  }
-                                },
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/gallery_icon.svg',
-                                  color: primaryColor,
-                                  height: 100.0,
-                                ),
-                                const SizedBox(height: margin),
-                                TextFontStyle(
-                                  'upload photo'.tr,
-                                  size: fontSizeXL,
-                                  color: primaryColor,
-                                ),
-                              ],
-                            ),
+                                if (result != null) {
+                                  _getImage(result);
+                                }
+                              },
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/icons/gallery_icon.svg',
+                                color: primaryColor,
+                                height: 100.0,
+                              ),
+                              const SizedBox(height: margin),
+                              TextFontStyle(
+                                'upload photo'.tr,
+                                size: fontSizeXL,
+                                color: primaryColor,
+                              ),
+                            ],
                           ),
-                        )
-                      : ObjectDetectionView(
-                          imageFile: _imageFile!,
-                          imageHeight: imageHeight!,
-                          imageWidth: imageWidth!,
-                          recognitions: _recognitions,
                         ),
-            ),
+                      )
+                    : ObjectDetectionView(
+                        imageFile: _imageFile!,
+                        imageHeight: imageHeight!,
+                        imageWidth: imageWidth!,
+                        recognitions: _recognitions,
+                      ),
 
             // Detection results
             if (_recognitions.isNotEmpty)
               Container(
                 padding: const EdgeInsets.all(8),
-                height: 120.0,
                 child: ListView.builder(
+                  shrinkWrap: true,
                   itemCount: _recognitions.length,
                   itemBuilder: (context, index) {
                     final recognition = _recognitions[index];
