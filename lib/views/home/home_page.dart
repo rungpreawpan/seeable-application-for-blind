@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/navigation/select_building_page.dart';
+import 'package:seeable/views/object_detection/components/real_time_object_detection.dart';
 import 'package:seeable/views/object_detection/object_detection_page.dart';
+import 'package:seeable/views/object_detection/test/realtime_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/views/settings/settings_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
@@ -41,8 +43,9 @@ class _HomePageState extends State<HomePage> {
             if (item['title'] == 'navigation'.tr) {
               Get.to(() => const SelectBuildingPage());
             } else if (item['title'] == 'object detection'.tr) {
-              Get.to(() => const ObjectDetectionPage());
-              // Get.to(() => const CameraDetectionPage());
+              // Get.to(() => const ObjectDetectionPage());
+              // Get.to(() => const RealtimeObjectDetectionPage());
+              Get.to(() => RealtimePage());
             } else if (item['title'] == 'scan text'.tr) {
               Get.to(() => const ScanTextPage());
             } else if (item['title'] == 'settings'.tr) {
