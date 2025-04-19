@@ -43,13 +43,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
     try {
       // Load YOLOv8n model
       _interpreter =
-          await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
+      await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
       log('Input Shape: ${_interpreter.getInputTensor(0).shape}');
       log('Output Shape: ${_interpreter.getOutputTensor(0).shape}');
 
       // Load labels
       final labelsData =
-          await rootBundle.loadString('assets/yolov8_small/yolov8n.txt');
+      await rootBundle.loadString('assets/yolov8_small/yolov8n.txt');
       _labels = labelsData.split('\n').where((s) => s.isNotEmpty).toList();
       log('Model loaded with ${_labels.length} labels');
     } catch (e) {
@@ -132,9 +132,9 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           log('Output format: [1, 84, 8400]');
           var output = List.generate(
             outputShape[0],
-            (_) => List.generate(
+                (_) => List.generate(
               outputShape[1],
-              (_) => List<double>.filled(outputShape[2], 0.0),
+                  (_) => List<double>.filled(outputShape[2], 0.0),
             ),
           );
           outputData = output;
@@ -143,9 +143,9 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           log('Output format: [1, 8400, 84]');
           var output = List.generate(
             outputShape[0],
-            (_) => List.generate(
+                (_) => List.generate(
               outputShape[1],
-              (_) => List<double>.filled(outputShape[2], 0.0),
+                  (_) => List<double>.filled(outputShape[2], 0.0),
             ),
           );
           outputData = output;
@@ -177,7 +177,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
 
       // Process results
       final results =
-          _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
+      _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
 
       // Apply scaling factor if the detection was performed on a resized image
       final List<Map<String, dynamic>> scaledResults = results.map((detection) {
@@ -211,13 +211,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
   List<List<List<List<double>>>> _prepareInputNCHW(img.Image image) {
     return List.generate(
       1, // batch size
-      (_) => List.generate(
+          (_) => List.generate(
         3, // channels (RGB)
-        (c) => List.generate(
+            (c) => List.generate(
           inputSize, // height
-          (y) => List.generate(
+              (y) => List.generate(
             inputSize, // width
-            (x) {
+                (x) {
               final pixel = image.getPixel(x, y);
               if (c == 0) return pixel.r / 255.0; // Red channel
               if (c == 1) return pixel.g / 255.0; // Green channel
@@ -233,13 +233,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
   List<List<List<List<double>>>> _prepareInputNHWC(img.Image image) {
     return List.generate(
       1, // batch size
-      (_) => List.generate(
+          (_) => List.generate(
         inputSize, // height
-        (y) => List.generate(
+            (y) => List.generate(
           inputSize, // width
-          (x) => List.generate(
+              (x) => List.generate(
             3, // channels (RGB)
-            (c) {
+                (c) {
               final pixel = image.getPixel(x, y);
               if (c == 0) return pixel.r / 255.0; // Red channel
               if (c == 1) return pixel.g / 255.0; // Green channel
@@ -564,42 +564,42 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
               child: _isLoading
                   ? const CustomLoading()
                   : _imageFile == null
-                      ? InkWell(
-                          onTap: _isLoading
-                              ? null
-                              : () async {
-                                  XFile? result = await Get.bottomSheet(
-                                      const SelectCameraGalleryBottomSheet());
+                  ? InkWell(
+                onTap: _isLoading
+                    ? null
+                    : () async {
+                  XFile? result = await Get.bottomSheet(
+                      const SelectCameraGalleryBottomSheet());
 
-                                  if (result != null) {
-                                    _getImage(result);
-                                  }
-                                },
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                  'assets/icons/gallery_icon.svg',
-                                  color: primaryColor,
-                                  height: 100.0,
-                                ),
-                                const SizedBox(height: margin),
-                                TextFontStyle(
-                                  'upload photo'.tr,
-                                  size: fontSizeXL,
-                                  color: primaryColor,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : ObjectDetectionView(
-                          imageFile: _imageFile!,
-                          imageHeight: imageHeight!,
-                          imageWidth: imageWidth!,
-                          recognitions: _recognitions,
-                        ),
+                  if (result != null) {
+                    _getImage(result);
+                  }
+                },
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/icons/gallery_icon.svg',
+                        color: primaryColor,
+                        height: 100.0,
+                      ),
+                      const SizedBox(height: margin),
+                      TextFontStyle(
+                        'upload photo'.tr,
+                        size: fontSizeXL,
+                        color: primaryColor,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+                  : ObjectDetectionView(
+                imageFile: _imageFile!,
+                imageHeight: imageHeight!,
+                imageWidth: imageWidth!,
+                recognitions: _recognitions,
+              ),
             ),
 
             // Detection results
@@ -625,7 +625,7 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
                         width: 50.0,
                         height: 50.0,
                         color: Colors.primaries[
-                            recognition['class'] % Colors.primaries.length],
+                        recognition['class'] % Colors.primaries.length],
                       ),
                     );
                   },
@@ -640,13 +640,13 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
           onPressed: _isLoading
               ? null
               : () async {
-                  XFile? result = await Get.bottomSheet(
-                      const SelectCameraGalleryBottomSheet());
+            XFile? result = await Get.bottomSheet(
+                const SelectCameraGalleryBottomSheet());
 
-                  if (result != null) {
-                    _getImage(result);
-                  }
-                },
+            if (result != null) {
+              _getImage(result);
+            }
+          },
           backgroundColor: primaryColor,
           child: SvgPicture.asset(
             'assets/icons/gallery_icon.svg',

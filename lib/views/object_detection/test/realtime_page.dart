@@ -1,1106 +1,3 @@
-// import 'dart:developer';
-// import 'dart:io';
-// import 'dart:math' hide log;
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:flutter_svg/flutter_svg.dart';
-// import 'package:get/get.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:camera/camera.dart';
-// import 'package:seeable/constant/value_constant.dart';
-// import 'package:seeable/views/object_detection/components/object_detection_view.dart';
-// import 'package:seeable/views/object_detection/test/bounding_box_painter.dart';
-// import 'package:seeable/widgets/custom_loading.dart';
-// import 'package:seeable/widgets/main_template.dart';
-// import 'package:seeable/widgets/text_font_style.dart';
-// import 'package:tflite_flutter/tflite_flutter.dart';
-// import 'package:image/image.dart' as img;
-//
-// class RealtimePage extends StatefulWidget {
-//   const RealtimePage({super.key});
-//
-//   @override
-//   State<RealtimePage> createState() => _RealtimePageState();
-// }
-//
-// class _RealtimePageState extends State<RealtimePage> {
-//   File? _imageFile;
-//   int? imageHeight;
-//   int? imageWidth;
-//   bool _isLoading = false;
-//   late Interpreter _interpreter;
-//   late List<String> _labels;
-//   List<Map<String, dynamic>> _recognitions = [];
-//
-//   // Camera related variables
-//   List<CameraDescription>? cameras;
-//   CameraController? cameraController;
-//   bool _isCameraInitialized = false;
-//   bool _isStreamMode = false;
-//   bool _isProcessingFrame = false;
-//   int _processingTime = 0;
-//   int _framesPerSecond = 0;
-//   int _frameCount = 0;
-//   DateTime _lastFpsUpdate = DateTime.now();
-//
-//   final int inputSize = 640;
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadModel();
-//     _initializeCamera();
-//   }
-//
-//   Future<void> _loadModel() async {
-//     try {
-//       // Load YOLOv8n model
-//       _interpreter =
-//       await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
-//       log('Input Shape: ${_interpreter.getInputTensor(0).shape}');
-//       log('Output Shape: ${_interpreter.getOutputTensor(0).shape}');
-//
-//       // Load labels
-//       final labelsData =
-//       await rootBundle.loadString('assets/yolov8_small/yolov8n.txt');
-//       _labels = labelsData.split('\n').where((s) => s.isNotEmpty).toList();
-//       log('Model loaded with ${_labels.length} labels');
-//     } catch (e) {
-//       log('Error loading model: $e');
-//     }
-//   }
-//
-//   Future<void> _initializeCamera() async {
-//     try {
-//       cameras = await availableCameras();
-//       if (cameras != null && cameras!.isNotEmpty) {
-//         cameraController = CameraController(
-//           cameras![0],
-//           ResolutionPreset.medium,
-//           enableAudio: false,
-//           imageFormatGroup: ImageFormatGroup.yuv420,
-//         );
-//
-//         await cameraController!.initialize();
-//
-//         if (!mounted) return;
-//
-//         setState(() {
-//           _isCameraInitialized = true;
-//         });
-//
-//         log('Camera initialized successfully');
-//       } else {
-//         log('No cameras available');
-//       }
-//     } catch (e) {
-//       log('Error initializing camera: $e');
-//     }
-//   }
-//
-//   Future<void> _startCameraStream() async {
-//     if (!_isCameraInitialized || cameraController == null || !cameraController!.value.isInitialized) {
-//       log('Camera not initialized');
-//       return;
-//     }
-//
-//     if (_isStreamMode) return; // Already in stream mode
-//
-//     setState(() {
-//       _isStreamMode = true;
-//       _imageFile = null;
-//       _recognitions = [];
-//     });
-//
-//     // Start image stream
-//     await cameraController!.startImageStream((CameraImage image) {
-//       if (_isProcessingFrame) return; // Skip if still processing a frame
-//
-//       _isProcessingFrame = true;
-//       final startTime = DateTime.now();
-//
-//       _processImageStream(image).then((_) {
-//         final endTime = DateTime.now();
-//         _processingTime = endTime.difference(startTime).inMilliseconds;
-//
-//         // Calculate FPS every second
-//         _frameCount++;
-//         final now = DateTime.now();
-//         if (now.difference(_lastFpsUpdate).inSeconds >= 1) {
-//           _framesPerSecond = _frameCount;
-//           _frameCount = 0;
-//           _lastFpsUpdate = now;
-//
-//           if (mounted) {
-//             setState(() {});
-//           }
-//         }
-//
-//         _isProcessingFrame = false;
-//       }).catchError((e) {
-//         log('Error processing frame: $e');
-//         _isProcessingFrame = false;
-//       });
-//     });
-//   }
-//
-//   Future<void> _stopCameraStream() async {
-//     if (!_isStreamMode) return;
-//
-//     if (cameraController != null && cameraController!.value.isStreamingImages) {
-//       await cameraController!.stopImageStream();
-//     }
-//
-//     setState(() {
-//       _isStreamMode = false;
-//       _recognitions = [];
-//     });
-//   }
-//
-//   Future<void> _processImageStream(CameraImage image) async {
-//     try {
-//       // Store original dimensions
-//       imageHeight = image.height;
-//       imageWidth = image.width;
-//
-//       // Convert CameraImage to img.Image
-//       final img.Image? convertedImage = _convertCameraImage(image);
-//       if (convertedImage == null) return;
-//
-//       // Resize image to model input size
-//       final resizedImage = img.copyResize(
-//         convertedImage,
-//         width: inputSize,
-//         height: inputSize,
-//         interpolation: img.Interpolation.cubic,
-//       );
-//
-//       // Get model shapes
-//       final inputShape = _interpreter.getInputTensor(0).shape;
-//       final outputShape = _interpreter.getOutputTensor(0).shape;
-//
-//       // Determine input format and prepare input
-//       List<List<List<List<double>>>> inputData;
-//       if (inputShape.length == 4 && inputShape[1] == 3) {
-//         // NCHW format [batch, channels, height, width]
-//         inputData = _prepareInputNCHW(resizedImage);
-//       } else {
-//         // NHWC format [batch, height, width, channels]
-//         inputData = _prepareInputNHWC(resizedImage);
-//       }
-//
-//       // Create output container based on shape
-//       List<dynamic> outputData = [];
-//
-//       if (outputShape.length == 3) {
-//         if (outputShape[1] == 84) {
-//           // Format [1, 84, 8400]
-//           var output = List.generate(
-//             outputShape[0],
-//                 (_) => List.generate(
-//               outputShape[1],
-//                   (_) => List<double>.filled(outputShape[2], 0.0),
-//             ),
-//           );
-//           outputData = output;
-//         } else if (outputShape[2] == 84) {
-//           // Format [1, 8400, 84]
-//           var output = List.generate(
-//             outputShape[0],
-//                 (_) => List.generate(
-//               outputShape[1],
-//                   (_) => List<double>.filled(outputShape[2], 0.0),
-//             ),
-//           );
-//           outputData = output;
-//         } else {
-//           log('Unsupported output shape: $outputShape');
-//           return;
-//         }
-//       } else {
-//         log('Unsupported output shape: $outputShape');
-//         return;
-//       }
-//
-//       // Run inference
-//       _interpreter.run(inputData, outputData);
-//
-//       // Process results
-//       final results = _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
-//
-//       if (mounted) {
-//         setState(() {
-//           _recognitions = results;
-//         });
-//       }
-//     } catch (e) {
-//       log('Error processing image stream: $e');
-//     }
-//   }
-//
-//   // Convert CameraImage to img.Image
-//   img.Image? _convertCameraImage(CameraImage cameraImage) {
-//     try {
-//       if (cameraImage.format.group == ImageFormatGroup.yuv420) {
-//         // For YUV420 format (most common)
-//         return _convertYUV420toImage(cameraImage);
-//       } else if (cameraImage.format.group == ImageFormatGroup.bgra8888) {
-//         // For BGRA8888 format
-//         return _convertBGRA8888toImage(cameraImage);
-//       } else {
-//         log('Unsupported image format: ${cameraImage.format.group}');
-//         return null;
-//       }
-//     } catch (e) {
-//       log('Error converting camera image: $e');
-//       return null;
-//     }
-//   }
-//
-//   img.Image _convertYUV420toImage(CameraImage cameraImage) {
-//     final width = cameraImage.width;
-//     final height = cameraImage.height;
-//
-//     // Create an empty image
-//     final convertedImage = img.Image(width: width, height: height);
-//
-//     // YUV (YCbCr) to RGB conversion
-//     final yPlane = cameraImage.planes[0].bytes;
-//     final uPlane = cameraImage.planes[1].bytes;
-//     final vPlane = cameraImage.planes[2].bytes;
-//
-//     final yRowStride = cameraImage.planes[0].bytesPerRow;
-//     final uvRowStride = cameraImage.planes[1].bytesPerRow;
-//     final uvPixelStride = cameraImage.planes[1].bytesPerPixel!;
-//
-//     // Convert each pixel from YUV to RGB
-//     for (int y = 0; y < height; y++) {
-//       for (int x = 0; x < width; x++) {
-//         final int yIndex = y * yRowStride + x;
-//
-//         // UV values need to be sampled at different intervals
-//         final int uvIndex = (y ~/ 2) * uvRowStride + (x ~/ 2) * uvPixelStride;
-//
-//         // YUV values
-//         int yValue = yPlane[yIndex];
-//         final int uValue = uPlane[uvIndex];
-//         final int vValue = vPlane[uvIndex];
-//
-//         // Convert to RGB using standard YUV to RGB formula
-//         // R = Y + 1.402 * (V - 128)
-//         // G = Y - 0.344136 * (U - 128) - 0.714136 * (V - 128)
-//         // B = Y + 1.772 * (U - 128)
-//
-//         int r = yValue + (1.402 * (vValue - 128)).toInt();
-//         int g = yValue - (0.344136 * (uValue - 128)).toInt() - (0.714136 * (vValue - 128)).toInt();
-//         int b = yValue + (1.772 * (uValue - 128)).toInt();
-//
-//         // Clamp RGB values to [0, 255]
-//         r = r.clamp(0, 255);
-//         g = g.clamp(0, 255);
-//         b = b.clamp(0, 255);
-//
-//         // Set pixel in the output image
-//         convertedImage.setPixelRgba(x, y, r, g, b, 255);
-//       }
-//     }
-//
-//     return convertedImage;
-//   }
-//
-//   img.Image _convertBGRA8888toImage(CameraImage cameraImage) {
-//     final width = cameraImage.width;
-//     final height = cameraImage.height;
-//     final bytesPerPixel = 4; // BGRA = 4 bytes per pixel
-//
-//     // Create an empty image
-//     final convertedImage = img.Image(width: width, height: height);
-//
-//     final plane = cameraImage.planes[0];
-//     final pixels = plane.bytes;
-//
-//     for (int y = 0; y < height; y++) {
-//       for (int x = 0; x < width; x++) {
-//         final int pixelIndex = (y * plane.bytesPerRow) + (x * bytesPerPixel);
-//
-//         // BGRA byte order
-//         final int b = pixels[pixelIndex];
-//         final int g = pixels[pixelIndex + 1];
-//         final int r = pixels[pixelIndex + 2];
-//         final int a = pixels[pixelIndex + 3];
-//
-//         // Set pixel in the output image
-//         convertedImage.setPixelRgba(x, y, r, g, b, a);
-//       }
-//     }
-//
-//     return convertedImage;
-//   }
-//
-//   Future<void> _getImage(XFile? pickedFile) async {
-//     // Stop camera stream if active
-//     if (_isStreamMode) {
-//       await _stopCameraStream();
-//     }
-//
-//     setState(() {
-//       _isLoading = true;
-//       _recognitions = [];
-//     });
-//
-//     try {
-//       if (pickedFile != null) {
-//         setState(() {
-//           _imageFile = File(pickedFile.path);
-//         });
-//         await _runObjectDetection();
-//       }
-//     } catch (e) {
-//       log('Error picking image: $e');
-//     } finally {
-//       setState(() {
-//         _isLoading = false;
-//       });
-//     }
-//   }
-//
-//   Future<void> _runObjectDetection() async {
-//     if (_imageFile == null) return;
-//
-//     try {
-//       // Read and decode image
-//       final imageData = await _imageFile!.readAsBytes();
-//       final image = img.decodeImage(imageData);
-//       if (image == null) {
-//         log('Failed to decode image');
-//         return;
-//       }
-//
-//       // Store original dimensions
-//       imageHeight = image.height;
-//       imageWidth = image.width;
-//       log('Original image dimensions: ${imageWidth}x${imageHeight}');
-//
-//       // Get model shapes
-//       final inputShape = _interpreter.getInputTensor(0).shape;
-//       final outputShape = _interpreter.getOutputTensor(0).shape;
-//       log('Model input shape: $inputShape');
-//       log('Model output shape: $outputShape');
-//
-//       // Resize image to model input size
-//       final resizedImage = img.copyResize(
-//         image,
-//         width: inputSize,
-//         height: inputSize,
-//         interpolation: img.Interpolation.cubic,
-//       );
-//       log('Resized to: ${resizedImage.width}x${resizedImage.height}');
-//
-//       // Determine input format (NCHW or NHWC) and prepare input
-//       List<List<List<List<double>>>> inputData;
-//       if (inputShape.length == 4 && inputShape[1] == 3) {
-//         // NCHW format [batch, channels, height, width]
-//         log('Using NCHW input format');
-//         inputData = _prepareInputNCHW(resizedImage);
-//       } else {
-//         // NHWC format [batch, height, width, channels]
-//         log('Using NHWC input format');
-//         inputData = _prepareInputNHWC(resizedImage);
-//       }
-//
-//       // Create output container based on shape
-//       List<dynamic> outputData = [];
-//
-//       if (outputShape.length == 3) {
-//         if (outputShape[1] == 84) {
-//           // Format [1, 84, 8400]
-//           log('Output format: [1, 84, 8400]');
-//           var output = List.generate(
-//             outputShape[0],
-//                 (_) => List.generate(
-//               outputShape[1],
-//                   (_) => List<double>.filled(outputShape[2], 0.0),
-//             ),
-//           );
-//           outputData = output;
-//         } else if (outputShape[2] == 84) {
-//           // Format [1, 8400, 84]
-//           log('Output format: [1, 8400, 84]');
-//           var output = List.generate(
-//             outputShape[0],
-//                 (_) => List.generate(
-//               outputShape[1],
-//                   (_) => List<double>.filled(outputShape[2], 0.0),
-//             ),
-//           );
-//           outputData = output;
-//         } else {
-//           log('Unsupported output shape: $outputShape');
-//           return;
-//         }
-//       } else {
-//         log('Unsupported output shape: $outputShape');
-//         return;
-//       }
-//
-//       // Run inference
-//       log('Running inference...');
-//       _interpreter.run(inputData, outputData);
-//
-//       // For debugging: log a sample of the raw output
-//       if (outputShape[1] == 84) {
-//         log('Sample output [0][0][0]: ${outputData[0][0][0]}');
-//         log('Sample output [0][1][0]: ${outputData[0][1][0]}');
-//         log('Sample output [0][2][0]: ${outputData[0][2][0]}');
-//         log('Sample output [0][3][0]: ${outputData[0][3][0]}');
-//       } else if (outputShape[2] == 84) {
-//         log('Sample output [0][0][0]: ${outputData[0][0][0]}');
-//         log('Sample output [0][0][1]: ${outputData[0][0][1]}');
-//         log('Sample output [0][0][2]: ${outputData[0][0][2]}');
-//         log('Sample output [0][0][3]: ${outputData[0][0][3]}');
-//       }
-//
-//       // Process results
-//       final results =
-//       _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
-//
-//       // Apply scaling factor if the detection was performed on a resized image
-//       final List<Map<String, dynamic>> scaledResults = results.map((detection) {
-//         final List<int> bbox = List<int>.from(detection['bbox']);
-//
-//         // Log the original bounding box
-//         log('Original bbox: $bbox');
-//
-//         return {
-//           'bbox': bbox,
-//           'confidence': detection['confidence'],
-//           'class': detection['class'],
-//           'label': detection['label'],
-//         };
-//       }).toList();
-//
-//       setState(() {
-//         _recognitions = scaledResults;
-//         log('Found ${_recognitions.length} objects');
-//         // Debug output for the first detection
-//         if (_recognitions.isNotEmpty) {
-//           log('First detection: ${_recognitions[0]}');
-//         }
-//       });
-//     } catch (e) {
-//       log('Error running object detection: $e');
-//     }
-//   }
-//
-//   // Prepare input in NCHW format [batch, channels, height, width]
-//   List<List<List<List<double>>>> _prepareInputNCHW(img.Image image) {
-//     return List.generate(
-//       1, // batch size
-//           (_) => List.generate(
-//         3, // channels (RGB)
-//             (c) => List.generate(
-//           inputSize, // height
-//               (y) => List.generate(
-//             inputSize, // width
-//                 (x) {
-//               final pixel = image.getPixel(x, y);
-//               if (c == 0) return pixel.r / 255.0; // Red channel
-//               if (c == 1) return pixel.g / 255.0; // Green channel
-//               return pixel.b / 255.0; // Blue channel
-//             },
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   // Prepare input in NHWC format [batch, height, width, channels]
-//   List<List<List<List<double>>>> _prepareInputNHWC(img.Image image) {
-//     return List.generate(
-//       1, // batch size
-//           (_) => List.generate(
-//         inputSize, // height
-//             (y) => List.generate(
-//           inputSize, // width
-//               (x) => List.generate(
-//             3, // channels (RGB)
-//                 (c) {
-//               final pixel = image.getPixel(x, y);
-//               if (c == 0) return pixel.r / 255.0; // Red channel
-//               if (c == 1) return pixel.g / 255.0; // Green channel
-//               return pixel.b / 255.0; // Blue channel
-//             },
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-//
-//   List<Map<String, dynamic>> _processOutputs(List<dynamic> outputData,
-//       List<int> outputShape, int sourceWidth, int sourceHeight) {
-//     const confidenceThreshold = 0.25;
-//     const iouThreshold = 0.45;
-//     List<Map<String, dynamic>> detections = [];
-//
-//     try {
-//       // Option 1: Transpose-style output (shape [1, 84, 8400])
-//       if (outputShape.length == 3 && outputShape[1] == 84) {
-//         final numClasses = min(outputShape[1] - 4, 80); // Cap at 80 classes
-//         final numBoxes = outputShape[2];
-//
-//         log('Processing transpose-style output: $numBoxes boxes, $numClasses classes');
-//
-//         for (int i = 0; i < numBoxes; i++) {
-//           try {
-//             // Get bbox coordinates
-//             final x = outputData[0][0][i] as double; // Center x
-//             final y = outputData[0][1][i] as double; // Center y
-//             final w = outputData[0][2][i] as double; // Width
-//             final h = outputData[0][3][i] as double; // Height
-//
-//             // Find class with highest confidence
-//             double maxConfidence = 0;
-//             int classId = 0;
-//
-//             for (int c = 0; c < numClasses; c++) {
-//               final confidence = outputData[0][4 + c][i] as double;
-//               if (confidence > maxConfidence) {
-//                 maxConfidence = confidence;
-//                 classId = c;
-//               }
-//             }
-//
-//             // Log some samples for debugging
-//             if (i < 3 && maxConfidence > confidenceThreshold) {
-//               log('Sample detection $i: x=$x, y=$y, w=$w, h=$h, conf=$maxConfidence, class=$classId');
-//             }
-//
-//             // Filter by confidence threshold
-//             if (maxConfidence > confidenceThreshold) {
-//               final label =
-//               classId < _labels.length ? _labels[classId] : 'Unknown';
-//
-//               // Skip unknown labels
-//               if (label == 'Unknown') {
-//                 log('Skipping Unknown label detection');
-//                 continue;
-//               }
-//
-//               // YOLOv8 outputs normalized coordinates (0-1)
-//               // Determine if coordinates are normalized (0-1) or absolute
-//               double normalizedX = x;
-//               double normalizedY = y;
-//               double normalizedW = w;
-//               double normalizedH = h;
-//
-//               // Check if inputs might be in input size coordinates (0-640)
-//               if (x > 1.0 || y > 1.0 || w > 1.0 || h > 1.0) {
-//                 if (x <= inputSize &&
-//                     y <= inputSize &&
-//                     w <= inputSize &&
-//                     h <= inputSize) {
-//                   // Values are probably in input size space (0-640)
-//                   normalizedX = x / inputSize;
-//                   normalizedY = y / inputSize;
-//                   normalizedW = w / inputSize;
-//                   normalizedH = h / inputSize;
-//                   log('Normalizing from input size space: $x,$y,$w,$h -> $normalizedX,$normalizedY,$normalizedW,$normalizedH');
-//                 } else if (x <= sourceWidth && y <= sourceHeight) {
-//                   // Values might be in source image space
-//                   normalizedX = x / sourceWidth;
-//                   normalizedY = y / sourceHeight;
-//                   normalizedW = w / sourceWidth;
-//                   normalizedH = h / sourceHeight;
-//                   log('Normalizing from source image space');
-//                 } else {
-//                   // Values are using some other scale we don't understand
-//                   // Use a different approach - try to estimate the scale
-//                   double estimatedScale = max(
-//                     max(x, y) / max(sourceWidth, sourceHeight),
-//                     max(w, h) / max(sourceWidth, sourceHeight),
-//                   );
-//                   normalizedX = x / (estimatedScale * sourceWidth);
-//                   normalizedY = y / (estimatedScale * sourceHeight);
-//                   normalizedW = w / (estimatedScale * sourceWidth);
-//                   normalizedH = h / (estimatedScale * sourceHeight);
-//                   log('Using estimated scale normalization: $estimatedScale');
-//                 }
-//               }
-//
-//               // Convert normalized coordinates to pixel values on the original image
-//               final xmin =
-//               ((normalizedX - normalizedW / 2) * sourceWidth).round();
-//               final ymin =
-//               ((normalizedY - normalizedH / 2) * sourceHeight).round();
-//               final xmax =
-//               ((normalizedX + normalizedW / 2) * sourceWidth).round();
-//               final ymax =
-//               ((normalizedY + normalizedH / 2) * sourceHeight).round();
-//
-//               // Clamp values to ensure they're within image boundaries
-//               final finalXmin = xmin.clamp(0, sourceWidth - 1);
-//               final finalYmin = ymin.clamp(0, sourceHeight - 1);
-//               final finalXmax = xmax.clamp(0, sourceWidth - 1);
-//               final finalYmax = ymax.clamp(0, sourceHeight - 1);
-//
-//               // Log the bbox conversion for the first few detections
-//               if (i < 3) {
-//                 log('BBox conversion: [$normalizedX, $normalizedY, $normalizedW, $normalizedH] -> [$finalXmin, $finalYmin, $finalXmax, $finalYmax]');
-//               }
-//
-//               detections.add({
-//                 'bbox': [finalXmin, finalYmin, finalXmax, finalYmax],
-//                 'confidence': maxConfidence,
-//                 'class': classId,
-//                 'label': label,
-//               });
-//             }
-//           } catch (e) {
-//             log('Error processing detection $i: $e');
-//           }
-//         }
-//       }
-//       // Option 2: Box-first output (shape [1, 8400, 84])
-//       else if (outputShape.length == 3 && outputShape[2] == 84) {
-//         final numBoxes = outputShape[1];
-//         final numClasses = min(outputShape[2] - 4, 80); // Cap at 80 classes
-//
-//         log('Processing box-first output: $numBoxes boxes, $numClasses classes');
-//
-//         for (int i = 0; i < numBoxes; i++) {
-//           try {
-//             // Get bbox coordinates
-//             final x = outputData[0][i][0] as double; // Center x
-//             final y = outputData[0][i][1] as double; // Center y
-//             final w = outputData[0][i][2] as double; // Width
-//             final h = outputData[0][i][3] as double; // Height
-//
-//             // Find class with highest confidence
-//             double maxConfidence = 0;
-//             int classId = 0;
-//
-//             for (int c = 0; c < numClasses; c++) {
-//               final confidence = outputData[0][i][4 + c] as double;
-//               if (confidence > maxConfidence) {
-//                 maxConfidence = confidence;
-//                 classId = c;
-//               }
-//             }
-//
-//             // Log some samples for debugging
-//             if (i < 3 && maxConfidence > confidenceThreshold) {
-//               log('Sample detection $i: x=$x, y=$y, w=$w, h=$h, conf=$maxConfidence, class=$classId');
-//             }
-//
-//             // Filter by confidence threshold
-//             if (maxConfidence > confidenceThreshold) {
-//               final label =
-//               classId < _labels.length ? _labels[classId] : 'Unknown';
-//
-//               // Skip unknown labels
-//               if (label == 'Unknown') {
-//                 log('Skipping Unknown label detection');
-//                 continue;
-//               }
-//
-//               // Determine if coordinates are normalized (0-1) or absolute
-//               double normalizedX = x;
-//               double normalizedY = y;
-//               double normalizedW = w;
-//               double normalizedH = h;
-//
-//               // Check if inputs might be in input size coordinates (0-640)
-//               if (x > 1.0 || y > 1.0 || w > 1.0 || h > 1.0) {
-//                 if (x <= inputSize &&
-//                     y <= inputSize &&
-//                     w <= inputSize &&
-//                     h <= inputSize) {
-//                   // Values are probably in input size space (0-640)
-//                   normalizedX = x / inputSize;
-//                   normalizedY = y / inputSize;
-//                   normalizedW = w / inputSize;
-//                   normalizedH = h / inputSize;
-//                   log('Normalizing from input size space: $x,$y,$w,$h -> $normalizedX,$normalizedY,$normalizedW,$normalizedH');
-//                 } else if (x <= sourceWidth && y <= sourceHeight) {
-//                   // Values might be in source image space
-//                   normalizedX = x / sourceWidth;
-//                   normalizedY = y / sourceHeight;
-//                   normalizedW = w / sourceWidth;
-//                   normalizedH = h / sourceHeight;
-//                   log('Normalizing from source image space');
-//                 } else {
-//                   // Values are using some other scale we don't understand
-//                   // Use a different approach - try to estimate the scale
-//                   double estimatedScale = max(
-//                     max(x, y) / max(sourceWidth, sourceHeight),
-//                     max(w, h) / max(sourceWidth, sourceHeight),
-//                   );
-//                   normalizedX = x / (estimatedScale * sourceWidth);
-//                   normalizedY = y / (estimatedScale * sourceHeight);
-//                   normalizedW = w / (estimatedScale * sourceWidth);
-//                   normalizedH = h / (estimatedScale * sourceHeight);
-//                   log('Using estimated scale normalization: $estimatedScale');
-//                 }
-//               }
-//
-//               // Convert normalized coordinates to pixel values on the original image
-//               final xmin =
-//               ((normalizedX - normalizedW / 2) * sourceWidth).round();
-//               final ymin =
-//               ((normalizedY - normalizedH / 2) * sourceHeight).round();
-//               final xmax =
-//               ((normalizedX + normalizedW / 2) * sourceWidth).round();
-//               final ymax =
-//               ((normalizedY + normalizedH / 2) * sourceHeight).round();
-//
-//               // Clamp values to ensure they're within image boundaries
-//               final finalXmin = xmin.clamp(0, sourceWidth - 1);
-//               final finalYmin = ymin.clamp(0, sourceHeight - 1);
-//               final finalXmax = xmax.clamp(0, sourceWidth - 1);
-//               final finalYmax = ymax.clamp(0, sourceHeight - 1);
-//
-//               // Log the bbox conversion for the first few detections
-//               if (i < 3) {
-//                 log('BBox conversion: [$normalizedX, $normalizedY, $normalizedW, $normalizedH] -> [$finalXmin, $finalYmin, $finalXmax, $finalYmax]');
-//               }
-//
-//               detections.add({
-//                 'bbox': [finalXmin, finalYmin, finalXmax, finalYmax],
-//                 'confidence': maxConfidence,
-//                 'class': classId,
-//                 'label': label,
-//               });
-//             }
-//           } catch (e) {
-//             log('Error processing detection $i: $e');
-//           }
-//         }
-//       }
-//     } catch (e) {
-//       log('Error processing detections: $e');
-//     }
-//
-//     // Apply non-maximum suppression
-//     final filteredDetections = _nonMaxSuppression(detections, iouThreshold);
-//     log('After NMS: ${filteredDetections.length} detections remaining');
-//
-//     return filteredDetections;
-//   }
-//
-//   List<Map<String, dynamic>> _nonMaxSuppression(
-//       List<Map<String, dynamic>> detections, double iouThreshold) {
-//     // Sort by confidence
-//     detections.sort((a, b) => b['confidence'].compareTo(a['confidence']));
-//
-//     final List<Map<String, dynamic>> result = [];
-//
-//     for (int i = 0; i < detections.length; i++) {
-//       bool shouldKeep = true;
-//
-//       for (final kept in result) {
-//         final iou = _calculateIoU(
-//           List<int>.from(detections[i]['bbox']), // Explicitly cast to List<int>
-//           List<int>.from(kept['bbox']), // Explicitly cast to List<int>
-//         );
-//
-//         if (iou > iouThreshold) {
-//           shouldKeep = false;
-//           break;
-//         }
-//       }
-//
-//       if (shouldKeep) {
-//         result.add(detections[i]);
-//       }
-//     }
-//
-//     return result;
-//   }
-//
-//   double _calculateIoU(List<int> box1, List<int> box2) {
-//     // Calculate intersection area
-//     final int xmin = max(box1[0], box2[0]);
-//     final int ymin = max(box1[1], box2[1]);
-//     final int xmax = min(box1[2], box2[2]);
-//     final int ymax = min(box1[3], box2[3]);
-//
-//     if (xmin >= xmax || ymin >= ymax) return 0.0;
-//
-//     final intersectionArea = (xmax - xmin) * (ymax - ymin);
-//
-//     // Calculate union area
-//     final box1Area = (box1[2] - box1[0]) * (box1[3] - box1[1]);
-//     final box2Area = (box2[2] - box2[0]) * (box2[3] - box2[1]);
-//
-//     final unionArea = box1Area + box2Area - intersectionArea;
-//
-//     return intersectionArea / unionArea;
-//   }
-//
-//   // Create a widget to display camera preview with bounding boxes
-//   Widget _buildCameraView() {
-//     if (!_isCameraInitialized || cameraController == null) {
-//       return const Center(
-//         child: Text('Camera initializing...'),
-//       );
-//     }
-//
-//     return Stack(
-//       children: [
-//         // Camera preview
-//         CameraPreview(cameraController!),
-//
-//         // Bounding boxes overlay
-//         if (_recognitions.isNotEmpty)
-//           CustomPaint(
-//             size: Size(imageWidth?.toDouble() ?? 1, imageHeight?.toDouble() ?? 1),
-//             painter: BoundingBoxPainter(
-//               recognitions: _recognitions,
-//               imageWidth: imageWidth?.toDouble() ?? 1,
-//               imageHeight: imageHeight?.toDouble() ?? 1,
-//               screenWidth: MediaQuery.of(context).size.width,
-//               screenHeight: MediaQuery.of(context).size.width *
-//                   (imageHeight?.toDouble() ?? 1) / (imageWidth?.toDouble() ?? 1),
-//             ),
-//           ),
-//
-//         // FPS and processing time indicator
-//         Positioned(
-//           top: 10,
-//           right: 10,
-//           child: Container(
-//             padding: const EdgeInsets.all(8),
-//             decoration: BoxDecoration(
-//               color: Colors.black.withOpacity(0.6),
-//               borderRadius: BorderRadius.circular(8),
-//             ),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.end,
-//               children: [
-//                 Text(
-//                   'FPS: $_framesPerSecond',
-//                   style: const TextStyle(color: Colors.white),
-//                 ),
-//                 Text(
-//                   'Process: $_processingTime ms',
-//                   style: const TextStyle(color: Colors.white),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return MainTemplate(
-//       appBarTitle: 'object detection'.tr,
-//       body: SafeArea(
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.center,
-//           children: [
-//             Expanded(
-//               child: _isLoading
-//                   ? const CustomLoading()
-//                   : _isStreamMode
-//                   ? _buildCameraView()
-//                   : _imageFile == null
-//                   ? InkWell(
-//                 onTap: _isLoading
-//                     ? null
-//                     : () async {
-//                   // Show options: Camera stream, Camera photo, Gallery
-//                   final choice = await showDialog<String>(
-//                     context: context,
-//                     builder: (BuildContext context) {
-//                       return SimpleDialog(
-//                         title: Text('Select source'.tr),
-//                         children: <Widget>[
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'stream');
-//                             },
-//                             child: Text('Camera stream'.tr),
-//                           ),
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'camera');
-//                             },
-//                             child: Text('Take photo'.tr),
-//                           ),
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'gallery');
-//                             },
-//                             child: Text('Gallery'.tr),
-//                           ),
-//                         ],
-//                       );
-//                     },
-//                   );
-//
-//                   if (choice == 'stream') {
-//                     _startCameraStream();
-//                   } else if (choice == 'camera' || choice == 'gallery') {
-//                     final source = choice == 'camera'
-//                         ? ImageSource.camera
-//                         : ImageSource.gallery;
-//                     final imagePicker = ImagePicker();
-//                     final pickedFile = await imagePicker.pickImage(source: source);
-//                     if (pickedFile != null) {
-//                       _getImage(pickedFile);
-//                     }
-//                   }
-//                 },
-//                 child: Center(
-//                   child: Column(
-//                     mainAxisAlignment: MainAxisAlignment.center,
-//                     children: [
-//                       SvgPicture.asset(
-//                         'assets/icons/gallery_icon.svg',
-//                         color: primaryColor,
-//                         height: 100.0,
-//                       ),
-//                       const SizedBox(height: margin),
-//                       TextFontStyle(
-//                         'select detection mode'.tr,
-//                         size: fontSizeXL,
-//                         color: primaryColor,
-//                       ),
-//                     ],
-//                   ),
-//                 ),
-//               )
-//                   : ObjectDetectionView(
-//                 imageFile: _imageFile!,
-//                 imageHeight: imageHeight!,
-//                 imageWidth: imageWidth!,
-//                 recognitions: _recognitions,
-//               ),
-//             ),
-//
-//             // Detection results (only show in image mode, not in stream mode)
-//             if (_recognitions.isNotEmpty && !_isStreamMode)
-//               Container(
-//                 height: 200.0,
-//                 padding: const EdgeInsets.all(8),
-//                 child: ListView.builder(
-//                   itemCount: _recognitions.length,
-//                   physics: const BouncingScrollPhysics(),
-//                   itemBuilder: (context, index) {
-//                     final recognition = _recognitions[index];
-//                     return ListTile(
-//                       dense: true,
-//                       title: TextFontStyle(
-//                         '${recognition['label']}',
-//                         size: fontSizeM,
-//                         weight: FontWeight.bold,
-//                       ),
-//                       subtitle: TextFontStyle(
-//                           'Confidence: ${(recognition['confidence'] * 100).toStringAsFixed(1)}%'),
-//                       leading: Container(
-//                         width: 50.0,
-//                         height: 50.0,
-//                         color: Colors.primaries[
-//                         recognition['class'] % Colors.primaries.length],
-//                       ),
-//                     );
-//                   },
-//                 ),
-//               ),
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: Stack(
-//         children: [
-//           // Show back button when in stream mode to exit
-//           if (_isStreamMode)
-//             Positioned(
-//               bottom: 16,
-//               right: 16,
-//               child: FloatingActionButton(
-//                 heroTag: 'backButton',
-//                 onPressed: _stopCameraStream,
-//                 backgroundColor: Colors.red,
-//                 child: const Icon(Icons.stop),
-//               ),
-//             ),
-//
-//           // Show image picker button when not in stream mode and have an image
-//           if (!_isStreamMode && _imageFile != null)
-//             Positioned(
-//               bottom: 16,
-//               right: 16,
-//               child: FloatingActionButton(
-//                 heroTag: 'changeImageButton',
-//                 onPressed: _isLoading
-//                     ? null
-//                     : () async {
-//                   final choice = await showDialog<String>(
-//                     context: context,
-//                     builder: (BuildContext context) {
-//                       return SimpleDialog(
-//                         title: Text('Select source'.tr),
-//                         children: <Widget>[
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'stream');
-//                             },
-//                             child: Text('Camera stream'.tr),
-//                           ),
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'camera');
-//                             },
-//                             child: Text('Take photo'.tr),
-//                           ),
-//                           SimpleDialogOption(
-//                             onPressed: () {
-//                               Navigator.pop(context, 'gallery');
-//                             },
-//                             child: Text('Gallery'.tr),
-//                           ),
-//                         ],
-//                       );
-//                     },
-//                   );
-//
-//                   if (choice == 'stream') {
-//                     _startCameraStream();
-//                   } else if (choice == 'camera' || choice == 'gallery') {
-//                     final source = choice == 'camera'
-//                         ? ImageSource.camera
-//                         : ImageSource.gallery;
-//                     final imagePicker = ImagePicker();
-//                     final pickedFile = await imagePicker.pickImage(source: source);
-//                     if (pickedFile != null) {
-//                       _getImage(pickedFile);
-//                     }
-//                   }
-//                 },
-//                 backgroundColor: primaryColor,
-//                 child: SvgPicture.asset(
-//                   'assets/icons/gallery_icon.svg',
-//                   color: Colors.white,
-//                   height: 28.0,
-//                 ),
-//               ),
-//             ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   @override
-//   void dispose() {
-//     _interpreter.close();
-//     cameraController?.dispose();
-//     super.dispose();
-//   }
-// }
-
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
@@ -1115,7 +12,6 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/object_detection/components/object_detection_view.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
-import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
@@ -1165,13 +61,13 @@ class _RealtimePageState extends State<RealtimePage> {
     try {
       // Load YOLOv8n model
       _interpreter =
-      await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
+          await Interpreter.fromAsset('assets/yolov8_small/yolov8n.tflite');
       log('Input Shape: ${_interpreter.getInputTensor(0).shape}');
       log('Output Shape: ${_interpreter.getOutputTensor(0).shape}');
 
       // Load labels
       final labelsData =
-      await rootBundle.loadString('assets/yolov8_small/yolov8n.txt');
+          await rootBundle.loadString('assets/yolov8_small/yolov8n.txt');
       _labels = labelsData.split('\n').where((s) => s.isNotEmpty).toList();
       log('Model loaded with ${_labels.length} labels');
     } catch (e) {
@@ -1208,7 +104,9 @@ class _RealtimePageState extends State<RealtimePage> {
   }
 
   Future<void> _startIntervalCapture() async {
-    if (!_isCameraInitialized || cameraController == null || !cameraController!.value.isInitialized) {
+    if (!_isCameraInitialized ||
+        cameraController == null ||
+        !cameraController!.value.isInitialized) {
       log('Camera not initialized');
       return;
     }
@@ -1223,7 +121,7 @@ class _RealtimePageState extends State<RealtimePage> {
       // เริ่มกล้องใหม่ด้วยความละเอียดต่ำ
       cameraController = CameraController(
         cameras![0],
-        ResolutionPreset.low, // ใช้ความละเอียดต่ำในโหมดถ่ายภาพเป็นช่วงเวลา
+        ResolutionPreset.low,
         enableAudio: false,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
@@ -1245,12 +143,13 @@ class _RealtimePageState extends State<RealtimePage> {
     });
 
     // เริ่มตัวจับเวลาสำหรับการถ่ายภาพเป็นช่วงเวลา
-    _captureTimer = Timer.periodic(Duration(seconds: _captureInterval), (timer) {
+    _captureTimer =
+        Timer.periodic(Duration(seconds: _captureInterval), (timer) {
       _captureAndDetect();
     });
 
-    // ถ่ายภาพทันทีสำหรับเฟรมแรก
-    _captureAndDetect();
+    // // ถ่ายภาพทันทีสำหรับเฟรมแรก
+    // _captureAndDetect();
   }
 
   Future<void> _stopIntervalCapture() async {
@@ -1450,9 +349,9 @@ class _RealtimePageState extends State<RealtimePage> {
           // Format [1, 84, 8400]
           var output = List.generate(
             outputShape[0],
-                (_) => List.generate(
+            (_) => List.generate(
               outputShape[1],
-                  (_) => List<double>.filled(outputShape[2], 0.0),
+              (_) => List<double>.filled(outputShape[2], 0.0),
             ),
           );
           outputData = output;
@@ -1460,9 +359,9 @@ class _RealtimePageState extends State<RealtimePage> {
           // Format [1, 8400, 84]
           var output = List.generate(
             outputShape[0],
-                (_) => List.generate(
+            (_) => List.generate(
               outputShape[1],
-                  (_) => List<double>.filled(outputShape[2], 0.0),
+              (_) => List<double>.filled(outputShape[2], 0.0),
             ),
           );
           outputData = output;
@@ -1481,11 +380,13 @@ class _RealtimePageState extends State<RealtimePage> {
       _interpreter.run(inputData, outputData);
 
       // ประมวลผลผลลัพธ์
-      final results = _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
+      final results =
+          _processOutputs(outputData, outputShape, imageWidth!, imageHeight!);
 
       // ลดจำนวนผลลัพธ์ถ้ามีมากเกินไป (เพื่อประหยัดหน่วยความจำ)
       List<Map<String, dynamic>> limitedResults = results;
-      if (results.length > 20) {  // จำกัดเหลือ 20 วัตถุที่มีความเชื่อมั่นสูงสุด
+      if (results.length > 20) {
+        // จำกัดเหลือ 20 วัตถุที่มีความเชื่อมั่นสูงสุด
         limitedResults = results.sublist(0, 20);
       }
 
@@ -1501,7 +402,6 @@ class _RealtimePageState extends State<RealtimePage> {
       // inputData = null; // ไม่ต้องล้างอย่างนี้
       // outputData = null; // ไม่ต้องล้างอย่างนี้
       // results.clear(); // ไม่จำเป็นต้องล้าง เพราะตัวแปรจะหมดอายุเมื่อออกจากฟังก์ชัน
-
     } catch (e) {
       log('Error running object detection: $e');
     } finally {
@@ -1513,13 +413,13 @@ class _RealtimePageState extends State<RealtimePage> {
   List<List<List<List<double>>>> _prepareInputNCHW(img.Image image) {
     return List.generate(
       1, // batch size
-          (_) => List.generate(
+      (_) => List.generate(
         3, // channels (RGB)
-            (c) => List.generate(
+        (c) => List.generate(
           inputSize, // height
-              (y) => List.generate(
+          (y) => List.generate(
             inputSize, // width
-                (x) {
+            (x) {
               final pixel = image.getPixel(x, y);
               if (c == 0) return pixel.r / 255.0; // Red channel
               if (c == 1) return pixel.g / 255.0; // Green channel
@@ -1535,13 +435,13 @@ class _RealtimePageState extends State<RealtimePage> {
   List<List<List<List<double>>>> _prepareInputNHWC(img.Image image) {
     return List.generate(
       1, // batch size
-          (_) => List.generate(
+      (_) => List.generate(
         inputSize, // height
-            (y) => List.generate(
+        (y) => List.generate(
           inputSize, // width
-              (x) => List.generate(
+          (x) => List.generate(
             3, // channels (RGB)
-                (c) {
+            (c) {
               final pixel = image.getPixel(x, y);
               if (c == 0) return pixel.r / 255.0; // Red channel
               if (c == 1) return pixel.g / 255.0; // Green channel
@@ -1590,7 +490,7 @@ class _RealtimePageState extends State<RealtimePage> {
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
-              classId < _labels.length ? _labels[classId] : 'Unknown';
+                  classId < _labels.length ? _labels[classId] : 'Unknown';
 
               // Skip unknown labels
               if (label == 'Unknown') {
@@ -1637,13 +537,13 @@ class _RealtimePageState extends State<RealtimePage> {
 
               // Convert normalized coordinates to pixel values on the original image
               final xmin =
-              ((normalizedX - normalizedW / 2) * sourceWidth).round();
+                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
               final ymin =
-              ((normalizedY - normalizedH / 2) * sourceHeight).round();
+                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
               final xmax =
-              ((normalizedX + normalizedW / 2) * sourceWidth).round();
+                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
               final ymax =
-              ((normalizedY + normalizedH / 2) * sourceHeight).round();
+                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
 
               // Clamp values to ensure they're within image boundaries
               final finalXmin = xmin.clamp(0, sourceWidth - 1);
@@ -1693,7 +593,7 @@ class _RealtimePageState extends State<RealtimePage> {
             // Filter by confidence threshold
             if (maxConfidence > confidenceThreshold) {
               final label =
-              classId < _labels.length ? _labels[classId] : 'Unknown';
+                  classId < _labels.length ? _labels[classId] : 'Unknown';
 
               // Skip unknown labels
               if (label == 'Unknown') {
@@ -1739,13 +639,13 @@ class _RealtimePageState extends State<RealtimePage> {
 
               // Convert normalized coordinates to pixel values on the original image
               final xmin =
-              ((normalizedX - normalizedW / 2) * sourceWidth).round();
+                  ((normalizedX - normalizedW / 2) * sourceWidth).round();
               final ymin =
-              ((normalizedY - normalizedH / 2) * sourceHeight).round();
+                  ((normalizedY - normalizedH / 2) * sourceHeight).round();
               final xmax =
-              ((normalizedX + normalizedW / 2) * sourceWidth).round();
+                  ((normalizedX + normalizedW / 2) * sourceWidth).round();
               final ymax =
-              ((normalizedY + normalizedH / 2) * sourceHeight).round();
+                  ((normalizedY + normalizedH / 2) * sourceHeight).round();
 
               // Clamp values to ensure they're within image boundaries
               final finalXmin = xmin.clamp(0, sourceWidth - 1);
@@ -1845,7 +745,8 @@ class _RealtimePageState extends State<RealtimePage> {
             child: Container(
               color: Colors.black.withOpacity(0.1),
               child: IntervalDetectionView(
-                key: UniqueKey(), // ใช้ UniqueKey เพื่อบังคับให้สร้างใหม่ทุกครั้ง
+                key: UniqueKey(),
+                // ใช้ UniqueKey เพื่อบังคับให้สร้างใหม่ทุกครั้ง
                 imageFile: _imageFile!,
                 imageHeight: imageHeight ?? 1,
                 imageWidth: imageWidth ?? 1,
@@ -1907,80 +808,97 @@ class _RealtimePageState extends State<RealtimePage> {
               child: _isLoading
                   ? const CustomLoading()
                   : _isIntervalMode
-                  ? _buildIntervalCaptureView()
-                  : _imageFile == null
-                  ? InkWell(
-                onTap: _isLoading
-                    ? null
-                    : () async {
-                  // Show options: Camera interval, Camera photo, Gallery
-                  final choice = await showDialog<String>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SimpleDialog(
-                        title: Text('Select source'.tr),
-                        children: <Widget>[
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'interval');
-                            },
-                            child: Text('Camera interval capture (1s)'.tr),
-                          ),
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'camera');
-                            },
-                            child: Text('Take photo'.tr),
-                          ),
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'gallery');
-                            },
-                            child: Text('Gallery'.tr),
-                          ),
-                        ],
-                      );
-                    },
-                  );
+                      ? _buildIntervalCaptureView()
+                      : _imageFile == null
+                          ? InkWell(
+                              onTap: _isLoading
+                                  ? null
+                                  : () async {
+                                      // Show options: Camera interval, Camera photo, Gallery
+                                      final choice = await showDialog<String>(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return SimpleDialog(
+                                            title: TextFontStyle(
+                                              'upload photo'.tr,
+                                              size: fontSizeXL,
+                                            ),
+                                            children: <Widget>[
+                                              SimpleDialogOption(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                      context, 'interval');
+                                                },
+                                                child: TextFontStyle(
+                                                  'real time'.tr,
+                                                  size: fontSizeL,
+                                                ),
+                                              ),
+                                              SimpleDialogOption(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                      context, 'camera');
+                                                },
+                                                child: TextFontStyle(
+                                                  'camera'.tr,
+                                                  size: fontSizeL,
+                                                ),
+                                              ),
+                                              SimpleDialogOption(
+                                                onPressed: () {
+                                                  Navigator.pop(
+                                                      context, 'gallery');
+                                                },
+                                                child: TextFontStyle(
+                                                  'gallery'.tr,
+                                                  size: fontSizeL,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
 
-                  if (choice == 'interval') {
-                    _startIntervalCapture();
-                  } else if (choice == 'camera' || choice == 'gallery') {
-                    final source = choice == 'camera'
-                        ? ImageSource.camera
-                        : ImageSource.gallery;
-                    final imagePicker = ImagePicker();
-                    final pickedFile = await imagePicker.pickImage(source: source);
-                    if (pickedFile != null) {
-                      _getImage(pickedFile);
-                    }
-                  }
-                },
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/icons/gallery_icon.svg',
-                        color: primaryColor,
-                        height: 100.0,
-                      ),
-                      const SizedBox(height: margin),
-                      TextFontStyle(
-                        'select detection mode'.tr,
-                        size: fontSizeXL,
-                        color: primaryColor,
-                      ),
-                    ],
-                  ),
-                ),
-              )
-                  : ObjectDetectionView(
-                imageFile: _imageFile!,
-                imageHeight: imageHeight!,
-                imageWidth: imageWidth!,
-                recognitions: _recognitions,
-              ),
+                                      if (choice == 'interval') {
+                                        _startIntervalCapture();
+                                      } else if (choice == 'camera' ||
+                                          choice == 'gallery') {
+                                        final source = choice == 'camera'
+                                            ? ImageSource.camera
+                                            : ImageSource.gallery;
+                                        final imagePicker = ImagePicker();
+                                        final pickedFile = await imagePicker
+                                            .pickImage(source: source);
+                                        if (pickedFile != null) {
+                                          _getImage(pickedFile);
+                                        }
+                                      }
+                                    },
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SvgPicture.asset(
+                                      'assets/icons/gallery_icon.svg',
+                                      color: primaryColor,
+                                      height: 100.0,
+                                    ),
+                                    const SizedBox(height: margin),
+                                    TextFontStyle(
+                                      'upload photo'.tr,
+                                      size: fontSizeXL,
+                                      color: primaryColor,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : ObjectDetectionView(
+                              imageFile: _imageFile!,
+                              imageHeight: imageHeight!,
+                              imageWidth: imageWidth!,
+                              recognitions: _recognitions,
+                            ),
             ),
 
             // Detection results (only show in image mode, not in interval mode)
@@ -2006,7 +924,7 @@ class _RealtimePageState extends State<RealtimePage> {
                         width: 50.0,
                         height: 50.0,
                         color: Colors.primaries[
-                        recognition['class'] % Colors.primaries.length],
+                            recognition['class'] % Colors.primaries.length],
                       ),
                     );
                   },
@@ -2015,144 +933,144 @@ class _RealtimePageState extends State<RealtimePage> {
           ],
         ),
       ),
-      floatingActionButton: Stack(
-        children: [
-          // Show back button when in interval mode to exit
-          if (_isIntervalMode)
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: FloatingActionButton(
-                heroTag: 'backButton',
-                onPressed: _stopIntervalCapture,
-                backgroundColor: Colors.red,
-                child: const Icon(Icons.stop),
-              ),
-            ),
-
-          // Adjust interval button
-          if (_isIntervalMode)
-            Positioned(
-              bottom: 16,
-              right: 80,
-              child: FloatingActionButton(
-                heroTag: 'adjustIntervalButton',
-                onPressed: () async {
-                  // Show dialog to adjust interval
-                  final newInterval = await showDialog<int>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SimpleDialog(
-                        title: Text('Adjust Capture Interval'.tr),
-                        children: <Widget>[
-                          for (int interval = 1; interval <= 5; interval++)
-                            SimpleDialogOption(
-                              onPressed: () {
-                                Navigator.pop(context, interval);
-                              },
-                              child: Text('$interval seconds'),
-                            ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (newInterval != null) {
-                    setState(() {
-                      _captureInterval = newInterval;
-                    });
-
-                    // Reset the timer with new interval
-                    _captureTimer?.cancel();
-                    _captureTimer = Timer.periodic(Duration(seconds: _captureInterval), (timer) {
-                      _captureAndDetect();
-                    });
-                  }
-                },
-                backgroundColor: Colors.blue,
-                child: const Icon(Icons.timer),
-              ),
-            ),
-
-          // Manual capture button in interval mode
-          if (_isIntervalMode)
-            Positioned(
-              bottom: 16,
-              right: 144,
-              child: FloatingActionButton(
-                heroTag: 'manualCaptureButton',
-                onPressed: _isCapturing || _isProcessing
-                    ? null
-                    : () {
-                  _captureAndDetect();
-                },
-                backgroundColor: Colors.green,
-                child: const Icon(Icons.camera),
-              ),
-            ),
-
-          // Show image picker button when not in interval mode and have an image
-          if (!_isIntervalMode && _imageFile != null)
-            Positioned(
-              bottom: 16,
-              right: 16,
-              child: FloatingActionButton(
-                heroTag: 'changeImageButton',
-                onPressed: _isLoading
-                    ? null
-                    : () async {
-                  final choice = await showDialog<String>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SimpleDialog(
-                        title: Text('Select source'.tr),
-                        children: <Widget>[
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'interval');
-                            },
-                            child: Text('Camera interval capture (1s)'.tr),
-                          ),
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'camera');
-                            },
-                            child: Text('Take photo'.tr),
-                          ),
-                          SimpleDialogOption(
-                            onPressed: () {
-                              Navigator.pop(context, 'gallery');
-                            },
-                            child: Text('Gallery'.tr),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (choice == 'interval') {
-                    _startIntervalCapture();
-                  } else if (choice == 'camera' || choice == 'gallery') {
-                    final source = choice == 'camera'
-                        ? ImageSource.camera
-                        : ImageSource.gallery;
-                    final imagePicker = ImagePicker();
-                    final pickedFile = await imagePicker.pickImage(source: source);
-                    if (pickedFile != null) {
-                      _getImage(pickedFile);
-                    }
-                  }
-                },
-                backgroundColor: primaryColor,
-                child: SvgPicture.asset(
-                  'assets/icons/gallery_icon.svg',
-                  color: Colors.white,
-                  height: 28.0,
-                ),
-              ),
-            ),
-        ],
-      ),
+      // floatingActionButton: Stack(
+      //   children: [
+      //     // Show back button when in interval mode to exit
+      //     if (_isIntervalMode)
+      //       Positioned(
+      //         bottom: 16,
+      //         right: 16,
+      //         child: FloatingActionButton(
+      //           heroTag: 'backButton',
+      //           onPressed: _stopIntervalCapture,
+      //           backgroundColor: Colors.red,
+      //           child: const Icon(Icons.stop),
+      //         ),
+      //       ),
+      //
+      //     // Adjust interval button
+      //     if (_isIntervalMode)
+      //       Positioned(
+      //         bottom: 16,
+      //         right: 80,
+      //         child: FloatingActionButton(
+      //           heroTag: 'adjustIntervalButton',
+      //           onPressed: () async {
+      //             // Show dialog to adjust interval
+      //             final newInterval = await showDialog<int>(
+      //               context: context,
+      //               builder: (BuildContext context) {
+      //                 return SimpleDialog(
+      //                   title: Text('Adjust Capture Interval'.tr),
+      //                   children: <Widget>[
+      //                     for (int interval = 1; interval <= 5; interval++)
+      //                       SimpleDialogOption(
+      //                         onPressed: () {
+      //                           Navigator.pop(context, interval);
+      //                         },
+      //                         child: Text('$interval seconds'),
+      //                       ),
+      //                   ],
+      //                 );
+      //               },
+      //             );
+      //
+      //             if (newInterval != null) {
+      //               setState(() {
+      //                 _captureInterval = newInterval;
+      //               });
+      //
+      //               // Reset the timer with new interval
+      //               _captureTimer?.cancel();
+      //               _captureTimer = Timer.periodic(Duration(seconds: _captureInterval), (timer) {
+      //                 _captureAndDetect();
+      //               });
+      //             }
+      //           },
+      //           backgroundColor: Colors.blue,
+      //           child: const Icon(Icons.timer),
+      //         ),
+      //       ),
+      //
+      //     // Manual capture button in interval mode
+      //     if (_isIntervalMode)
+      //       Positioned(
+      //         bottom: 16,
+      //         right: 144,
+      //         child: FloatingActionButton(
+      //           heroTag: 'manualCaptureButton',
+      //           onPressed: _isCapturing || _isProcessing
+      //               ? null
+      //               : () {
+      //             _captureAndDetect();
+      //           },
+      //           backgroundColor: Colors.green,
+      //           child: const Icon(Icons.camera),
+      //         ),
+      //       ),
+      //
+      //     // Show image picker button when not in interval mode and have an image
+      //     if (!_isIntervalMode && _imageFile != null)
+      //       Positioned(
+      //         bottom: 16,
+      //         right: 16,
+      //         child: FloatingActionButton(
+      //           heroTag: 'changeImageButton',
+      //           onPressed: _isLoading
+      //               ? null
+      //               : () async {
+      //             final choice = await showDialog<String>(
+      //               context: context,
+      //               builder: (BuildContext context) {
+      //                 return SimpleDialog(
+      //                   title: Text('Select source'.tr),
+      //                   children: <Widget>[
+      //                     SimpleDialogOption(
+      //                       onPressed: () {
+      //                         Navigator.pop(context, 'interval');
+      //                       },
+      //                       child: Text('Camera interval capture (1s)'.tr),
+      //                     ),
+      //                     SimpleDialogOption(
+      //                       onPressed: () {
+      //                         Navigator.pop(context, 'camera');
+      //                       },
+      //                       child: Text('Take photo'.tr),
+      //                     ),
+      //                     SimpleDialogOption(
+      //                       onPressed: () {
+      //                         Navigator.pop(context, 'gallery');
+      //                       },
+      //                       child: Text('Gallery'.tr),
+      //                     ),
+      //                   ],
+      //                 );
+      //               },
+      //             );
+      //
+      //             if (choice == 'interval') {
+      //               _startIntervalCapture();
+      //             } else if (choice == 'camera' || choice == 'gallery') {
+      //               final source = choice == 'camera'
+      //                   ? ImageSource.camera
+      //                   : ImageSource.gallery;
+      //               final imagePicker = ImagePicker();
+      //               final pickedFile = await imagePicker.pickImage(source: source);
+      //               if (pickedFile != null) {
+      //                 _getImage(pickedFile);
+      //               }
+      //             }
+      //           },
+      //           backgroundColor: primaryColor,
+      //           child: SvgPicture.asset(
+      //             'assets/icons/gallery_icon.svg',
+      //             color: Colors.white,
+      //             height: 28.0,
+      //           ),
+      //         ),
+      //       ),
+      //   ],
+      // ),
     );
   }
 
@@ -2198,12 +1116,12 @@ class IntervalDetectionView extends StatelessWidget {
   final List<Map<String, dynamic>> recognitions;
 
   const IntervalDetectionView({
-    Key? key,
+    super.key,
     required this.imageFile,
     required this.imageHeight,
     required this.imageWidth,
     required this.recognitions,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2248,7 +1166,8 @@ class IntervalDetectionView extends StatelessWidget {
                     imageHeight: imageHeight.toDouble(),
                     screenWidth: MediaQuery.of(context).size.width,
                     screenHeight: MediaQuery.of(context).size.width *
-                        imageHeight / imageWidth,
+                        imageHeight /
+                        imageWidth,
                   ),
                 ),
             ],
@@ -2289,7 +1208,8 @@ class BoundingBoxPainter extends CustomPainter {
       final String label = recognition['label'] as String;
 
       // Select color based on class
-      final Color boxColor = Colors.primaries[classId % Colors.primaries.length];
+      final Color boxColor =
+          Colors.primaries[classId % Colors.primaries.length];
 
       // Scale bbox to screen size
       final double left = bbox[0] * scaleX;

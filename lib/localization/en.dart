@@ -1,4 +1,23 @@
 const Map<String, String> en = {
+  // register
+  'register': 'Register',
+  'firstname': 'Firstname',
+  'lastname': 'Lastname',
+  'username': 'Username',
+  'password': 'Password',
+  'email': 'Email',
+  'uuid': 'UUID',
+  'please enter your': 'Please enter your ',
+  'register success': 'Successfully registered',
+  'already have account': 'Already have an account? Log in here',
+
+  // login
+  'login': 'Login',
+  'dont have account': "Don't have an account? Register here",
+
+  // forget password
+  'forget password': 'Forget Password',
+
   // features list
   'navigation': 'Navigation',
   'object detection': 'Object Detection',
@@ -49,6 +68,7 @@ const Map<String, String> en = {
 
   // object detection
   'upload photo': 'Upload Photo',
+  'real time': 'Real-Time',
 
   // widget
   'camera': 'Camera',

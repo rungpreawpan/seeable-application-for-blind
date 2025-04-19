@@ -5,7 +5,10 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/home/home_page.dart';
+import 'package:seeable/views/intro/controller/intro_controller.dart';
 import 'package:seeable/views/intro/intro_page.dart';
+import 'package:seeable/views/login/login_page.dart';
+import 'package:seeable/views/login/register_page.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,6 +21,7 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   final AppInfoController _appInfoController = Get.put(AppInfoController());
+  final IntroController _introController = Get.put(IntroController());
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -50,12 +54,26 @@ class _SplashPageState extends State<SplashPage> {
 
     // for dev only
     // await storage.delete(key: 'intro');
-    String? intro = await storage.read(key: 'intro');
+    // await storage.delete(key: 'login');
+    // await storage.delete(key: 'permission');
 
-    if (intro == null) {
+    String? permission = await storage.read(key: 'permission');
+    String? register = await storage.read(key: 'intro');
+    String? login = await storage.read(key: 'login');
+
+    if (permission == null) {
       Get.off(() => const IntroPage());
     } else {
-      Get.off(() => const HomePage());
+      if (register == null) {
+        _introController.currentPage(7);
+        Get.off(() => const IntroPage());
+      } else {
+        if (login == null) {
+          Get.off(() => const LoginPage());
+        } else {
+          Get.off(() => const HomePage());
+        }
+      }
     }
   }
 

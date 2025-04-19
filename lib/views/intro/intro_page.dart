@@ -3,9 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:seeable/controller/app_info_controller.dart';
-import 'package:seeable/views/home/home_page.dart';
 import 'package:seeable/views/intro/controller/intro_controller.dart';
 import 'package:seeable/views/intro/template/intro_template.dart';
+import 'package:seeable/views/login/register_page.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -16,7 +16,7 @@ class IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<IntroPage> {
   final AppInfoController _appInfoController = Get.find();
-  final IntroController _introController = Get.put(IntroController());
+  final IntroController _introController = Get.find();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -95,6 +95,9 @@ class _IntroPageState extends State<IntroPage> {
               _introController.currentPage(5);
             },
           );
+
+        case 7:
+          return const RegisterPage();
 
         default:
           return Container();
@@ -175,7 +178,7 @@ class _IntroPageState extends State<IntroPage> {
       _appInfoController.bluetooth(false);
     }
 
-    await storage.write(key: 'intro', value: 'true');
-    Get.offAll(() => const HomePage());
+    await storage.write(key: 'permission', value: 'true');
+    _introController.currentPage(7);
   }
 }

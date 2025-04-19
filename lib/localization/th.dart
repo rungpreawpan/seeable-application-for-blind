@@ -1,4 +1,23 @@
 const Map<String, String> th = {
+  // register
+  'register': 'ลงทะเบียน',
+  'firstname': 'ชื่อ',
+  'lastname': 'นามสกุล',
+  'username': 'ชื่อผู้ใช้',
+  'password': 'รหัสผ่าน',
+  'email': 'อีเมล',
+  'uuid': 'รหัสเครื่อง',
+  'please enter your': 'กรุณากรอก',
+  'register success': 'ลงทะเบียนสำเร็จ',
+  'already have account': 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบที่นี่',
+
+  // login
+  'login': 'เข้าสู่ระบบ',
+  'dont have account': 'ยังไม่มีบัญชี? ลงทะเบียนที่นี่',
+
+  // forget password
+  'forget password': 'ลืมรหัสผ่าน',
+
   // features list
   'navigation': 'ระบบนำทาง',
   'object detection': 'ตรวจจับวัตถุ',
@@ -49,6 +68,7 @@ const Map<String, String> th = {
 
   // object detection
   'upload photo': 'อัพโหลดรูปภาพ',
+  'real time': 'เรียลไทม์',
 
   // widget
   'camera': 'กล้อง',
