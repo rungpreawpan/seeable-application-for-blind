@@ -23,6 +23,10 @@ const Map<String, String> en = {
   'object detection': 'Object Detection',
   'scan text': 'Scan Text',
 
+  // navigation
+  'location': 'Locations',
+  'start navigation': 'Start Navigation',
+
   // building list
   'building a': 'Building A',
   'building b': 'Building B',
@@ -46,6 +50,7 @@ const Map<String, String> en = {
 
   // application page
   'settings': 'Settings',
+  'logout': 'Logout',
 
   // intro
   'welcome to seeable': 'Welcome to Seeable\nApplication for the visually impaired',

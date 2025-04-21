@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/navigation/controller/copy_controller.dart';
-import 'package:seeable/views/navigation/navigation_page.dart';
+import 'package:seeable/views/navigation/navigation_old_page.dart';
 import 'package:seeable/views/navigation/test_compass.dart';
 import 'package:seeable/views/navigation/test_navigation_page.dart';
 import 'package:seeable/widgets/custom_loading.dart';

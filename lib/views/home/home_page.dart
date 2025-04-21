@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/navigation/select_building_page.dart';
 import 'package:seeable/views/object_detection/components/real_time_object_detection.dart';
@@ -27,7 +28,7 @@ class _HomePageState extends State<HomePage> {
       'icon_path': 'assets/icons/object_detect_icon.svg'
     },
     {'title': 'scan text'.tr, 'icon_path': 'assets/icons/scan_text_icon.svg'},
-    {'title': 'settings'.tr, 'icon_path': 'assets/icons/settings_icon.svg'}
+    // {'title': 'settings'.tr, 'icon_path': 'assets/icons/settings_icon.svg'}
   ];
 
   @override
@@ -41,15 +42,17 @@ class _HomePageState extends State<HomePage> {
         return ListViewButton(
           onTap: () {
             if (item['title'] == 'navigation'.tr) {
-              Get.to(() => const SelectBuildingPage());
+              // Get.to(() => const SelectBuildingPage());
+              Get.to(() => const LocationListPage());
             } else if (item['title'] == 'object detection'.tr) {
               // Get.to(() => const ObjectDetectionPage());
               // Get.to(() => const RealtimeObjectDetectionPage());
               Get.to(() => RealtimePage());
             } else if (item['title'] == 'scan text'.tr) {
               Get.to(() => const ScanTextPage());
-            } else if (item['title'] == 'settings'.tr) {
-              Get.to(() => const SettingsPage());
+            // }
+              // else if (item['title'] == 'settings'.tr) {
+            //   Get.to(() => const SettingsPage());
             } else {
               Get.offAll(() => const HomePage());
             }

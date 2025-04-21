@@ -12,19 +12,19 @@ import 'package:seeable/widgets/custom_submit_button.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
-class NavigationPage extends StatefulWidget {
+class NavigationOldPage extends StatefulWidget {
   final BluetoothDevice device;
 
-  const NavigationPage({
+  const NavigationOldPage({
     super.key,
     required this.device,
   });
 
   @override
-  State<NavigationPage> createState() => _NavigationPageState();
+  State<NavigationOldPage> createState() => _NavigationOldPageState();
 }
 
-class _NavigationPageState extends State<NavigationPage> {
+class _NavigationOldPageState extends State<NavigationOldPage> {
   final BleController _bleController = Get.find();
 
   Timer? _timer;

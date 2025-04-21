@@ -4,11 +4,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/app_info_controller.dart';
-import 'package:seeable/views/home/home_page.dart';
 import 'package:seeable/views/intro/controller/intro_controller.dart';
 import 'package:seeable/views/intro/intro_page.dart';
 import 'package:seeable/views/login/login_page.dart';
-import 'package:seeable/views/login/register_page.dart';
+import 'package:seeable/widgets/custom_nav_bar.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,12 +52,14 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(seconds: 2));
 
     // for dev only
-    // await storage.delete(key: 'intro');
+    // await storage.delete(key: 'register');
     // await storage.delete(key: 'login');
     // await storage.delete(key: 'permission');
 
+    // await storage.write(key: 'login', value: 'true');
+
     String? permission = await storage.read(key: 'permission');
-    String? register = await storage.read(key: 'intro');
+    String? register = await storage.read(key: 'register');
     String? login = await storage.read(key: 'login');
 
     if (permission == null) {
@@ -71,7 +72,7 @@ class _SplashPageState extends State<SplashPage> {
         if (login == null) {
           Get.off(() => const LoginPage());
         } else {
-          Get.off(() => const HomePage());
+          Get.off(() => const CustomNavBar());
         }
       }
     }

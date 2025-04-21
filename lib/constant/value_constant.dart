@@ -17,3 +17,14 @@ const Color primaryColor = Color.fromRGBO(61, 153, 112, 1);
 // padding
 const double margin = 8.0;
 const double marginX2 = 16.0;
+
+// shadow
+List<BoxShadow> customBoxShadow = [
+  BoxShadow(
+    // ignore: deprecated_member_use
+    color: Colors.grey.withOpacity(0.5),
+    spreadRadius: 1.0,
+    blurRadius: 5.0,
+    offset: const Offset(1.0, 1.0),
+  )
+];

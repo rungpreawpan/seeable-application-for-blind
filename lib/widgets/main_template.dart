@@ -6,6 +6,7 @@ import 'package:seeable/widgets/text_font_style.dart';
 
 class MainTemplate extends StatelessWidget {
   final String appBarTitle;
+  final bool showBackButton;
   final Function()? onBack;
   final List<Widget>? actions;
   final Widget? body;
@@ -14,6 +15,7 @@ class MainTemplate extends StatelessWidget {
   const MainTemplate({
     super.key,
     this.appBarTitle = '',
+    this.showBackButton = true,
     this.onBack,
     this.actions,
     this.body,
@@ -23,6 +25,7 @@ class MainTemplate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: appBarTitle != ''
@@ -38,7 +41,7 @@ class MainTemplate extends StatelessWidget {
                 height: 90.0,
               ),
         leading: Visibility(
-          visible: appBarTitle != '',
+          visible: appBarTitle != '' && showBackButton,
           child: InkWell(
             onTap: () {
               if (onBack != null) {
@@ -71,7 +74,9 @@ class MainTemplate extends StatelessWidget {
         toolbarHeight: 90.0,
         elevation: 0.0,
       ),
-      body: body,
+      body: SizedBox.expand(
+        child: body,
+      ),
       floatingActionButton: floatingActionButton,
     );
   }

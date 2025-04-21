@@ -23,6 +23,10 @@ const Map<String, String> th = {
   'object detection': 'ตรวจจับวัตถุ',
   'scan text': 'สแกนตัวหนังสือ',
 
+  // navigation
+  'location': 'สถานที่',
+  'start navigation': 'เริ่มนำทาง',
+
   // building list
   'building a': 'อาคาร A',
   'building b': 'อาคาร B',
@@ -46,6 +50,7 @@ const Map<String, String> th = {
 
   // application page
   'settings': 'ตั้งค่า',
+  'logout': 'ออกจากระบบ',
 
   // intro
   'welcome to seeable': 'ยินดีต้อนรับสู่ Seeable\nแอปพลิเคชันสำหรับผู้พิการทางสายตา',
