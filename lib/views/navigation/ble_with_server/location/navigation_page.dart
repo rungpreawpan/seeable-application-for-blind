@@ -4,16 +4,17 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/ble_socket_service.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/navigation_controller.dart';
+import 'package:seeable/views/navigation/ble_with_server/model/place_model.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class NavigationPage extends StatefulWidget {
-  final String appBarTitle;
+  final PlaceModel place;
 
   const NavigationPage({
     super.key,
-    required this.appBarTitle,
+    required this.place,
   });
 
   @override
@@ -27,6 +28,20 @@ class _NavigationPageState extends State<NavigationPage> {
   bool isNavigate = false;
 
   final bleSocket = BLESocketService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _prepareData();
+  }
+
+  _prepareData() async {
+    isFavorite = widget.place.isFavorite ?? false;
+    setState(() {
+
+    });
+  }
 
   // @override
   // void initState() {
@@ -45,13 +60,20 @@ class _NavigationPageState extends State<NavigationPage> {
     return Stack(
       children: [
         MainTemplate(
-          appBarTitle: widget.appBarTitle,
+          appBarTitle: widget.place.name ?? '-',
+          showBackButton: true,
           actions: [
             InkWell(
-              onTap: () {
+              onTap: () async {
                 isFavorite = !isFavorite;
+
+                await _navigationController.setFavorite(
+                    placeId: widget.place.id ?? 0,
+                    isFavorite: isFavorite,
+                );
+
                 setState(() {});
-              }, //TODO เชื่อมกับหลังบ้าน
+              },
               child: SizedBox(
                 child: Padding(
                   padding: const EdgeInsets.only(right: marginX2),

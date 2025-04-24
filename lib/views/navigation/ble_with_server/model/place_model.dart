@@ -4,6 +4,7 @@ class PlaceModel {
   String? gateway;
   int? bleCount;
   List<String>? bleNames;
+  bool? isFavorite;
 
   PlaceModel({
     this.id,
@@ -11,6 +12,7 @@ class PlaceModel {
     this.gateway,
     this.bleCount,
     this.bleNames,
+    this.isFavorite,
   });
 
   factory PlaceModel.fromJSON(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class PlaceModel {
       gateway: json['gateway'],
       bleCount: json['ble_count'],
       bleNames: List.from(json['ble_names']),
+      isFavorite: json['is_favorite'],
     );
   }
 }

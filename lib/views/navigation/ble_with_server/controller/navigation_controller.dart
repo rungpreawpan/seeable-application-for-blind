@@ -43,8 +43,38 @@ class NavigationController extends GetxController {
     }
   }
 
-  setFavorite() async {
-    //TODO
+  setFavorite({
+    required int placeId,
+    required bool isFavorite,
+  }) async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('ไม่มีสัญญาณอินเตอร์เน็ต');
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      var response = await RequestService().request(
+        '/places/$placeId/favorite',
+        method: HttpMethod.put,
+        data: {
+          "is_favorite": isFavorite,
+        },
+      );
+
+      if (response != null && response.statusCode == 200) {
+        print(response);
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   startNavigation() async {

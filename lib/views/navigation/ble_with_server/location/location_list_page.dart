@@ -46,7 +46,7 @@ class _LocationListPageState extends State<LocationListPage> {
             return ListViewButton(
               onTap: () {
                 Get.to(
-                  () => NavigationPage(appBarTitle: item.name ?? '-'),
+                  () => NavigationPage(place: item),
                 );
               },
               iconPath: '',
