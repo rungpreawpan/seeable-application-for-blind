@@ -17,6 +17,13 @@ const Map<String, String> th = {
 
   // forget password
   'forget password': 'ลืมรหัสผ่าน',
+  'verify': 'ยืนยันตัวตน',
+  'send otp': 'ส่ง OTP',
+  'otp': 'รหัส OTP',
+  'reset password': 'เปลี่ยนรหัสผ่าน',
+  'ref code': 'รหัสอ้างอิง',
+  'confirm password': 'ยืนยันรหัสผ่าน',
+  'password not match': 'รหัสผ่านไม่ตรงกัน',
 
   // features list
   'navigation': 'ระบบนำทาง',

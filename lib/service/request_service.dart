@@ -10,6 +10,7 @@ import 'package:seeable/utils/alert.dart';
 enum HttpMethod {
   get,
   post,
+  put,
   patch,
   delete,
 }
@@ -92,6 +93,14 @@ class RequestService {
 
       case HttpMethod.patch:
         response = await _dio.post(
+          path,
+          data: data,
+          options: options,
+        );
+        break;
+
+      case HttpMethod.put:
+        response = await _dio.put(
           path,
           data: data,
           options: options,

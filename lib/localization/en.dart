@@ -17,6 +17,13 @@ const Map<String, String> en = {
 
   // forget password
   'forget password': 'Forget Password',
+  'verify': 'Verify Identity',
+  'send otp': 'Send OTP',
+  'otp': 'OTP',
+  'reset password': 'Reset Password',
+  'ref code': 'Ref. code',
+  'confirm password': 'Confirm Password',
+  'password not match': 'Password do not match',
 
   // features list
   'navigation': 'Navigation',

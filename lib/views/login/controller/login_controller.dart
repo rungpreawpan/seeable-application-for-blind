@@ -4,9 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
-import 'package:seeable/views/home/home_page.dart';
 import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/widgets/custom_alert_dialog.dart';
+import 'package:seeable/widgets/custom_nav_bar.dart';
 
 class LoginController extends GetxController {
   var isLoading = false.obs;
@@ -69,7 +69,7 @@ class LoginController extends GetxController {
         await storage.write(key: 'register', value: 'true');
         await storage.write(key: 'login', value: 'true');
 
-        await Get.offAll(() => const HomePage());
+        await Get.offAll(() => const CustomNavBar());
       }
     } catch (e) {
       log(e.toString());
@@ -97,6 +97,7 @@ class LoginController extends GetxController {
       );
 
       if (response != null && response.statusCode == 201) {
+        //TODO
         // user = UserModel.fromJSON(response);
       }
     } catch (e) {
@@ -104,5 +105,9 @@ class LoginController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  updateUser() async {
+    //TODO
   }
 }

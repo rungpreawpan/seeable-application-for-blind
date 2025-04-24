@@ -38,7 +38,7 @@ dependencies:
   android_id: ^0.4.0
   device_info_plus: ^11.2.1
   socket_io_client: ^3.1.1
-  google_mlkit_object_detection: ^0.15.0
+#  google_mlkit_object_detection: ^0.15.0
 
 dev_dependencies:
   flutter_test:

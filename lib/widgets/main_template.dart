@@ -15,7 +15,7 @@ class MainTemplate extends StatelessWidget {
   const MainTemplate({
     super.key,
     this.appBarTitle = '',
-    this.showBackButton = true,
+    this.showBackButton = false,
     this.onBack,
     this.actions,
     this.body,
@@ -41,7 +41,7 @@ class MainTemplate extends StatelessWidget {
                 height: 90.0,
               ),
         leading: Visibility(
-          visible: appBarTitle != '' && showBackButton,
+          visible: showBackButton,
           child: InkWell(
             onTap: () {
               if (onBack != null) {
