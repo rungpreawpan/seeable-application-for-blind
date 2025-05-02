@@ -800,6 +800,7 @@ class _RealtimePageState extends State<RealtimePage> {
   Widget build(BuildContext context) {
     return MainTemplate(
       appBarTitle: 'object detection'.tr,
+      showBackButton: true,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,

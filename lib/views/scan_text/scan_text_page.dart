@@ -9,6 +9,7 @@ class ScanTextPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MainTemplate(
       appBarTitle: 'scan text'.tr,
+      showBackButton: true,
       body: Column(
         children: [],
       ),

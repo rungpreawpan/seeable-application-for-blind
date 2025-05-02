@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
-import 'package:seeable/views/navigation/select_building_page.dart';
-import 'package:seeable/views/object_detection/components/real_time_object_detection.dart';
-import 'package:seeable/views/object_detection/object_detection_page.dart';
+import 'package:seeable/views/object_detection/object_detect_server/object_detect_server_page.dart';
 import 'package:seeable/views/object_detection/test/realtime_page.dart';
+import 'package:seeable/views/object_detection/test_label/image_label_page.dart';
+import 'package:seeable/views/object_detection/test_ml_kit/object_detect_ml_kit.dart';
+import 'package:seeable/views/object_detection/test_ml_kit/test_ml_kit.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
-import 'package:seeable/views/settings/settings_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
 import 'package:seeable/widgets/navigation_main_template.dart';
 
@@ -28,7 +28,6 @@ class _HomePageState extends State<HomePage> {
       'icon_path': 'assets/icons/object_detect_icon.svg'
     },
     {'title': 'scan text'.tr, 'icon_path': 'assets/icons/scan_text_icon.svg'},
-    // {'title': 'settings'.tr, 'icon_path': 'assets/icons/settings_icon.svg'}
   ];
 
   @override
@@ -47,12 +46,13 @@ class _HomePageState extends State<HomePage> {
             } else if (item['title'] == 'object detection'.tr) {
               // Get.to(() => const ObjectDetectionPage());
               // Get.to(() => const RealtimeObjectDetectionPage());
-              Get.to(() => RealtimePage());
+              // Get.to(() => const RealtimePage());
+              //  Get.to(() => TestMlKit()); //ObjectDetectMlKit
+              // Get.to(() => const CameraObjectDetectionPage());
+              // Get.to(() => ImageLabelingExample());
+              Get.to(() => const ObjectDetectServerPage());
             } else if (item['title'] == 'scan text'.tr) {
               Get.to(() => const ScanTextPage());
-            // }
-              // else if (item['title'] == 'settings'.tr) {
-            //   Get.to(() => const SettingsPage());
             } else {
               Get.offAll(() => const HomePage());
             }

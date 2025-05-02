@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/ble_socket_service.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/navigation_controller.dart';
+import 'package:seeable/views/navigation/ble_with_server/model/ble_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/place_model.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -27,8 +28,6 @@ class _NavigationPageState extends State<NavigationPage> {
   bool isFavorite = false;
   bool isNavigate = false;
 
-  final bleSocket = BLESocketService();
-
   @override
   void initState() {
     super.initState();
@@ -38,22 +37,8 @@ class _NavigationPageState extends State<NavigationPage> {
 
   _prepareData() async {
     isFavorite = widget.place.isFavorite ?? false;
-    setState(() {
-
-    });
+    setState(() {});
   }
-
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   bleSocket.connect();
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   bleSocket.disconnect();
-  //   super.dispose();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -68,8 +53,8 @@ class _NavigationPageState extends State<NavigationPage> {
                 isFavorite = !isFavorite;
 
                 await _navigationController.setFavorite(
-                    placeId: widget.place.id ?? 0,
-                    isFavorite: isFavorite,
+                  placeId: widget.place.id ?? 0,
+                  isFavorite: isFavorite,
                 );
 
                 setState(() {});
@@ -112,23 +97,56 @@ class _NavigationPageState extends State<NavigationPage> {
   // TODO:
   _mapPicture() {
     return Expanded(
-      child: Container(
-        color: primaryColor,
+      child: ListView.builder(
+        itemCount: _navigationController.bleDataList.length,
+        itemBuilder: (context, index) {
+          BLEListModel item = _navigationController.bleDataList[index];
+
+          return TextFontStyle('${item.name}: ${item.rssiList}');
+        },
       ),
     );
+    // return Expanded(
+    //   child: SingleChildScrollView(
+    //     child: Column(
+    //       children: [
+    //         // InkWell(
+    //         //   onTap: () {},
+    //         //   child: Container(
+    //         //     height: 100,
+    //         //     width: 100,
+    //         //     color: primaryColor,
+    //         //   ),
+    //         // ),
+    //         TextFontStyle('${_navigationController.bleDataList}'),
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 
   _navigationButton() {
     return Visibility(
-      visible: !isNavigate,
+      visible: true,
+      // visible: !isNavigate,
       child: Column(
         children: [
           const SizedBox(height: marginX2),
           InkWell(
-            onTap: () {
-              isNavigate = !isNavigate;
-              setState(() {});
-            }, //TODO:
+            onTap: !isNavigate
+                ? () async {
+                    isNavigate = true;
+                    await _navigationController
+                        .startNavigation(widget.place.bleNames ?? []);
+
+                    setState(() {});
+                  }
+                : () async {
+                    isNavigate = false;
+                    await _navigationController.stopNavigation();
+
+                    setState(() {});
+                  }, //TODO:
             child: Container(
               height: 80.0,
               margin: const EdgeInsets.all(marginX2),
