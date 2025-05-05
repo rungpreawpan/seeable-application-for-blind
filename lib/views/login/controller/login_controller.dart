@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -66,8 +67,22 @@ class LoginController extends GetxController {
       );
 
       if (response != null && response.statusCode == 200) {
+        Map<String, dynamic> dataMap = response.data;
+        Map<String, dynamic> dataJSON = dataMap['user'];
+
+        user = UserModel.fromJSON(dataJSON);
+
+        String userData = jsonEncode({
+          'uuid': user?.uuid,
+          'firstname': user?.firstname,
+          'lastname': user?.lastname,
+          'email': user?.email,
+          'username': username,
+        });
+
         await storage.write(key: 'register', value: 'true');
         await storage.write(key: 'login', value: 'true');
+        await storage.write(key: 'user_data', value: userData);
 
         await Get.offAll(() => const CustomNavBar());
       }
@@ -96,9 +111,18 @@ class LoginController extends GetxController {
         method: HttpMethod.get,
       );
 
-      if (response != null && response.statusCode == 201) {
-        //TODO
-        // user = UserModel.fromJSON(response);
+      if (response != null && response.statusCode == 200) {
+        user = UserModel.fromJSON(response.data);
+
+        String userData = jsonEncode({
+          'uuid': user?.uuid,
+          'firstname': user?.firstname,
+          'lastname': user?.lastname,
+          'email': user?.email,
+          'username': user?.username,
+        });
+
+        await storage.write(key: 'user_data', value: userData);
       }
     } catch (e) {
       log(e.toString());
@@ -107,7 +131,44 @@ class LoginController extends GetxController {
     }
   }
 
-  updateUser() async {
-    //TODO
+  updateUser({
+    required String uuid,
+    required dynamic data,
+  }) async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('ไม่มีสัญญาณอินเตอร์เน็ต');
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      var response = await RequestService().request(
+        '/users/$uuid',
+        method: HttpMethod.put,
+        data: data,
+      );
+
+      if (response != null && response.statusCode == 200) {
+        await getUser(uuid: uuid);
+
+        Get.dialog(
+          CustomAlertDialog(
+            title: 'data update successful'.tr,
+            onOk: () {
+              Get.back(result: true);
+            },
+          ),
+        );
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

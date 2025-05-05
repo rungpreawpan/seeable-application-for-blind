@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,6 +9,7 @@ import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/intro/controller/intro_controller.dart';
 import 'package:seeable/views/intro/intro_page.dart';
 import 'package:seeable/views/login/login_page.dart';
+import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/custom_nav_bar.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +33,7 @@ class _SplashPageState extends State<SplashPage> {
 
     _checkFirstRun();
     _checkVersion();
+    _settings();
     _redirect();
   }
 
@@ -76,6 +80,27 @@ class _SplashPageState extends State<SplashPage> {
         }
       }
     }
+  }
+
+  _settings() async {
+    String? settingsValue = await storage.read(key: 'settings_value');
+
+    if (settingsValue == null) {
+      //todo get theme and language from phone
+      String settingsData = jsonEncode({
+        'use_speech_recognition': true,
+        'speed': 'normal',
+        'language': Get.locale.toString() == 'th' ? 'thai' : 'english',
+        'theme': 'system default',
+      });
+
+      await storage.write(key: 'settings_value', value: settingsData);
+      
+      // print(Get.locale);
+      // print(WidgetsBinding.instance.platformDispatcher.platformBrightness);
+    }
+
+
   }
 
   @override

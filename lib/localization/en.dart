@@ -107,6 +107,14 @@ const Map<String, String> en = {
   'application version': 'Application version',
   'confirm': 'Confirm',
   'cancel': 'Cancel',
+  'download seeable app for android and ios': 'Download Seeable application for Android and iOS',
+  'user information': 'User information',
+  'name': 'Name',
+  'save': 'Save',
+  'data update successful': 'Data update successful',
+  'registered uuid': 'Registered UUID',
+  'uuid not match': 'The UUID does not match the registered UUID',
+  'do you want to logout': 'Do you want to logout?',
 
   // widget
   'camera': 'Camera',

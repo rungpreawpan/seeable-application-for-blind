@@ -107,6 +107,14 @@ const Map<String, String> th = {
   'application version': 'เวอร์ชันของแอปพลิเคชัน',
   'confirm': 'ยืนยัน',
   'cancel': 'ยกเลิก',
+  'download seeable app for android and ios': 'ดาวน์โหลดแอปพลิเคชัน Seeable สำหรับ Android และ iOS',
+  'user information': 'ข้อมูลผู้ใช้',
+  'name': 'ชื่อ',
+  'save': 'บันทึก',
+  'data update successful': 'อัปเดตข้อมูลสำเร็จ',
+  'registered uuid': 'รหัสเครื่องที่ลงทะเบียน',
+  'uuid not match': 'รหัสเครื่องที่ใช้งานไม่ตรงกับรหัสเครื่องที่ลงทะเบียน',
+  'do you want to logout': 'คุณต้องการออกจากระบบหรือไม่',
 
   // widget
   'camera': 'กล้อง',

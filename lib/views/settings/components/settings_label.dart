@@ -5,9 +5,9 @@ import 'package:seeable/widgets/text_font_style.dart';
 
 enum SettingsLabelStyle {
   onOff,
-  dialog,
   interact,
   showData,
+  updateInfo,
 }
 
 class SettingsLabel extends StatelessWidget {
@@ -18,6 +18,7 @@ class SettingsLabel extends StatelessWidget {
   final Function(bool)? onChanged;
   final Function()? onTap;
   final String buttonInitialValue;
+  final bool showWarning;
 
   const SettingsLabel({
     super.key,
@@ -28,6 +29,7 @@ class SettingsLabel extends StatelessWidget {
     this.onChanged,
     this.onTap,
     this.buttonInitialValue = '',
+    this.showWarning = false,
   });
 
   @override
@@ -57,36 +59,32 @@ class SettingsLabel extends StatelessWidget {
         );
         break;
 
-      case SettingsLabelStyle.dialog:
-        labelStyle = Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextFontStyle(
-              title,
-              size: fontSizeL,
-              weight: FontWeight.normal,
-            ),
-            _selectButton(
-              onTap: onTap,
-              buttonInitialValue: buttonInitialValue,
-            ),
-          ],
-        );
-        break;
-
       case SettingsLabelStyle.interact:
-        labelStyle = Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextFontStyle(
-              title,
-              size: fontSizeL,
-              weight: isTopic ? FontWeight.bold : FontWeight.normal,
-            ),
-            _selectButton(
-              onTap: onTap,
-            ),
-          ],
+        labelStyle = InkWell(
+          onTap: onTap,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextFontStyle(
+                title,
+                size: fontSizeL,
+                weight: isTopic ? FontWeight.bold : FontWeight.normal,
+              ),
+              buttonInitialValue != ''
+                  ? TextFontStyle(
+                      buttonInitialValue,
+                      size: fontSizeL,
+                      weight: FontWeight.bold,
+                    )
+                  : const SizedBox(
+                      width: 20.0,
+                      child: Icon(
+                        Icons.navigate_next_rounded,
+                        size: 30.0,
+                      ),
+                    ),
+            ],
+          ),
         );
         break;
 
@@ -99,8 +97,61 @@ class SettingsLabel extends StatelessWidget {
               size: fontSizeL,
               weight: isTopic ? FontWeight.bold : FontWeight.normal,
             ),
-            _selectButton(buttonInitialValue: buttonInitialValue),
+            TextFontStyle(
+              buttonInitialValue,
+              size: fontSizeL,
+              weight: FontWeight.bold,
+            ),
           ],
+        );
+        break;
+
+      case SettingsLabelStyle.updateInfo:
+        labelStyle = InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFontStyle(
+                title,
+                size: fontSizeM,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      TextFontStyle(
+                        buttonInitialValue,
+                        size: fontSizeL,
+                        weight: FontWeight.bold,
+                      ),
+                      Visibility(
+                        visible: showWarning,
+                        child: const Row(
+                          children: [
+                            SizedBox(width: margin),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.red,
+                              size: 20.0,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    width: 20.0,
+                    child: Icon(
+                      Icons.navigate_next_rounded,
+                      size: 28.0,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
         break;
     }
@@ -116,29 +167,6 @@ class SettingsLabel extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       activeColor: primaryColor,
-    );
-  }
-
-  _selectButton({
-    Function()? onTap,
-    String buttonInitialValue = '',
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: settingsLabelStyle == SettingsLabelStyle.dialog ||
-              settingsLabelStyle == SettingsLabelStyle.showData
-          ? TextFontStyle(
-              buttonInitialValue,
-              size: fontSizeL,
-              weight: FontWeight.bold,
-            )
-          : const SizedBox(
-              width: 20.0,
-              child: const Icon(
-                Icons.navigate_next_rounded,
-                size: 30.0,
-              ),
-            ),
     );
   }
 }
