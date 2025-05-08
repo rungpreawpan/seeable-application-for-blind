@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -70,7 +69,7 @@ class ObjectDetectionController extends GetxController {
       if (response != null && response.statusCode == 200) {
         Map<String, dynamic> dataMap = response.data;
         Map<String, dynamic> dataJSON = dataMap['objects'];
-        print(dataJSON);
+        log(dataJSON.toString());
 
         objectDetected = ObjectDetectionModel.fromJSON(dataJSON);
       }

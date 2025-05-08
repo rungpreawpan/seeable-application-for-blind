@@ -95,7 +95,7 @@ class _SplashPageState extends State<SplashPage> {
       });
 
       await storage.write(key: 'settings_value', value: settingsData);
-      
+
       // print(Get.locale);
       // print(WidgetsBinding.instance.platformDispatcher.platformBrightness);
     }

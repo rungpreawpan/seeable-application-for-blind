@@ -8,6 +8,7 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/object_detection/object_detect_server/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/object_detect_server/model/object_detection_model.dart';
 import 'package:seeable/widgets/custom_loading.dart';
+import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:image/image.dart' as img;
@@ -35,26 +36,27 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  _button(),
-                  const SizedBox(height: marginX2),
-                  _objectImage(),
-                  const SizedBox(height: marginX2),
-                  _objectLabels(),
-                ],
+    return MainTemplate(
+      appBarTitle: 'object detection'.tr,
+      showBackButton: true,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _button(),
+                    const SizedBox(height: marginX2),
+                    _objectImage(),
+                    const SizedBox(height: marginX2),
+                    _objectLabels(),
+                  ],
+                ),
               ),
-            ),
-            _loading(),
-          ],
+              _loading(),
+            ],
+          ),
         ),
-      ),
     );
   }
 
@@ -94,17 +96,17 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
       return const SizedBox();
     }
 
-    print(imageSize);
-    print(_objectDetectionController.objectDetected?.imageWidth);
-    print(_objectDetectionController.objectDetected?.imageHeight);
+    // print(imageSize);
+    // print(_objectDetectionController.objectDetected?.imageWidth);
+    // print(_objectDetectionController.objectDetected?.imageHeight);
 
     double displayWidth = Get.width;
     double scaleX =
         displayWidth / _objectDetectionController.objectDetected!.imageWidth!;
     double scaleY = (displayWidth * imageSize!.height / imageSize!.width) /
         _objectDetectionController.objectDetected!.imageHeight!;
-    print(scaleX);
-    print(scaleY);
+    // print(scaleX);
+    // print(scaleY);
 
     return Stack(
       children: [

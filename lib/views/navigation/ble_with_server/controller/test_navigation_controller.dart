@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:seeable/views/navigation/ble_with_server/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/ble_model.dart';
 
 class TestNavigationController extends GetxController {
@@ -161,7 +160,6 @@ class TestNavigationController extends GetxController {
     // x = (A^T A)^{-1} A^T b
     final result = _solveLeastSquares(A, b);
     if (result == null) {
-      print('null2');
       return null;
     }
 
@@ -171,9 +169,9 @@ class TestNavigationController extends GetxController {
     calculateX = x;
     calculateY = y;
 
-    if (kDebugMode) {
-      print('multilateration2D x:$x y:$y');
-    }
+    // if (kDebugMode) {
+    //   print('multilateration2D x:$x y:$y');
+    // }
   }
 
   // Least Squares x = (A^T A)^{-1} A^T b
@@ -181,7 +179,6 @@ class TestNavigationController extends GetxController {
   List<double>? _solveLeastSquares(List<List<double>> A, List<double> b) {
     final m = A.length; // equation length
     if (m == 0) {
-      print('null3');
       return null;
     }
 

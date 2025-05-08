@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/views/navigation/ble_with_server/controller/ble_socket_service.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/ble_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/place_model.dart';

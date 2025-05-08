@@ -6,6 +6,7 @@ import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
 import 'package:seeable/views/navigation/ble_with_server/controller/test_navigation_controller.dart';
+import 'package:seeable/views/navigation/ble_with_server/controller/weight_centroid_controller.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/ble_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/model/place_model.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -14,6 +15,7 @@ class NavigationController extends GetxController {
   var isLoading = false.obs;
 
   TestNavigationController testNavigationController = Get.put(TestNavigationController());
+  WeightCentroidController weightCentroidController = Get.put(WeightCentroidController());
   AppInfoController appInfoController = Get.find();
   List<PlaceModel> placeList = [];
   List<BLEListModel> bleDataList = [];
@@ -185,8 +187,9 @@ class NavigationController extends GetxController {
         bleDataList.add(receivedData);
       }
 
-      testNavigationController.findPosition(bleDataList);
+      // testNavigationController.findPosition(bleDataList); //TODO
       log('BLE ${ble.name} - RSSI ล่าสุด: ${ble.rssi}');
+      weightCentroidController.findPosition(bleDataList);
     });
   }
 
