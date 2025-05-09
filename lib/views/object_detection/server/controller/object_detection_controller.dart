@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
-import 'package:seeable/views/object_detection/object_detect_server/model/object_detection_model.dart';
+import 'package:seeable/views/object_detection/server/model/object_detection_model.dart';
 
 class ObjectDetectionController extends GetxController {
   var isLoading = false.obs;

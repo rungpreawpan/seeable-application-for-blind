@@ -4,9 +4,9 @@ import 'dart:async';
 import 'dart:isolate';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
-import 'package:seeable/views/object_detection/real_time_components/detect_painter.dart';
-import 'package:seeable/views/object_detection/real_time_components/inference_utils.dart';
-import 'package:seeable/views/object_detection/real_time_components/isolate_data.dart';
+import 'package:seeable/views/object_detection/mobile/real_time_components/detect_painter.dart';
+import 'package:seeable/views/object_detection/mobile/real_time_components/inference_utils.dart';
+import 'package:seeable/views/object_detection/mobile/real_time_components/isolate_data.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class CameraDetectionPage extends StatefulWidget {

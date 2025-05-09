@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/views/object_detection/components/object_detection_view.dart';
+import 'package:seeable/views/object_detection/mobile/components/object_detection_view.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';

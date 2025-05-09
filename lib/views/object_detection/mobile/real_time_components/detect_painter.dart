@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:seeable/views/object_detection/real_time_components/isolate_data.dart';
+import 'package:seeable/views/object_detection/mobile/real_time_components/isolate_data.dart';
 
 class DetectionPainter extends CustomPainter {
   final List<DetectionResult> detections;

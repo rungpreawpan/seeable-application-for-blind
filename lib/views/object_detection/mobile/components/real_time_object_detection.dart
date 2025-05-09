@@ -1,13 +1,14 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' hide log;
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/views/object_detection/components/object_detection_view.dart';
+import 'package:seeable/views/object_detection/mobile/components/object_detection_view.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
@@ -15,14 +16,14 @@ import 'package:seeable/widgets/text_font_style.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
-class ObjectDetectionPage extends StatefulWidget {
-  const ObjectDetectionPage({super.key});
+class RealtimeObjectDetectionPage extends StatefulWidget {
+  const RealtimeObjectDetectionPage({super.key});
 
   @override
-  State<ObjectDetectionPage> createState() => _ObjectDetectionPageState();
+  State<RealtimeObjectDetectionPage> createState() => _RealtimeObjectDetectionPageState();
 }
 
-class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
+class _RealtimeObjectDetectionPageState extends State<RealtimeObjectDetectionPage> {
   File? _imageFile;
   int? imageHeight;
   int? imageWidth;
@@ -31,12 +32,24 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
   late List<String> _labels;
   List<Map<String, dynamic>> _recognitions = [];
 
+  // Camera related variables
+  List<CameraDescription>? cameras;
+  CameraController? cameraController;
+  bool _isCameraInitialized = false;
+  bool _isStreamMode = false;
+  bool _isProcessingFrame = false;
+  int _processingTime = 0;
+  int _framesPerSecond = 0;
+  int _frameCount = 0;
+  DateTime _lastFpsUpdate = DateTime.now();
+
   final int inputSize = 640;
 
   @override
   void initState() {
     super.initState();
     _loadModel();
+    _initializeCamera();
   }
 
   Future<void> _loadModel() async {
@@ -54,6 +67,34 @@ class _ObjectDetectionPageState extends State<ObjectDetectionPage> {
       log('Model loaded with ${_labels.length} labels');
     } catch (e) {
       log('Error loading model: $e');
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      cameras = await availableCameras();
+      if (cameras != null && cameras!.isNotEmpty) {
+        cameraController = CameraController(
+          cameras![0],
+          ResolutionPreset.medium,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.yuv420,
+        );
+
+        await cameraController!.initialize();
+
+        if (!mounted) return;
+
+        setState(() {
+          _isCameraInitialized = true;
+        });
+
+        log('Camera initialized successfully');
+      } else {
+        log('No cameras available');
+      }
+    } catch (e) {
+      log('Error initializing camera: $e');
     }
   }
 

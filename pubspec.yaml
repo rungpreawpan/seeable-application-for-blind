@@ -17,6 +17,7 @@ dependencies:
   firebase_core: ^3.6.0
   google_fonts: ^6.2.1
   firebase_analytics: ^11.3.5
+  firebase_crashlytics: ^4.3.5
   package_info_plus: ^8.1.1
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.3
@@ -29,7 +30,6 @@ dependencies:
   flutter_compass: ^0.8.1
   tflite_flutter: ^0.11.0
   image_picker: ^1.1.2
-#  flutter_tesseract_ocr: ^0.4.26
   image: ^4.5.3
   camera: ^0.11.1
   speech_to_text: ^7.0.0
@@ -38,10 +38,9 @@ dependencies:
   android_id: ^0.4.0
   device_info_plus: ^11.2.1
   socket_io_client: ^3.1.1
-  google_mlkit_object_detection: ^0.15.0
-  google_mlkit_image_labeling: ^0.14.1
   flutter_keyboard_visibility: ^6.0.0
   share_plus: ^11.0.0
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

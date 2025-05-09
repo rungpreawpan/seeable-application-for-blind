@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/views/object_detection/object_detect_server/controller/object_detection_controller.dart';
-import 'package:seeable/views/object_detection/object_detect_server/model/object_detection_model.dart';
+import 'package:seeable/views/object_detection/server/controller/object_detection_controller.dart';
+import 'package:seeable/views/object_detection/server/model/object_detection_model.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
@@ -43,6 +43,7 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
           child: Stack(
             children: [
               SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
                     _button(),
@@ -122,10 +123,6 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
             top: top,
             width: width,
             height: height,
-            // left: object.x1,
-            // top: object.y1,
-            // width: object.x2! - object.x1!,
-            // height: object.y2! - object.y1!,
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
