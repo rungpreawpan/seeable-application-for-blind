@@ -14,8 +14,10 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class NavigationController extends GetxController {
   var isLoading = false.obs;
 
-  TestNavigationController testNavigationController = Get.put(TestNavigationController());
-  WeightCentroidController weightCentroidController = Get.put(WeightCentroidController());
+  TestNavigationController testNavigationController =
+      Get.put(TestNavigationController());
+  WeightCentroidController weightCentroidController =
+      Get.put(WeightCentroidController());
   AppInfoController appInfoController = Get.find();
   List<PlaceModel> placeList = [];
   List<BLEListModel> bleDataList = [];
@@ -111,6 +113,7 @@ class NavigationController extends GetxController {
 
       if (response != null && response.statusCode == 200) {
         print(response);
+        bleDataList.clear();
         connectSocket();
       }
     } catch (e) {

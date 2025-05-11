@@ -27,6 +27,8 @@ class _NavigationPageState extends State<NavigationPage> {
   bool isFavorite = false;
   bool isNavigate = false;
 
+  String userUUID = '';
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +38,7 @@ class _NavigationPageState extends State<NavigationPage> {
 
   _prepareData() async {
     isFavorite = widget.place.isFavorite ?? false;
+
     setState(() {});
   }
 

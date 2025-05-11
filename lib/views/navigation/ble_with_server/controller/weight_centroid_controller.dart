@@ -8,16 +8,19 @@ class WeightCentroidController extends GetxController {
   int topRightRssi = 0;
   int bottomLeftRssi = 0;
   int bottomRightRssi = 0;
+  int centerRightRssi = 0;
 
   List<int> topLeftRssiList = [];
   List<int> topRightRssiList = [];
   List<int> bottomLeftRssiList = [];
   List<int> bottomRightRssiList = [];
+  List<int> centerRightRssiList = [];
 
   double topLeftDistance = 0.0;
   double topRightDistance = 0.0;
   double bottomLeftDistance = 0.0;
   double bottomRightDistance = 0.0;
+  double centerRightDistance = 0.0;
 
   double calculateX = 0.0;
   double calculateY = 0.0;
@@ -31,17 +34,25 @@ class WeightCentroidController extends GetxController {
         deviceList.firstWhere((e) => e.name == 'Ruuvi 2559').rssiList ?? [];
     bottomRightRssiList =
         deviceList.firstWhere((e) => e.name == 'Ruuvi BAAD').rssiList ?? [];
+    centerRightRssiList =
+        deviceList.firstWhere((e) => e.name == 'Ruuvi 30E9').rssiList ?? [];
 
     topLeftRssi = getRssiAvg(topLeftRssiList);
     topRightRssi = getRssiAvg(topRightRssiList);
     bottomLeftRssi = getRssiAvg(bottomLeftRssiList);
     bottomRightRssi = getRssiAvg(bottomRightRssiList);
+    centerRightRssi = getRssiAvg(centerRightRssiList);
 
     List<Map<String, dynamic>> data = [
-      {'x': 0.0, 'y': 2.4, 'rssi': topLeftRssi},
-      {'x': 2.5, 'y': 2.4, 'rssi': topRightRssi},
+      // {'x': 0.0, 'y': 2.4, 'rssi': topLeftRssi},
+      // {'x': 2.5, 'y': 2.4, 'rssi': topRightRssi},
+      // {'x': 0.0, 'y': 0.0, 'rssi': bottomLeftRssi},
+      // {'x': 2.5, 'y': 0.0, 'rssi': bottomRightRssi},
+      {'x': 0.0, 'y': 8.0, 'rssi': topLeftRssi},
+      {'x': 3.6, 'y': 8.0, 'rssi': topRightRssi},
       {'x': 0.0, 'y': 0.0, 'rssi': bottomLeftRssi},
-      {'x': 2.5, 'y': 0.0, 'rssi': bottomRightRssi},
+      {'x': 3.6, 'y': 0.0, 'rssi': bottomRightRssi},
+      {'x': 3.6, 'y': 4.0, 'rssi': centerRightRssi},
     ];
     print(data);
 
@@ -52,7 +63,8 @@ class WeightCentroidController extends GetxController {
 
   int getRssiAvg(List<int> rssiList) {
     if (rssiList.isEmpty) return -100;
-    return (rssiList.reduce((a, b) => a + b) / rssiList.length).toInt();
+    // return (rssiList.reduce((a, b) => a + b) / rssiList.length).toInt();
+    return rssiList.last;
   }
 
   Map<String, double> weightCentroid(List<Map<String, dynamic>> data) {

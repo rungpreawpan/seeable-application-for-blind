@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
@@ -12,6 +13,7 @@ import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:image/image.dart' as img;
+import 'package:translator/translator.dart';
 
 class ObjectDetectServerPage extends StatefulWidget {
   const ObjectDetectServerPage({super.key});
@@ -24,6 +26,9 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
   final ObjectDetectionController _objectDetectionController =
       Get.put(ObjectDetectionController());
 
+  final FlutterTts flutterTts = FlutterTts();
+  final translator = GoogleTranslator();
+
   File? _imageFile;
   Size? imageSize;
 
@@ -32,6 +37,40 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
     super.initState();
 
     _objectDetectionController.objectDetected = null;
+    _ttsSettings();
+  }
+
+  _ttsSettings() async {
+    await flutterTts.setSpeechRate(1.0);
+  }
+
+  //TODO: แก้ให้ทำงานไวขึ้น
+  Future _speak() async {
+    if (_objectDetectionController.objectDetected?.boxes != null) {
+      List<String> objects = [];
+      for (BoxesModel object
+          in _objectDetectionController.objectDetected!.boxes!) {
+        objects.add(object.label!);
+      }
+
+      if (objects.isNotEmpty) {
+        List<String> translateObjects = [];
+        for (String obj in objects) {
+          var translation = await translator.translate(obj, from: 'en', to: 'th');
+          translateObjects.add(translation.text);
+        }
+
+        await flutterTts.speak('ตรวจพบวัตถุดังนี้ $translateObjects');
+      } else {
+        await flutterTts.speak('ไม่สามารถตรวจจับวัตถุได้');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    flutterTts.stop();
+    super.dispose();
   }
 
   @override
@@ -39,25 +78,25 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
     return MainTemplate(
       appBarTitle: 'object detection'.tr,
       showBackButton: true,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: [
-                    _button(),
-                    const SizedBox(height: marginX2),
-                    _objectImage(),
-                    const SizedBox(height: marginX2),
-                    _objectLabels(),
-                  ],
-                ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  _button(),
+                  const SizedBox(height: marginX2),
+                  _objectImage(),
+                  const SizedBox(height: marginX2),
+                  _objectLabels(),
+                ],
               ),
-              _loading(),
-            ],
-          ),
+            ),
+            _loading(),
+          ],
         ),
+      ),
     );
   }
 
@@ -80,6 +119,8 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
           setState(() {
             _objectDetectionController.isLoading.value = false;
           });
+
+          await _speak();
         }
       },
       child: Container(
@@ -142,6 +183,7 @@ class _ObjectDetectServerPageState extends State<ObjectDetectServerPage> {
             _objectDetectionController.objectDetected!.boxes!.isNotEmpty
         ? ListView.builder(
             shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: _objectDetectionController.objectDetected!.boxes!.length,
             itemBuilder: (context, index) {
               BoxesModel item =

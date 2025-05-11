@@ -1,5 +1,13 @@
+import 'dart:convert';
+import 'dart:developer';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import 'package:seeable/controller/app_info_controller.dart';
+import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
@@ -16,6 +24,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final BleController _bleController = Get.put(BleController());
+  final AppInfoController _appInfoController = Get.find();
+  final FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
+
+  FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  UserModel? userInfo;
 
   List featuresList = [
     {'title': 'navigation'.tr, 'icon_path': 'assets/icons/navigation_icon.svg'},
@@ -25,6 +39,57 @@ class _HomePageState extends State<HomePage> {
     },
     {'title': 'scan text'.tr, 'icon_path': 'assets/icons/scan_text_icon.svg'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _startAdvertiseBluetooth();
+  }
+
+  _checkAdvertiseBluetooth() async {
+    if (await FlutterBlePeripheral().isAdvertising) {
+      await FlutterBlePeripheral().stop();
+    } else {
+      await _startAdvertiseBluetooth();
+    }
+  }
+
+  _startAdvertiseBluetooth() async {
+    String? userData = await storage.read(key: 'user_data');
+
+    if (userData == null) return;
+
+    Map<String, dynamic> userDataMap = json.decode(userData);
+    userInfo = UserModel.fromJSON(userDataMap);
+
+    String convertHexToUUID(String hex) {
+      String padded = hex.padRight(32, '0');
+      return '${padded.substring(0, 8)}-'
+          '${padded.substring(8, 12)}-'
+          '${padded.substring(12, 16)}-'
+          '${padded.substring(16, 20)}-'
+          '${padded.substring(20, 32)}';
+    }
+
+    AdvertiseData advertiseData = AdvertiseData(
+      serviceUuid: convertHexToUUID(userInfo!.uuid!),
+      localName: 'seeable',
+      manufacturerId: 1234,
+      manufacturerData: Uint8List.fromList([1, 2, 3, 4, 5, 6]),
+      includeDeviceName: true,
+    );
+
+    await FlutterBlePeripheral().start(advertiseData: advertiseData);
+    log('bluetooth advertise: ${advertiseData.localName} | ${advertiseData.serviceUuid}');
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _checkAdvertiseBluetooth();
+  }
 
   @override
   Widget build(BuildContext context) {
