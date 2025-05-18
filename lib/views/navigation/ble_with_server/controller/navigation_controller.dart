@@ -102,11 +102,20 @@ class NavigationController extends GetxController {
     try {
       isLoading.value = true;
 
+      String convertHexToUUID(String hex) {
+        String padded = hex.padRight(32, '0');
+        return '${padded.substring(0, 8)}-'
+            '${padded.substring(8, 12)}-'
+            '${padded.substring(12, 16)}-'
+            '${padded.substring(16, 20)}-'
+            '${padded.substring(20, 32)}';
+      }
+
       var response = await RequestService().request(
         '/navigation/start',
         method: HttpMethod.post,
         data: {
-          'uuid': appInfoController.uuid.value,
+          'uuid': convertHexToUUID(appInfoController.uuid.value),
           'ble_names': bleNames,
         },
       );
@@ -192,7 +201,7 @@ class NavigationController extends GetxController {
 
       // testNavigationController.findPosition(bleDataList); //TODO
       log('BLE ${ble.name} - RSSI ล่าสุด: ${ble.rssi}');
-      weightCentroidController.findPosition(bleDataList);
+      // weightCentroidController.findPosition(bleDataList);
     });
   }
 

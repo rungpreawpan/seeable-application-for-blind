@@ -11,6 +11,7 @@ import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
+import 'package:seeable/views/scan_text/real_time_scan_text_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
 import 'package:seeable/widgets/navigation_main_template.dart';
@@ -47,11 +48,9 @@ class _HomePageState extends State<HomePage> {
     _startAdvertiseBluetooth();
   }
 
-  _checkAdvertiseBluetooth() async {
+  _stopAdvertiseBluetooth() async {
     if (await FlutterBlePeripheral().isAdvertising) {
       await FlutterBlePeripheral().stop();
-    } else {
-      await _startAdvertiseBluetooth();
     }
   }
 
@@ -76,11 +75,18 @@ class _HomePageState extends State<HomePage> {
       serviceUuid: convertHexToUUID(userInfo!.uuid!),
       localName: 'seeable',
       manufacturerId: 1234,
-      manufacturerData: Uint8List.fromList([1, 2, 3, 4, 5, 6]),
+      manufacturerData: Uint8List.fromList('seeable-${userInfo!.uuid!}'.codeUnits),
       includeDeviceName: true,
     );
 
-    await FlutterBlePeripheral().start(advertiseData: advertiseData);
+    await FlutterBlePeripheral().start(
+      advertiseData: advertiseData,
+      advertiseSettings: AdvertiseSettings(
+        advertiseMode: AdvertiseMode.advertiseModeLowLatency,
+        txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
+        timeout: 0,
+      ),
+    );
     log('bluetooth advertise: ${advertiseData.localName} | ${advertiseData.serviceUuid}');
   }
 
@@ -88,7 +94,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     super.dispose();
 
-    _checkAdvertiseBluetooth();
+    _stopAdvertiseBluetooth();
   }
 
   @override
@@ -100,8 +106,10 @@ class _HomePageState extends State<HomePage> {
         var item = featuresList[index];
 
         return ListViewButton(
-          onTap: () {
+          onTap: () async {
             if (item['title'] == 'navigation'.tr) {
+              // await FlutterBlePeripheral().stop();
+              // _stopAdvertiseBluetooth();
               Get.to(() => const LocationListPage());
             } else if (item['title'] == 'object detection'.tr) {
               // Get.to(() => const ObjectDetectionPage());
@@ -110,7 +118,8 @@ class _HomePageState extends State<HomePage> {
               // Get.to(() => const CameraObjectDetectionPage());
               Get.to(() => const ObjectDetectServerPage());
             } else if (item['title'] == 'scan text'.tr) {
-              Get.to(() => const ScanTextPage());
+              // Get.to(() => const ScanTextPage());
+              Get.to(() => const RealTimeScanTextPage());
             } else {
               Get.offAll(() => const HomePage());
             }
