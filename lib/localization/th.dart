@@ -82,6 +82,9 @@ const Map<String, String> th = {
   'upload photo': 'อัพโหลดรูปภาพ',
   'real time': 'เรียลไทม์',
 
+  // scan text
+  'scan result': 'ผลการสแกน',
+
   // settings
   'sound': 'เสียง',
   'voice control': 'การสั่งการด้วยเสียง',

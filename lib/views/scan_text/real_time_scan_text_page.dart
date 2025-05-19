@@ -127,7 +127,7 @@ class _RealTimeScanTextPageState extends State<RealTimeScanTextPage> {
     _imageFile = File(picture.path);
 
     await _ocrController.uploadImage(_imageFile!);
-    Get.to(() => const ScanTextResultPage());
+    Get.to(() => ScanTextResultPage(imageFile: _imageFile));
   }
 
   _loading() {

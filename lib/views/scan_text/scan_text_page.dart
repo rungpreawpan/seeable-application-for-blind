@@ -45,8 +45,8 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
   @override
   void dispose() {
-    flutterTts.stop();
     super.dispose();
+    flutterTts.stop();
   }
 
   @override

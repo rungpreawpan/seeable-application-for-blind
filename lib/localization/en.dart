@@ -82,6 +82,9 @@ const Map<String, String> en = {
   'upload photo': 'Upload Photo',
   'real time': 'Real-Time',
 
+  // scan text
+  'scan result': 'Scan Result',
+
   // settings
   'sound': 'Sound',
   'voice control': 'Voice control',

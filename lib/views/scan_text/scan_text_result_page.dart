@@ -1,11 +1,21 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
+import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/main_template.dart';
 
 class ScanTextResultPage extends StatefulWidget {
-  const ScanTextResultPage({super.key});
+  final File? imageFile;
+
+  const ScanTextResultPage({
+    super.key,
+    required this.imageFile,
+  });
 
   @override
   State<ScanTextResultPage> createState() => _ScanTextResultPageState();
@@ -14,18 +24,35 @@ class ScanTextResultPage extends StatefulWidget {
 class _ScanTextResultPageState extends State<ScanTextResultPage> {
   final OcrController _ocrController = Get.find();
 
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
   final FlutterTts flutterTts = FlutterTts();
+
+  SettingsModel? settingsInfo;
 
   @override
   void initState() {
     super.initState();
 
     _ttsSettings();
-    _speak();
   }
 
   _ttsSettings() async {
-    await flutterTts.setSpeechRate(1.0);
+    String? settingsData = await storage.read(key: 'settings_value');
+    if (settingsData != null) {
+      Map<String, dynamic> settingsValueMap = json.decode(settingsData);
+      settingsInfo = SettingsModel.fromJSON(settingsValueMap);
+
+      if (settingsInfo?.speed == 'slow') {
+        await flutterTts.setSpeechRate(0.0);
+      } else if (settingsInfo?.speed == 'fast') {
+        await flutterTts.setSpeechRate(1.0);
+      } else {
+        await flutterTts.setSpeechRate(0.5);
+      }
+    }
+
+    _speak();
   }
 
   Future _speak() async {
@@ -35,17 +62,30 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+
+    flutterTts.stop();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MainTemplate(
-      appBarTitle: 'scan text'.tr, //TODO
+      appBarTitle: 'scan result'.tr,
       showBackButton: true,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
+              //TODO resize image
+              widget.imageFile != null
+                  ? Image.file(widget.imageFile!)
+                  : const SizedBox(),
               Text(
-                _ocrController.ocrText != null ? _ocrController.ocrText!.text! : '',
+                _ocrController.ocrText != null
+                    ? _ocrController.ocrText!.text!
+                    : '',
               ),
             ],
           ),
