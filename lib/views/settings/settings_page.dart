@@ -224,16 +224,25 @@ class _SettingsPageState extends State<SettingsPage> {
             title: 'voice control'.tr,
             settingsLabelStyle: SettingsLabelStyle.onOff,
             switchValue: _speechRecognitionValue,
-            onChanged: (value) {
+            onChanged: (value) async {
               _speechRecognitionValue = !_speechRecognitionValue;
               setState(() {});
+
+              String settingsData = jsonEncode({
+                'use_speech_recognition': _speechRecognitionValue,
+                'speed': settingsInfo?.speed ?? 'normal',
+                'language': settingsInfo?.language ?? 'thai',
+                'theme': settingsInfo?.theme ?? 'system default',
+              });
+
+              await storage.write(key: 'settings_value', value: settingsData);
             },
           ),
           const SizedBox(height: marginX2),
           SettingsLabel(
             title: 'speech speed'.tr,
             buttonInitialValue:
-                selectedSpeed.isNotEmpty ? selectedSpeed.first : 'test', //TODO
+                selectedSpeed.isNotEmpty ? selectedSpeed.first : 'normal'.tr,
             settingsLabelStyle: SettingsLabelStyle.interact,
             onTap: () async {
               List? result = await Get.to(
@@ -255,6 +264,25 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (result != null) {
                 setState(() {});
+
+                String speed;
+                if (selectedSpeed.first == 'slow'.tr) {
+                  speed = 'slow';
+                } else if (selectedSpeed.first == 'fast'.tr) {
+                  speed = 'fast';
+                } else {
+                  speed = 'normal';
+                }
+
+                String settingsData = jsonEncode({
+                  'use_speech_recognition':
+                      settingsInfo?.useSpeechRecognition ?? true,
+                  'speed': speed,
+                  'language': settingsInfo?.language ?? 'thai',
+                  'theme': settingsInfo?.theme ?? 'system default',
+                });
+
+                await storage.write(key: 'settings_value', value: settingsData);
               }
             },
           ),
@@ -279,7 +307,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: 'language'.tr,
             buttonInitialValue: selectedLanguage.isNotEmpty
                 ? selectedLanguage.first
-                : 'test', //TODO:
+                : 'thai'.tr,
             settingsLabelStyle: SettingsLabelStyle.interact,
             onTap: () async {
               List? result = await Get.to(
@@ -301,14 +329,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (result != null) {
                 setState(() {});
+
+                String language;
+                if (selectedLanguage.first == 'english'.tr) {
+                  language = 'english';
+                } else {
+                  language = 'thai';
+                }
+
+                String settingsData = jsonEncode({
+                  'use_speech_recognition':
+                      settingsInfo?.useSpeechRecognition ?? true,
+                  'speed': settingsInfo?.speed ?? 'normal',
+                  'language': language,
+                  'theme': settingsInfo?.theme ?? 'system default',
+                });
+
+                await storage.write(key: 'settings_value', value: settingsData);
               }
             },
           ),
           const SizedBox(height: marginX2),
           SettingsLabel(
             title: 'theme'.tr,
-            buttonInitialValue:
-                selectedTheme.isNotEmpty ? selectedTheme.first : 'test', //TODO:
+            buttonInitialValue: selectedTheme.isNotEmpty
+                ? selectedTheme.first
+                : 'system default'.tr,
             settingsLabelStyle: SettingsLabelStyle.interact,
             onTap: () async {
               List? result = await Get.to(
@@ -330,6 +376,25 @@ class _SettingsPageState extends State<SettingsPage> {
 
               if (result != null) {
                 setState(() {});
+
+                String theme;
+                if (selectedTheme.first == 'light'.tr) {
+                  theme = 'light';
+                } else if (selectedTheme.first == 'dark'.tr) {
+                  theme = 'dark';
+                } else {
+                  theme = 'system default';
+                }
+
+                String settingsData = jsonEncode({
+                  'use_speech_recognition':
+                      settingsInfo?.useSpeechRecognition ?? true,
+                  'speed': settingsInfo?.speed ?? 'normal',
+                  'language': settingsInfo?.language ?? 'thai',
+                  'theme': theme,
+                });
+
+                await storage.write(key: 'settings_value', value: settingsData);
               }
             },
           ),

@@ -9,7 +9,6 @@ import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/intro/controller/intro_controller.dart';
 import 'package:seeable/views/intro/intro_page.dart';
 import 'package:seeable/views/login/login_page.dart';
-import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/custom_nav_bar.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';

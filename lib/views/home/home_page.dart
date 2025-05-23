@@ -11,7 +11,7 @@ import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
 import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
-import 'package:seeable/views/scan_text/real_time_scan_text_page.dart';
+import 'package:seeable/views/object_detection/server/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/widgets/listview_button.dart';
 import 'package:seeable/widgets/navigation_main_template.dart';
@@ -116,10 +116,10 @@ class _HomePageState extends State<HomePage> {
               // Get.to(() => const RealtimeObjectDetectionPage());
               // Get.to(() => const RealtimePage());
               // Get.to(() => const CameraObjectDetectionPage());
-              Get.to(() => const ObjectDetectServerPage());
+              // Get.to(() => const ObjectDetectServerPage());
+              Get.to(() => const RealTimeObjectDetectServerPage());
             } else if (item['title'] == 'scan text'.tr) {
-              // Get.to(() => const ScanTextPage());
-              Get.to(() => const RealTimeScanTextPage());
+              Get.to(() => const ScanTextPage());
             } else {
               Get.offAll(() => const HomePage());
             }

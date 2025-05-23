@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
+import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
 import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -43,12 +44,16 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
       Map<String, dynamic> settingsValueMap = json.decode(settingsData);
       settingsInfo = SettingsModel.fromJSON(settingsValueMap);
 
-      if (settingsInfo?.speed == 'slow') {
-        await flutterTts.setSpeechRate(0.0);
-      } else if (settingsInfo?.speed == 'fast') {
-        await flutterTts.setSpeechRate(1.0);
+      if (settingsInfo?.useSpeechRecognition == false) {
+        return;
       } else {
-        await flutterTts.setSpeechRate(0.5);
+        if (settingsInfo?.speed == 'slow') {
+          await flutterTts.setSpeechRate(0.0);
+        } else if (settingsInfo?.speed == 'fast') {
+          await flutterTts.setSpeechRate(1.0);
+        } else {
+          await flutterTts.setSpeechRate(0.5);
+        }
       }
     }
 
@@ -76,18 +81,24 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          child: Column(
-            children: [
-              //TODO resize image
-              widget.imageFile != null
-                  ? Image.file(widget.imageFile!)
-                  : const SizedBox(),
-              Text(
-                _ocrController.ocrText != null
-                    ? _ocrController.ocrText!.text!
-                    : '',
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(marginX2),
+            child: Column(
+              children: [
+                widget.imageFile != null
+                    ? Image.file(
+                        widget.imageFile!,
+                        fit: BoxFit.fitWidth,
+                      )
+                    : const SizedBox(),
+                const SizedBox(height: marginX2),
+                Text(
+                  _ocrController.ocrText != null
+                      ? _ocrController.ocrText!.text!
+                      : '',
+                ),
+              ],
+            ),
           ),
         ),
       ),

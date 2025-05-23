@@ -1,15 +1,20 @@
+import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
+import 'package:seeable/views/scan_text/scan_text_result_page.dart';
+import 'package:seeable/widgets/custom_camera_button.dart';
 import 'package:seeable/widgets/custom_loading.dart';
+import 'package:seeable/widgets/custom_switch_camera_button.dart';
 import 'package:seeable/widgets/main_template.dart';
-import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
-import 'package:seeable/widgets/text_font_style.dart';
 
 class ScanTextPage extends StatefulWidget {
   const ScanTextPage({super.key});
@@ -21,32 +26,73 @@ class ScanTextPage extends StatefulWidget {
 class _ScanTextPageState extends State<ScanTextPage> {
   final OcrController _ocrController = Get.put(OcrController());
 
-  final FlutterTts flutterTts = FlutterTts();
+  List<CameraDescription>? _cameras;
+  CameraController? _cameraController;
+  int _selectedCameraIndex = 0;
 
   File? _imageFile;
+  Uint8List? _thumbnailData;
 
   @override
   void initState() {
     super.initState();
 
-    _ocrController.ocrText = null;
-    _ttsSettings();
+    _initializeCamera();
+    _loadLatestImage();
   }
 
-  _ttsSettings() async {
-    await flutterTts.setSpeechRate(1.0);
-  }
+  Future<void> _initializeCamera([int cameraIndex = 0]) async {
+    try {
+      _cameras = await availableCameras();
 
-  Future _speak() async {
-    if (_ocrController.ocrText?.text != null) {
-      await flutterTts.speak(_ocrController.ocrText!.text!);
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _cameraController = CameraController(
+          _cameras![cameraIndex],
+          ResolutionPreset.high,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.jpeg,
+        );
+
+        await _cameraController!.initialize();
+
+        if (!mounted) return;
+
+        setState(() {});
+      } else {
+        log('No cameras available');
+      }
+    } catch (e) {
+      log('Error initializing camera: $e');
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    flutterTts.stop();
+  Future<void> _loadLatestImage() async {
+    final permission = await PhotoManager.requestPermissionExtend();
+
+    if (permission.isAuth || permission == PermissionState.limited) {
+      final albums = await PhotoManager.getAssetPathList(
+        type: RequestType.image,
+        onlyAll: true,
+      );
+
+      if (albums.isNotEmpty) {
+        final recentAlbum = albums.first;
+        final recentAssets =
+            await recentAlbum.getAssetListPaged(page: 0, size: 1);
+
+        if (recentAssets.isNotEmpty) {
+          final asset = recentAssets.first;
+          final thumb =
+              await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
+          _thumbnailData = thumb;
+          setState(() {});
+        }
+      }
+
+      if (permission == PermissionState.limited) {
+        await PhotoManager.presentLimited();
+      }
+    }
   }
 
   @override
@@ -54,70 +100,97 @@ class _ScanTextPageState extends State<ScanTextPage> {
     return MainTemplate(
       appBarTitle: 'scan text'.tr,
       showBackButton: true,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Container(
+              color: Colors.black,
+              child: Stack(
                 children: [
-                  _button(),
-                  const SizedBox(height: marginX2),
-                  _ocrImage(),
-                  const SizedBox(height: marginX2),
-                  _ocrLabels(),
+                  _cameraController != null
+                      ? CameraPreview(_cameraController!)
+                      : const SizedBox(),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: marginX2),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _selectImageButton(),
+                          CustomCameraButton(
+                            onTap: () {
+                              _scanText();
+                            },
+                          ),
+                          CustomSwitchCameraButton(
+                            onTap: () {
+                              if (_cameras == null || _cameras!.length < 2) {
+                                return;
+                              }
+
+                              if (_selectedCameraIndex == 0) {
+                                _selectedCameraIndex =
+                                    (_selectedCameraIndex + 1) %
+                                        _cameras!.length;
+                              } else {
+                                _selectedCameraIndex = 0;
+                              }
+                              _initializeCamera(_selectedCameraIndex);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            _loading(),
-          ],
-        ),
+          ),
+          _loading(),
+        ],
       ),
     );
   }
 
-  _button() {
+  _selectImageButton() {
     return InkWell(
       onTap: () async {
-        XFile? result =
-            await Get.bottomSheet(const SelectCameraGalleryBottomSheet());
+        XFile? file = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+        );
 
-        if (result != null) {
-          _imageFile = File(result.path);
-
-          setState(() {
-            _ocrController.isLoading.value = true;
-          });
-
-          await _ocrController.uploadImage(_imageFile!);
-
-          setState(() {
-            _ocrController.isLoading.value = false;
-          });
-
-          await _speak();
+        if (file != null) {
+          await _ocrController.uploadImage(File(file.path));
+          Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
         }
       },
       child: Container(
-        padding: const EdgeInsets.all(marginX2),
-        color: Colors.grey,
-        child: const TextFontStyle('Pick Image'),
+        height: 50.0,
+        width: 50.0,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: _thumbnailData != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(10.0),
+                child: Image.memory(
+                  _thumbnailData!,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : const SizedBox(),
       ),
     );
   }
 
-  _ocrImage() {
-    if (_imageFile == null || _ocrController.ocrText == null) {
-      return const SizedBox();
-    }
+  _scanText() async {
+    final XFile picture = await _cameraController!.takePicture();
+    _imageFile = File(picture.path);
 
-    return Image.file(_imageFile!);
-  }
-
-  _ocrLabels() {
-    return _ocrController.ocrText?.text != null
-        ? TextFontStyle(_ocrController.ocrText!.text!)
-        : const SizedBox();
+    await _ocrController.uploadImage(_imageFile!);
+    Get.to(() => ScanTextResultPage(imageFile: _imageFile));
   }
 
   _loading() {
