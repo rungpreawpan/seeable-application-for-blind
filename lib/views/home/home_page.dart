@@ -10,6 +10,7 @@ import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
 import 'package:seeable/views/navigation/controller/ble_controller.dart';
+import 'package:seeable/views/navigation/fingerprint/fingerprint_navigation_page.dart';
 import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
 import 'package:seeable/views/object_detection/server/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
@@ -110,7 +111,8 @@ class _HomePageState extends State<HomePage> {
             if (item['title'] == 'navigation'.tr) {
               // await FlutterBlePeripheral().stop();
               // _stopAdvertiseBluetooth();
-              Get.to(() => const LocationListPage());
+              // Get.to(() => const LocationListPage()); //server
+              Get.to(() => const FingerprintNavigationPage());
             } else if (item['title'] == 'object detection'.tr) {
               // Get.to(() => const ObjectDetectionPage());
               // Get.to(() => const RealtimeObjectDetectionPage());

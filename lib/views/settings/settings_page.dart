@@ -29,7 +29,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final AppInfoController _appInfoController = Get.find();
-  final SettingsController _settingsController = Get.put(SettingsController());
+  final SettingsController _settingsController = Get.find();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -117,10 +117,14 @@ class _SettingsPageState extends State<SettingsPage> {
     } else {
       selectedSpeed.add('normal'.tr);
     }
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return MainTemplate(
       appBarTitle: 'settings'.tr,
       body: Stack(
@@ -130,7 +134,7 @@ class _SettingsPageState extends State<SettingsPage> {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  _content(),
+                  _content(theme),
                   const SizedBox(height: marginX2),
                   _logoutButton(),
                 ],
@@ -143,21 +147,21 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  _content() {
+  _content(ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _userInfo(),
-        _sound(),
+        _userInfo(theme),
+        _sound(theme),
         _divider(),
-        _userInterface(),
+        _userInterface(theme),
         _divider(),
-        _aboutApplication(),
+        _aboutApplication(theme),
       ],
     );
   }
 
-  _userInfo() {
+  _userInfo(ThemeData theme) {
     return InkWell(
       onTap: () {
         Get.to(() => const UpdateUserInfoPage());
@@ -172,9 +176,9 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         margin: const EdgeInsets.all(marginX2),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.grey.shade300,
           borderRadius: BorderRadius.circular(10.0),
-          boxShadow: customBoxShadow,
+          // boxShadow: customBoxShadow,
         ),
         child: Row(
           children: [
@@ -189,7 +193,6 @@ class _SettingsPageState extends State<SettingsPage> {
                         : '-',
                     size: fontSizeXL,
                     weight: FontWeight.bold,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: margin),
                   TextFontStyle(
@@ -201,6 +204,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const Icon(
               Icons.navigate_next_rounded,
               size: 30.0,
+              color: Colors.black,
             ),
           ],
         ),
@@ -208,7 +212,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  _sound() {
+  _sound(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: marginX2),
       child: Column(
@@ -216,8 +220,7 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           TextFontStyle(
             'sound'.tr,
-            size: fontSizeXL,
-            weight: FontWeight.bold,
+            style: theme.textTheme.labelLarge,
           ),
           const SizedBox(height: marginX2),
           SettingsLabel(
@@ -226,7 +229,6 @@ class _SettingsPageState extends State<SettingsPage> {
             switchValue: _speechRecognitionValue,
             onChanged: (value) async {
               _speechRecognitionValue = !_speechRecognitionValue;
-              setState(() {});
 
               String settingsData = jsonEncode({
                 'use_speech_recognition': _speechRecognitionValue,
@@ -236,6 +238,8 @@ class _SettingsPageState extends State<SettingsPage> {
               });
 
               await storage.write(key: 'settings_value', value: settingsData);
+
+              setState(() {});
             },
           ),
           const SizedBox(height: marginX2),
@@ -263,8 +267,6 @@ class _SettingsPageState extends State<SettingsPage> {
               );
 
               if (result != null) {
-                setState(() {});
-
                 String speed;
                 if (selectedSpeed.first == 'slow'.tr) {
                   speed = 'slow';
@@ -283,6 +285,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
+
+                setState(() {});
               }
             },
           ),
@@ -291,7 +295,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  _userInterface() {
+  _userInterface(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: marginX2),
       child: Column(
@@ -299,8 +303,7 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           TextFontStyle(
             'user interface'.tr,
-            size: fontSizeXL,
-            weight: FontWeight.bold,
+            style: theme.textTheme.labelLarge,
           ),
           const SizedBox(height: marginX2),
           SettingsLabel(
@@ -328,13 +331,15 @@ class _SettingsPageState extends State<SettingsPage> {
               );
 
               if (result != null) {
-                setState(() {});
-
                 String language;
                 if (selectedLanguage.first == 'english'.tr) {
                   language = 'english';
+                  _settingsController.locale.value = 'en';
+                  Get.updateLocale(Locale(_settingsController.locale.value));
                 } else {
                   language = 'thai';
+                  _settingsController.locale.value = 'th';
+                  Get.updateLocale(Locale(_settingsController.locale.value));
                 }
 
                 String settingsData = jsonEncode({
@@ -346,6 +351,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
+                // await _prepareData();
+
+                setState(() {});
               }
             },
           ),
@@ -375,15 +383,18 @@ class _SettingsPageState extends State<SettingsPage> {
               );
 
               if (result != null) {
-                setState(() {});
-
                 String theme;
                 if (selectedTheme.first == 'light'.tr) {
                   theme = 'light';
+                  _settingsController.themeMode.value = ThemeMode.light;
+                  Get.changeThemeMode(ThemeMode.light);
                 } else if (selectedTheme.first == 'dark'.tr) {
                   theme = 'dark';
+                  _settingsController.themeMode.value = ThemeMode.dark;
+                  Get.changeThemeMode(ThemeMode.dark);
                 } else {
                   theme = 'system default';
+                  _settingsController.themeMode.value = ThemeMode.system;
                 }
 
                 String settingsData = jsonEncode({
@@ -395,6 +406,9 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
+                // await _prepareData();
+
+                setState(() {});
               }
             },
           ),
@@ -403,7 +417,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  _aboutApplication() {
+  _aboutApplication(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: marginX2),
       child: Column(
@@ -411,8 +425,7 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           TextFontStyle(
             'about application'.tr,
-            size: fontSizeXL,
-            weight: FontWeight.bold,
+            style: theme.textTheme.labelLarge,
           ),
           const SizedBox(height: marginX2),
           SettingsLabel(
@@ -467,7 +480,9 @@ class _SettingsPageState extends State<SettingsPage> {
           'logout'.tr,
           size: fontSizeL,
           weight: FontWeight.bold,
-          color: primaryColor,
+          color: _settingsController.themeMode.value == ThemeMode.light
+              ? primaryColor
+              : Colors.white,
           underline: true,
         ),
       ),

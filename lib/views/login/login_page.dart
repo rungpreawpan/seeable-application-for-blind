@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/login/controller/login_controller.dart';
 import 'package:seeable/views/login/forget_password_page.dart';
+import 'package:seeable/views/login/register_page.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_submit_button.dart';
 import 'package:seeable/widgets/custom_textfield.dart';
@@ -100,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
   _redirectToRegister() {
     return InkWell(
       onTap: () {
-        //TODO
+        Get.offAll(() => const RegisterPage());
       },
       child: TextFontStyle(
         'dont have account'.tr,

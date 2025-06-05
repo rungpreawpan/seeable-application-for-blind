@@ -56,6 +56,7 @@ const Map<String, String> en = {
   'start': 'Start',
 
   // application page
+  'main page': 'Main Page',
   'settings': 'Settings',
   'logout': 'Logout',
 

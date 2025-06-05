@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
+import 'package:seeable/widgets/custom_back_button.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
-class MainTemplate extends StatelessWidget {
+class MainTemplate extends StatefulWidget {
   final String appBarTitle;
   final bool showBackButton;
   final Function()? onBack;
@@ -23,61 +25,52 @@ class MainTemplate extends StatelessWidget {
   });
 
   @override
+  State<MainTemplate> createState() => _MainTemplateState();
+}
+
+class _MainTemplateState extends State<MainTemplate> {
+  final SettingsController _settingsController = Get.find();
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       extendBody: true,
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: appBarTitle != ''
+        title: widget.appBarTitle != ''
             ? TextFontStyle(
-                appBarTitle,
-                size: fontAppbar,
-                color: primaryColor,
-                weight: FontWeight.bold,
+                widget.appBarTitle,
+                style: theme.textTheme.titleLarge,
                 align: TextAlign.center,
               )
             : SvgPicture.asset(
-                'assets/logo/seeable_logo.svg',
+                _settingsController.themeMode.value == ThemeMode.light
+                    ? 'assets/logo/seeable_logo.svg'
+                    : 'assets/logo/seeable_logo_dark_theme.svg',
                 height: 90.0,
               ),
         leading: Visibility(
-          visible: showBackButton,
-          child: InkWell(
+          visible: widget.showBackButton,
+          child: CustomBackButton(
             onTap: () {
-              if (onBack != null) {
-                onBack!();
+              if (widget.onBack != null) {
+                widget.onBack!();
               }
 
               Get.back();
             },
-            child: const Padding(
-              padding: EdgeInsets.only(left: marginX2),
-              child: CircleAvatar(
-                backgroundColor: primaryColor,
-                radius: 20,
-                child: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  radius: 19,
-                  child: Icon(
-                    Icons.arrow_back_rounded,
-                    color: primaryColor,
-                    size: 30.0,
-                  ),
-                ),
-              ),
-            ),
           ),
         ),
-        actions: actions,
+        actions: widget.actions,
         centerTitle: true,
-        backgroundColor: Colors.white,
         toolbarHeight: 90.0,
         elevation: 0.0,
       ),
       body: SizedBox.expand(
-        child: body,
+        child: widget.body,
       ),
-      floatingActionButton: floatingActionButton,
+      floatingActionButton: widget.floatingActionButton,
     );
   }
 }

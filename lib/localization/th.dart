@@ -56,6 +56,7 @@ const Map<String, String> th = {
   'start': 'นำทาง',
 
   // application page
+  'main page': 'หน้าหลัก',
   'settings': 'ตั้งค่า',
   'logout': 'ออกจากระบบ',
 

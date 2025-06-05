@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 enum SettingsLabelStyle {
@@ -10,9 +12,8 @@ enum SettingsLabelStyle {
   updateInfo,
 }
 
-class SettingsLabel extends StatelessWidget {
+class SettingsLabel extends StatefulWidget {
   final String title;
-  final bool isTopic;
   final SettingsLabelStyle settingsLabelStyle;
   final bool switchValue;
   final Function(bool)? onChanged;
@@ -23,7 +24,6 @@ class SettingsLabel extends StatelessWidget {
   const SettingsLabel({
     super.key,
     required this.title,
-    this.isTopic = false,
     required this.settingsLabelStyle,
     this.switchValue = false,
     this.onChanged,
@@ -33,13 +33,21 @@ class SettingsLabel extends StatelessWidget {
   });
 
   @override
+  State<SettingsLabel> createState() => _SettingsLabelState();
+}
+
+class _SettingsLabelState extends State<SettingsLabel> {
+  final SettingsController _settingsController = Get.find();
+
+  @override
   Widget build(BuildContext context) {
-    return getLabelStyle();
+    return getLabelStyle(context);
   }
 
-  Widget getLabelStyle() {
+  Widget getLabelStyle(BuildContext context) {
     Widget labelStyle;
-    SettingsLabelStyle label = settingsLabelStyle;
+    SettingsLabelStyle label = widget.settingsLabelStyle;
+    final theme = Theme.of(context);
 
     switch (label) {
       case SettingsLabelStyle.onOff:
@@ -47,13 +55,12 @@ class SettingsLabel extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             TextFontStyle(
-              title,
-              size: fontSizeL,
-              weight: FontWeight.normal,
+              widget.title,
+              style: theme.textTheme.labelSmall,
             ),
             _switch(
-              value: switchValue,
-              onChanged: onChanged,
+              value: widget.switchValue,
+              onChanged: widget.onChanged,
             ),
           ],
         );
@@ -61,20 +68,18 @@ class SettingsLabel extends StatelessWidget {
 
       case SettingsLabelStyle.interact:
         labelStyle = InkWell(
-          onTap: onTap,
+          onTap: widget.onTap,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextFontStyle(
-                title,
-                size: fontSizeL,
-                weight: isTopic ? FontWeight.bold : FontWeight.normal,
+                widget.title,
+                style: theme.textTheme.labelSmall,
               ),
-              buttonInitialValue != ''
+              widget.buttonInitialValue != ''
                   ? TextFontStyle(
-                      buttonInitialValue,
-                      size: fontSizeL,
-                      weight: FontWeight.bold,
+                      widget.buttonInitialValue,
+                      style: theme.textTheme.labelMedium,
                     )
                   : const SizedBox(
                       width: 20.0,
@@ -93,14 +98,12 @@ class SettingsLabel extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             TextFontStyle(
-              title,
-              size: fontSizeL,
-              weight: isTopic ? FontWeight.bold : FontWeight.normal,
+              widget.title,
+              style: theme.textTheme.labelSmall,
             ),
             TextFontStyle(
-              buttonInitialValue,
-              size: fontSizeL,
-              weight: FontWeight.bold,
+              widget.buttonInitialValue,
+              style: theme.textTheme.labelMedium,
             ),
           ],
         );
@@ -108,12 +111,12 @@ class SettingsLabel extends StatelessWidget {
 
       case SettingsLabelStyle.updateInfo:
         labelStyle = InkWell(
-          onTap: onTap,
+          onTap: widget.onTap,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFontStyle(
-                title,
+                widget.title,
                 size: fontSizeM,
               ),
               Row(
@@ -122,12 +125,11 @@ class SettingsLabel extends StatelessWidget {
                   Row(
                     children: [
                       TextFontStyle(
-                        buttonInitialValue,
-                        size: fontSizeL,
-                        weight: FontWeight.bold,
+                        widget.buttonInitialValue,
+                        style: theme.textTheme.labelMedium,
                       ),
                       Visibility(
-                        visible: showWarning,
+                        visible: widget.showWarning,
                         child: const Row(
                           children: [
                             SizedBox(width: margin),
@@ -141,11 +143,12 @@ class SettingsLabel extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(
+                  SizedBox(
                     width: 20.0,
                     child: Icon(
                       Icons.navigate_next_rounded,
                       size: 28.0,
+                      color: theme.iconTheme.color,
                     ),
                   ),
                 ],
@@ -166,7 +169,9 @@ class SettingsLabel extends StatelessWidget {
     return CupertinoSwitch(
       value: value,
       onChanged: onChanged,
-      activeColor: primaryColor,
+      activeTrackColor: _settingsController.themeMode.value == ThemeMode.light
+          ? primaryColor
+          : Colors.grey.shade700,
     );
   }
 }

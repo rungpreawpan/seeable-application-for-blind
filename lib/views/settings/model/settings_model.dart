@@ -19,4 +19,13 @@ class SettingsModel {
       theme: json['theme'],
     );
   }
+
+  Map<String, dynamic> toJSON() {
+    return {
+      'use_speech_recognition': useSpeechRecognition,
+      'speed': speed,
+      'language': language,
+      'theme': theme,
+    };
+  }
 }

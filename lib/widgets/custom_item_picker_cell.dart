@@ -24,7 +24,7 @@ class CustomItemPickerCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: isSelected ? primaryColor : Colors.white,
         borderRadius: BorderRadius.circular(10.0),
-        boxShadow: customBoxShadow,
+        boxShadow: lightBoxShadow,
       ),
       child: Row(
         children: [

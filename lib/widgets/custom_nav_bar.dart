@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/home/home_page.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/views/settings/settings_page.dart';
 
 class CustomNavBar extends StatefulWidget {
@@ -14,6 +14,8 @@ class CustomNavBar extends StatefulWidget {
 }
 
 class _CustomNavBarState extends State<CustomNavBar> {
+  final SettingsController _settingsController = Get.find();
+
   int currentIndex = 0;
 
   final List _screen = [
@@ -23,13 +25,17 @@ class _CustomNavBarState extends State<CustomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       extendBody: true,
       body: _screen[currentIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: customBoxShadow,
+          color: theme.bottomNavigationBarTheme.backgroundColor,
+          boxShadow: _settingsController.themeMode.value == ThemeMode.light
+              ? lightBoxShadow
+              : null,
           borderRadius: const BorderRadius.only(
             topRight: Radius.circular(25.0),
             topLeft: Radius.circular(25.0),
@@ -41,17 +47,8 @@ class _CustomNavBarState extends State<CustomNavBar> {
             child: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.transparent,
-              elevation: 0.0,
-              selectedItemColor: Colors.black,
-              unselectedItemColor: Colors.grey.shade400,
               selectedFontSize: fontSizeS,
               unselectedFontSize: fontSizeS,
-              selectedLabelStyle: TextStyle(
-                fontFamily: GoogleFonts.kanit().fontFamily,
-              ),
-              unselectedLabelStyle: TextStyle(
-                fontFamily: GoogleFonts.kanit().fontFamily,
-              ),
               currentIndex: currentIndex,
               onTap: (index) {
                 currentIndex = index;
@@ -66,11 +63,9 @@ class _CustomNavBarState extends State<CustomNavBar> {
                     height: 25.0,
                     width: 25.0,
                     fit: BoxFit.fitHeight,
-                    // ignore: deprecated_member_use
-                    color:
-                        currentIndex == 0 ? Colors.black : Colors.grey.shade400,
+                    color: _iconColor(currentIndex == 0),
                   ),
-                  label: 'หน้าหลัก', //TODO
+                  label: 'main page'.tr,
                   tooltip: '',
                 ),
                 BottomNavigationBarItem(
@@ -81,9 +76,7 @@ class _CustomNavBarState extends State<CustomNavBar> {
                     height: 30.0,
                     width: 30.0,
                     fit: BoxFit.fitHeight,
-                    // ignore: deprecated_member_use
-                    color:
-                        currentIndex == 1 ? Colors.black : Colors.grey.shade400,
+                    color: _iconColor(currentIndex == 1),
                   ),
                   label: 'settings'.tr,
                   tooltip: '',
@@ -94,5 +87,21 @@ class _CustomNavBarState extends State<CustomNavBar> {
         ),
       ),
     );
+  }
+
+  Color _iconColor(bool isSelected) {
+    Color color = Colors.black;
+
+    if (_settingsController.themeMode.value == ThemeMode.light) {
+      if (isSelected) {
+        color = Colors.black;
+      } else {
+        color = Colors.grey.shade400;
+      }
+    } else if (_settingsController.themeMode.value == ThemeMode.dark) {
+      color = Colors.white;
+    }
+
+    return color;
   }
 }

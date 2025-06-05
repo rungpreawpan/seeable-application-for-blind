@@ -12,6 +12,7 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
 import 'package:seeable/views/scan_text/scan_text_result_page.dart';
 import 'package:seeable/widgets/custom_camera_button.dart';
+import 'package:seeable/widgets/custom_gallery_button.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_switch_camera_button.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -31,7 +32,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
   int _selectedCameraIndex = 0;
 
   File? _imageFile;
-  Uint8List? _thumbnailData;
+  Uint8List? _thumbnailImage;
 
   @override
   void initState() {
@@ -84,7 +85,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
           final asset = recentAssets.first;
           final thumb =
               await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
-          _thumbnailData = thumb;
+          _thumbnailImage = thumb;
           setState(() {});
         }
       }
@@ -117,7 +118,19 @@ class _ScanTextPageState extends State<ScanTextPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _selectImageButton(),
+                          CustomGalleryButton(
+                            onTap: () async {
+                              XFile? file = await ImagePicker().pickImage(
+                                source: ImageSource.gallery,
+                              );
+
+                              if (file != null) {
+                                await _ocrController.uploadImage(File(file.path));
+                                Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
+                              }
+                            },
+                            thumbnailImage: _thumbnailImage,
+                          ),
                           CustomCameraButton(
                             onTap: () {
                               _scanText();
@@ -149,38 +162,6 @@ class _ScanTextPageState extends State<ScanTextPage> {
           ),
           _loading(),
         ],
-      ),
-    );
-  }
-
-  _selectImageButton() {
-    return InkWell(
-      onTap: () async {
-        XFile? file = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-        );
-
-        if (file != null) {
-          await _ocrController.uploadImage(File(file.path));
-          Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
-        }
-      },
-      child: Container(
-        height: 50.0,
-        width: 50.0,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: _thumbnailData != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(10.0),
-                child: Image.memory(
-                  _thumbnailData!,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : const SizedBox(),
       ),
     );
   }

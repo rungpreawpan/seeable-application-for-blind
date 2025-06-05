@@ -7,10 +7,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/firebase_options.dart';
 import 'package:seeable/localization/localize.dart';
 import 'package:seeable/views/splash_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'views/settings/controller/settings_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +34,8 @@ Future<void> main() async {
     return true;
   };
 
+  Get.put(SettingsController());
+
   SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp],
   ).then((value) => runApp(const MyApp()));
@@ -38,35 +43,30 @@ Future<void> main() async {
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   static FirebaseAnalyticsObserver observer =
-  FirebaseAnalyticsObserver(analytics: analytics);
+      FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  String? language;
-  String? theme; //TODO: เอาค่าจากsettingsmodelมาใส่
-
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
       title: 'Seeable - Application for Blind',
       translations: Translation(),
-      locale: Locale(language ?? 'th'),
+      locale: const Locale('th'),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [
         Locale('th'),
         Locale('en'),
       ],
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: false,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-      ),
+      theme: _lightTheme,
+      darkTheme: _darkTheme,
       home: const SplashPage(),
       builder: (context, child) {
         return MediaQuery(
@@ -78,4 +78,128 @@ class _MyAppState extends State<MyApp> {
       },
     );
   }
+
+  ThemeData get _lightTheme => ThemeData(
+        useMaterial3: false,
+        brightness: Brightness.light,
+        primaryColor: primaryColor,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        textTheme: TextTheme(
+          labelLarge: TextStyle(
+            fontSize: fontSizeXL,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.black,
+            overflow: TextOverflow.ellipsis,
+          ),
+          labelMedium: TextStyle(
+            fontSize: fontSizeL,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.black,
+          ),
+          labelSmall: TextStyle(
+            fontSize: fontSizeL,
+            fontWeight: FontWeight.normal,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            letterSpacing: 0,
+            color: Colors.black,
+          ),
+          titleLarge: TextStyle(
+            fontSize: fontAppbar,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: primaryColor,
+          ),
+          displaySmall: TextStyle(
+            fontSize: fontSizeM,
+            fontWeight: FontWeight.normal,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.black,
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.black,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.white,
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          elevation: 0.0,
+          backgroundColor: Colors.white,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey.shade400,
+          selectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.kanit().fontFamily,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.kanit().fontFamily,
+          ),
+        ),
+      );
+
+  ThemeData get _darkTheme => ThemeData(
+        useMaterial3: false,
+        brightness: Brightness.light,
+        primaryColor: Colors.grey,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        textTheme: TextTheme(
+          labelLarge: TextStyle(
+            fontSize: fontSizeXL,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.white,
+            overflow: TextOverflow.ellipsis,
+          ),
+          labelMedium: TextStyle(
+            fontSize: fontSizeL,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.white,
+          ),
+          labelSmall: TextStyle(
+            fontSize: fontSizeL,
+            fontWeight: FontWeight.normal,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.white,
+          ),
+          titleLarge: TextStyle(
+            fontSize: fontAppbar,
+            fontWeight: FontWeight.bold,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            letterSpacing: 0,
+            color: Colors.white,
+          ),
+          displaySmall: TextStyle(
+            fontSize: fontSizeM,
+            fontWeight: FontWeight.normal,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            color: Colors.white,
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
+        scaffoldBackgroundColor: primaryDark,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: primaryDark,
+          foregroundColor: primaryDark,
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          elevation: 0.0,
+          backgroundColor: secondaryDark,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.white,
+          selectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.kanit().fontFamily,
+          ),
+          unselectedLabelStyle: TextStyle(
+            fontFamily: GoogleFonts.kanit().fontFamily,
+          ),
+        ),
+      );
 }

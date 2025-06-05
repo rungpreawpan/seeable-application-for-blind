@@ -13,6 +13,8 @@ import 'package:seeable/widgets/custom_nav_bar.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'settings/controller/settings_controller.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -23,6 +25,7 @@ class SplashPage extends StatefulWidget {
 class _SplashPageState extends State<SplashPage> {
   final AppInfoController _appInfoController = Get.put(AppInfoController());
   final IntroController _introController = Get.put(IntroController());
+  final SettingsController _settingsController = Get.find();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -123,7 +126,9 @@ class _SplashPageState extends State<SplashPage> {
 
   _logo() {
     return SvgPicture.asset(
-      'assets/logo/seeable_logo.svg',
+      _settingsController.themeMode.value == ThemeMode.light
+          ? 'assets/logo/seeable_logo.svg'
+          : 'assets/logo/seeable_logo_dark_theme.svg',
       height: 300.0,
     );
   }
@@ -133,8 +138,10 @@ class _SplashPageState extends State<SplashPage> {
       return TextFontStyle(
         'v ${_appInfoController.appVersion.value}',
         size: fontSizeM,
-        color: primaryColor,
         weight: FontWeight.bold,
+        color: _settingsController.themeMode.value == ThemeMode.light
+            ? primaryColor
+            : Colors.white,
       );
     });
   }

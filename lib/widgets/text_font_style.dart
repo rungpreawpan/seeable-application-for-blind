@@ -4,16 +4,19 @@ import 'package:seeable/constant/value_constant.dart';
 
 class TextFontStyle extends StatelessWidget {
   final String data;
-  final Color color;
+  final Color? color;
+  final TextStyle? style;
   final double size;
   final FontWeight weight;
   final bool underline;
   final TextOverflow? overflow;
   final TextAlign align;
 
-  const TextFontStyle(this.data, {
+  const TextFontStyle(
+    this.data, {
     super.key,
-    this.color = Colors.black,
+    this.color,
+    this.style,
     this.size = fontSizeS,
     this.weight = FontWeight.normal,
     this.underline = false,
@@ -25,16 +28,15 @@ class TextFontStyle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       data,
-      style: TextStyle(
-        color: color,
-        fontSize: size,
-        fontWeight: weight,
-        fontFamily: GoogleFonts
-            .kanit()
-            .fontFamily,
-        decoration: underline ? TextDecoration.underline : null,
-        overflow: overflow,
-      ),
+      style: style ??
+          TextStyle(
+            color: color,
+            fontSize: size,
+            fontWeight: weight,
+            fontFamily: GoogleFonts.kanit().fontFamily,
+            decoration: underline ? TextDecoration.underline : null,
+            overflow: overflow,
+          ),
       textAlign: align,
     );
   }

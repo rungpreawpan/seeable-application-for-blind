@@ -9,6 +9,7 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
 import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/text_font_style.dart';
 
 class ScanTextResultPage extends StatefulWidget {
   final File? imageFile;
@@ -75,6 +76,8 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return MainTemplate(
       appBarTitle: 'scan result'.tr,
       showBackButton: true,
@@ -92,10 +95,11 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
                       )
                     : const SizedBox(),
                 const SizedBox(height: marginX2),
-                Text(
+                TextFontStyle(
                   _ocrController.ocrText != null
                       ? _ocrController.ocrText!.text!
                       : '',
+                  style: theme.textTheme.displaySmall,
                 ),
               ],
             ),
