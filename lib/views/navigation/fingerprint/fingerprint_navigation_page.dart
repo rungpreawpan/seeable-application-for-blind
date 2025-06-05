@@ -54,6 +54,8 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
 
     _readRssi?.cancel();
     _readRssi = null;
+
+    _fingerprintController.clearData();
   }
 
   @override
