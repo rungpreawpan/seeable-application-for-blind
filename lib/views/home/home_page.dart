@@ -14,8 +14,10 @@ import 'package:seeable/views/navigation/fingerprint/fingerprint_navigation_page
 import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
 import 'package:seeable/views/object_detection/server/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/listview_button.dart';
 import 'package:seeable/widgets/navigation_main_template.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,11 +29,14 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final BleController _bleController = Get.put(BleController());
   final AppInfoController _appInfoController = Get.find();
+  final SettingsController _settingsController = Get.find();
   final FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
   UserModel? userInfo;
+
+  late stt.SpeechToText _speech;
 
   List featuresList = [
     {'title': 'navigation'.tr, 'icon_path': 'assets/icons/navigation_icon.svg'},
@@ -47,6 +52,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     _startAdvertiseBluetooth();
+    _speech = stt.SpeechToText();
   }
 
   _stopAdvertiseBluetooth() async {
@@ -76,7 +82,8 @@ class _HomePageState extends State<HomePage> {
       serviceUuid: convertHexToUUID(userInfo!.uuid!),
       localName: 'seeable',
       manufacturerId: 1234,
-      manufacturerData: Uint8List.fromList('seeable-${userInfo!.uuid!}'.codeUnits),
+      manufacturerData:
+          Uint8List.fromList('seeable-${userInfo!.uuid!}'.codeUnits),
       includeDeviceName: true,
     );
 
@@ -91,6 +98,21 @@ class _HomePageState extends State<HomePage> {
     log('bluetooth advertise: ${advertiseData.localName} | ${advertiseData.serviceUuid}');
   }
 
+  void _listen() async {
+    bool available = await _speech.initialize();
+    if (available) {
+      _speech.listen(
+        localeId: _settingsController.localeToString(_settingsController.currentLocale.value),
+        onResult: (val) {
+          if (val.hasConfidenceRating && val.confidence > 0) {
+            print(val.recognizedWords); //TODO
+          }
+        },
+      );
+    }
+  }
+
+
   @override
   void dispose() {
     super.dispose();
@@ -100,37 +122,40 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationMainTemplate(
-      appBarTitle: '',
-      items: featuresList,
-      itemWidget: (context, index) {
-        var item = featuresList[index];
+    return GestureDetector(
+      onTap: _listen,
+      child: NavigationMainTemplate(
+        appBarTitle: '',
+        items: featuresList,
+        itemWidget: (context, index) {
+          var item = featuresList[index];
 
-        return ListViewButton(
-          onTap: () async {
-            if (item['title'] == 'navigation'.tr) {
-              // await FlutterBlePeripheral().stop();
-              // _stopAdvertiseBluetooth();
-              // Get.to(() => const LocationListPage()); //server
-              Get.to(() => const FingerprintNavigationPage());
-            } else if (item['title'] == 'object detection'.tr) {
-              // Get.to(() => const ObjectDetectionPage());
-              // Get.to(() => const RealtimeObjectDetectionPage());
-              // Get.to(() => const RealtimePage());
-              // Get.to(() => const CameraObjectDetectionPage());
-              // Get.to(() => const ObjectDetectServerPage());
-              Get.to(() => const RealTimeObjectDetectServerPage());
-            } else if (item['title'] == 'scan text'.tr) {
-              Get.to(() => const ScanTextPage());
-            } else {
-              Get.offAll(() => const HomePage());
-            }
-          },
-          iconPath: item['icon_path'],
-          title: item['title'],
-          showArrow: false,
-        );
-      },
+          return ListViewButton(
+            onTap: () async {
+              if (item['title'] == 'navigation'.tr) {
+                // await FlutterBlePeripheral().stop();
+                // _stopAdvertiseBluetooth();
+                // Get.to(() => const LocationListPage()); //server
+                Get.to(() => const FingerprintNavigationPage());
+              } else if (item['title'] == 'object detection'.tr) {
+                // Get.to(() => const ObjectDetectionPage());
+                // Get.to(() => const RealtimeObjectDetectionPage());
+                // Get.to(() => const RealtimePage());
+                // Get.to(() => const CameraObjectDetectionPage());
+                // Get.to(() => const ObjectDetectServerPage());
+                Get.to(() => const RealTimeObjectDetectServerPage());
+              } else if (item['title'] == 'scan text'.tr) {
+                Get.to(() => const ScanTextPage());
+              } else {
+                Get.offAll(() => const HomePage());
+              }
+            },
+            iconPath: item['icon_path'],
+            title: item['title'],
+            showArrow: false,
+          );
+        },
+      ),
     );
   }
 }

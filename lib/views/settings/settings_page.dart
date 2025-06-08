@@ -334,12 +334,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 String language;
                 if (selectedLanguage.first == 'english'.tr) {
                   language = 'english';
-                  _settingsController.locale.value = 'en';
-                  Get.updateLocale(Locale(_settingsController.locale.value));
+                  _settingsController.currentLocale.value = _settingsController.languageNameToLocale('english');
+                  Get.updateLocale(_settingsController.currentLocale.value);
                 } else {
                   language = 'thai';
-                  _settingsController.locale.value = 'th';
-                  Get.updateLocale(Locale(_settingsController.locale.value));
+                  _settingsController.currentLocale.value = _settingsController.languageNameToLocale('thai');
+                  Get.updateLocale(_settingsController.currentLocale.value);
                 }
 
                 String settingsData = jsonEncode({
@@ -351,7 +351,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
-                // await _prepareData();
+                await _prepareData(); //TODO ใส่แล้วcontrollerไม่เลือกค่าในitempicker
 
                 setState(() {});
               }

@@ -1,16 +1,26 @@
 import 'dart:developer';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:seeable/service/request_service.dart';
+import 'package:seeable/utils/alert.dart';
+import 'package:seeable/views/navigation/fingerprint/model/fingerprint_model.dart';
 
 class FingerprintController extends GetxController {
+  var isLoading = false.obs;
   var isScanning = false.obs;
+
   RxList<ScanResult> scanList = <ScanResult>[].obs;
-  RxList<ScanResult> connectedList = <ScanResult>[].obs;
 
   RxMap<String, List<int>> rssiMap = <String, List<int>>{}.obs;
 
+  FingerprintModel? position;
+
   scanDevices() async {
-    print('start scan');
+    if (kDebugMode) {
+      print('start scan');
+    }
 
     isScanning.value = true;
 
@@ -19,36 +29,22 @@ class FingerprintController extends GetxController {
         if (results.isNotEmpty) {
           scanList.value = results
               .where((e) {
-                e.device.platformName.contains('Ruuvi')
-                    ? print('${e.device.remoteId} ${e.device.platformName}')
-                    : null;
+                if (kDebugMode) {
+                  e.device.platformName.contains('Ruuvi')
+                      ? print('${e.device.remoteId} ${e.device.platformName}')
+                      : null;
+                }
 
                 return e.device.platformName.contains('Ruuvi');
               })
               .map((e) => e)
               .toList();
 
-          if (connectedList.isEmpty) {
-            for (ScanResult scan in scanList) {
-              connectDevice(scan.device);
-              connectedList.add(scan);
-            }
-          } else {
-            for (ScanResult connected in connectedList) {
-              for (ScanResult scan in scanList) {
-                if (scan.device.platformName != connected.device.platformName) {
-                  connectDevice(scan.device);
-                  connectedList.add(scan);
-                }
-              }
-            }
-          }
+          readRssi();
         }
       },
       onError: (e) {
         log(e);
-        scanList.clear();
-        connectedList.clear();
       },
     );
 
@@ -64,53 +60,74 @@ class FingerprintController extends GetxController {
 
     isScanning.value = false;
 
-    print('scan complete');
-  }
-
-  connectDevice(BluetoothDevice device) async {
-    await device.connect();
-
-    print('Connected to ${device.platformName}');
+    if (kDebugMode) {
+      print('scan complete');
+    }
   }
 
   readRssi() async {
-    for (ScanResult connected in connectedList) {
-      BluetoothDevice device = connected.device;
+    for (var result in scanList) {
+      int rssi = result.rssi;
+      String deviceKey = result.device.platformName;
 
-      try {
-        var state = await device.connectionState.first;
-        if (state == BluetoothConnectionState.connected) {
-          int rssi = await device.readRssi();
-          String deviceKey = device.platformName;
+      if (!rssiMap.containsKey(deviceKey)) {
+        rssiMap[deviceKey] = [];
+      }
 
-          if (!rssiMap.containsKey(deviceKey)) {
-            rssiMap[deviceKey] = [];
-          }
+      rssiMap[deviceKey]!.add(rssi);
 
-          rssiMap[deviceKey]!.add(rssi);
+      if (rssiMap[deviceKey]!.length > 20) {
+        rssiMap[deviceKey]!.removeAt(0);
+      }
 
-          if (rssiMap[deviceKey]!.length > 100) {
-            rssiMap[deviceKey]!.removeAt(0);
-          }
-
-          print('Updated RSSI for $deviceKey: $rssi');
-          print('All RSSI values for $deviceKey: ${rssiMap[deviceKey]}');
-        }
-      } catch (e) {
-        print('Error reading RSSI from ${device.platformName}: $e');
+      if (kDebugMode) {
+        print('Updated RSSI for $deviceKey: $rssi');
+        print('All RSSI values for $deviceKey: ${rssiMap[deviceKey]}');
       }
     }
   }
 
-  clearData() {
-    if (connectedList.isEmpty) {
-      for (ScanResult connected in connectedList) {
-        connected.device.disconnect();
-      }
+  Map<String, List<int>> convertRssiMap(Map<String, List<int>> rssiMap) {
+    Map<String, List<int>> transformed = {};
+
+    rssiMap.forEach((key, values) {
+      String newKey = key.replaceAll(' ', '_');
+      transformed[newKey] = values;
+    });
+
+    return transformed;
+  }
+
+
+  sendRssi() async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('ไม่มีสัญญาณอินเตอร์เน็ต');
+      isLoading.value = false;
+
+      return;
     }
 
-    scanList.clear();
-    connectedList.clear();
-    rssiMap.clear();
+    try {
+      isLoading.value = true;
+
+      var response = await RequestService().request(
+        '/localize',
+        method: HttpMethod.post,
+        data: {
+          'rssi_map': convertRssiMap(rssiMap),
+        },
+      );
+
+      if (response != null && response.statusCode == 200) {
+        var dataJSON = response.data;
+        position = FingerprintModel.fromJSON(dataJSON);
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

@@ -14,12 +14,14 @@ class SettingsController extends GetxController {
 
   final storage = const FlutterSecureStorage();
   var themeMode = ThemeMode.light.obs;
-  var locale = 'th'.obs;
+  var currentLocale = const Locale('th', 'TH').obs;
 
   @override
   void onInit() {
     super.onInit();
-    _loadThemeFromSettings();
+
+    loadThemeFromSettings();
+    loadLanguageFromSettings();
   }
 
   //TODO: แก้ไขเวลาตั้งค่าว่าsystemแล้วไม่ยอมเปลี่ยนตามsystemจริงๆ
@@ -36,13 +38,13 @@ class SettingsController extends GetxController {
       settings = SettingsModel();
     }
 
-    settings.theme = _themeModeToString(mode);
+    settings.theme = themeModeToString(mode);
 
     await storage.write(
         key: 'settings_value', value: jsonEncode(settings.toJSON()));
   }
 
-  Future<void> _loadThemeFromSettings() async {
+  Future<void> loadThemeFromSettings() async {
     final data = await storage.read(key: 'settings_value');
 
     if (data != null) {
@@ -63,6 +65,7 @@ class SettingsController extends GetxController {
           default:
             themeMode.value = ThemeMode.light;
         }
+
         Get.changeThemeMode(themeMode.value);
       } catch (e) {
         themeMode.value = ThemeMode.light;
@@ -74,7 +77,7 @@ class SettingsController extends GetxController {
     }
   }
 
-  String _themeModeToString(ThemeMode mode) {
+  String themeModeToString(ThemeMode mode) {
     switch (mode) {
       case ThemeMode.light:
         return 'light';
@@ -85,28 +88,26 @@ class SettingsController extends GetxController {
     }
   }
 
-  //TODO
-  void setLanguage(ThemeMode mode) async {
-    // themeMode.value = mode;
-    // Get.changeThemeMode(mode);
-    //
-    // final existingData = await storage.read(key: 'settings_value');
-    // SettingsModel settings;
-    //
-    // if (existingData != null) {
-    //   settings = SettingsModel.fromJSON(json.decode(existingData));
-    // } else {
-    //   settings = SettingsModel();
-    // }
-    //
-    // settings.theme = _themeModeToString(mode);
-    //
-    // await storage.write(
-    //     key: 'settings_value', value: jsonEncode(settings.toJSON()));
+  void setLanguage(Locale locale) async {
+    currentLocale.value = locale;
+    Get.updateLocale(locale);
+
+    final existingData = await storage.read(key: 'settings_value');
+    SettingsModel settings;
+
+    if (existingData != null) {
+      settings = SettingsModel.fromJSON(json.decode(existingData));
+    } else {
+      settings = SettingsModel();
+    }
+
+    settings.language = languageToString(locale);
+
+    await storage.write(
+        key: 'settings_value', value: jsonEncode(settings.toJSON()));
   }
 
-  //TODO
-  Future<void> _loadLanguageFromSettings() async {
+  Future<void> loadLanguageFromSettings() async {
     final data = await storage.read(key: 'settings_value');
 
     if (data != null) {
@@ -116,22 +117,50 @@ class SettingsController extends GetxController {
 
         switch (settings.language?.toLowerCase()) {
           case 'thai':
-            locale.value = 'th';
+            currentLocale.value = languageNameToLocale('thai');
             break;
           case 'english':
-            locale.value = 'en';
+            currentLocale.value = languageNameToLocale('english');
             break;
           default:
+            currentLocale.value = languageNameToLocale('thai');
         }
-        Get.updateLocale(Locale(locale.value));
+
+        Get.updateLocale(currentLocale.value);
       } catch (e) {
-        locale.value = 'th';
-        Get.updateLocale(Locale(locale.value));
+        currentLocale.value = languageNameToLocale('thai');
+        Get.updateLocale(currentLocale.value);
       }
     } else {
-      locale.value = 'th';
-      Get.updateLocale(Locale(locale.value));
+      currentLocale.value = languageNameToLocale('thai');
+      Get.updateLocale(currentLocale.value);
     }
+  }
+
+  String languageToString(Locale locale) {
+    switch (locale.languageCode) {
+      case 'th':
+        return 'thai';
+      case 'en':
+        return 'english';
+      default:
+        return 'thai';
+    }
+  }
+
+  Locale languageNameToLocale(String name) {
+    switch (name.toLowerCase()) {
+      case 'thai':
+        return const Locale('th', 'TH');
+      case 'english':
+        return const Locale('en', 'US');
+      default:
+        return const Locale('th', 'TH');
+    }
+  }
+
+  String localeToString(Locale locale) {
+    return '${locale.languageCode}-${locale.countryCode}';
   }
 
   contactDev({
