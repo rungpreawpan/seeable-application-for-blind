@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/app_info_controller.dart';
@@ -45,15 +44,12 @@ class _UpdateUuidPageState extends State<UpdateUuidPage> {
   Widget build(BuildContext context) {
     return UpdateInfoTemplate(
       appBarTitle: 'uuid'.tr,
-      onBack: () {
-        //TODO:
-      },
       isChange: _uuidController.text != widget.uuid,
       onTap: () {
         _loginController.updateUser(
           uuid: widget.uuid,
           data: jsonEncode({
-            'uuid': _uuidController.text,
+            'newUuid': _uuidController.text,
           }),
         );
       },

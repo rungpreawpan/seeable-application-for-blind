@@ -34,7 +34,7 @@ class _CustomNavBarState extends State<CustomNavBar> {
         decoration: BoxDecoration(
           color: theme.bottomNavigationBarTheme.backgroundColor,
           boxShadow: _settingsController.themeMode.value == ThemeMode.light
-              ? lightBoxShadow
+              ? customBoxShadow
               : null,
           borderRadius: const BorderRadius.only(
             topRight: Radius.circular(25.0),

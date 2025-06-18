@@ -97,6 +97,13 @@ class _ScanTextPageState extends State<ScanTextPage> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+
+    _cameraController?.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MainTemplate(
       appBarTitle: 'scan text'.tr,

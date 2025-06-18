@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController? textEditingController;
@@ -39,7 +41,7 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.isEnabled = true,
     this.isDense,
-    this.filled = true,
+    this.filled = false,
     this.filledColor = Colors.white,
     this.padding,
     this.labelText,
@@ -55,6 +57,9 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final SettingsController settingsController = Get.find();
+    final theme = Theme.of(context);
+
     return TextField(
       controller: textEditingController,
       focusNode: focusNode,
@@ -67,11 +72,7 @@ class CustomTextField extends StatelessWidget {
       textInputAction: TextInputAction.done,
       textAlign: textAlign,
       obscureText: obscureText,
-      style: TextStyle(
-        color: Colors.black,
-        fontSize: fontSizeL,
-        fontFamily: GoogleFonts.kanit().fontFamily,
-      ),
+      style: theme.textTheme.labelSmall,
       onChanged: onChanged,
       decoration: InputDecoration(
         enabled: isEnabled,
@@ -85,29 +86,37 @@ class CustomTextField extends StatelessWidget {
             ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Colors.black12,
+          borderSide: BorderSide(
+            color: settingsController.themeMode.value == ThemeMode.light
+                ? Colors.black12
+                : Colors.white,
             width: 1.0,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Colors.black12,
+          borderSide: BorderSide(
+            color: settingsController.themeMode.value == ThemeMode.light
+                ? Colors.black12
+                : Colors.white,
             width: 1.0,
           ),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Colors.black12,
+          borderSide: BorderSide(
+            color: settingsController.themeMode.value == ThemeMode.light
+                ? Colors.black12
+                : Colors.white,
             width: 1.0,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Colors.black12,
+          borderSide: BorderSide(
+            color: settingsController.themeMode.value == ThemeMode.light
+                ? Colors.black12
+                : Colors.white,
             width: 1.0,
           ),
         ),

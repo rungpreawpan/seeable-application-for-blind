@@ -21,7 +21,7 @@ const double margin = 8.0;
 const double marginX2 = 16.0;
 
 // shadow
-List<BoxShadow> lightBoxShadow = [
+List<BoxShadow> customBoxShadow = [
   BoxShadow(
     color: Colors.grey.withOpacity(0.5),
     spreadRadius: 1.0,

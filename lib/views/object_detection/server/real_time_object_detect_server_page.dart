@@ -147,7 +147,7 @@ class _RealTimeObjectDetectServerPageState
         List<String> translateObjects = [];
         for (String obj in objects) {
           var translation =
-              await translator.translate(obj, from: 'en', to: 'th');
+              await translator.translate(obj, from: 'en', to: 'th'); //todo ต้องแปลจากth to enด้วยต้องเช็คจากsettings
           translateObjects.add(translation.text);
         }
 
@@ -163,6 +163,7 @@ class _RealTimeObjectDetectServerPageState
     super.dispose();
 
     flutterTts.stop();
+    _cameraController?.dispose();
   }
 
   @override

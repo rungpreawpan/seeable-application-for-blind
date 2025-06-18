@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
-class CustomItemPickerCell extends StatelessWidget {
+class CustomItemPickerCell extends StatefulWidget {
   final String title;
   final bool isSelected;
 
@@ -14,6 +15,13 @@ class CustomItemPickerCell extends StatelessWidget {
   });
 
   @override
+  State<CustomItemPickerCell> createState() => _CustomItemPickerCellState();
+}
+
+class _CustomItemPickerCellState extends State<CustomItemPickerCell> {
+  final SettingsController _settingsController = Get.find();
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: Get.width,
@@ -22,21 +30,26 @@ class CustomItemPickerCell extends StatelessWidget {
         vertical: 10.0,
       ),
       decoration: BoxDecoration(
-        color: isSelected ? primaryColor : Colors.white,
+        // color: widget.isSelected ? primaryColor : Colors.white,
+        color: widget.isSelected
+            ? _settingsController.themeMode.value == ThemeMode.light
+                ? primaryColor
+                : Colors.grey.shade600
+            : Colors.white,
         borderRadius: BorderRadius.circular(10.0),
-        boxShadow: lightBoxShadow,
+        boxShadow: customBoxShadow,
       ),
       child: Row(
         children: [
           Expanded(
             child: TextFontStyle(
-              title,
+              widget.title,
               size: fontSizeL,
-              color: isSelected ? Colors.white : Colors.black,
+              color: widget.isSelected ? Colors.white : Colors.black,
             ),
           ),
           Visibility(
-            visible: isSelected ? true : false,
+            visible: widget.isSelected ? true : false,
             child: const Icon(
               Icons.check,
               size: 24.0,

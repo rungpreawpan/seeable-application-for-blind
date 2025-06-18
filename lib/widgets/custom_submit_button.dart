@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class CustomSubmitButton extends StatelessWidget {
@@ -38,6 +40,8 @@ class CustomSubmitButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final SettingsController settingsController = Get.find();
+
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -45,7 +49,9 @@ class CustomSubmitButton extends StatelessWidget {
         width: buttonWidth,
         margin: buttonMargin,
         decoration: BoxDecoration(
-          color: buttonColor,
+          color: settingsController.themeMode.value == ThemeMode.light
+              ? buttonColor
+              : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(borderRadius),
           border: showBorder
               ? Border.all(
@@ -74,7 +80,9 @@ class CustomSubmitButton extends StatelessWidget {
               title,
               size: fontSize,
               weight: fontWeight,
-              color: fontColor,
+              color: settingsController.themeMode.value == ThemeMode.light
+                  ? fontColor
+                  : Colors.black,
             ),
           ],
         ),

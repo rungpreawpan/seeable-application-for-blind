@@ -17,11 +17,11 @@ class SettingsController extends GetxController {
   var currentLocale = const Locale('th', 'TH').obs;
 
   @override
-  void onInit() {
+  void onInit() async {
     super.onInit();
 
-    loadThemeFromSettings();
-    loadLanguageFromSettings();
+    await loadThemeFromSettings();
+    await loadLanguageFromSettings();
   }
 
   //TODO: แก้ไขเวลาตั้งค่าว่าsystemแล้วไม่ยอมเปลี่ยนตามsystemจริงๆ

@@ -35,9 +35,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
   bool _speechRecognitionValue = false;
 
-  final List<String> speedList = ['slow'.tr, 'normal'.tr, 'fast'.tr];
-  final List<String> languageList = ['thai'.tr, 'english'.tr];
-  final List<String> themeList = ['system default'.tr, 'light'.tr, 'dark'.tr];
+  List<String> get speedList => ['slow'.tr, 'normal'.tr, 'fast'.tr];
+
+  List<String> get languageList => ['thai'.tr, 'english'.tr];
+
+  List<String> get themeList => ['system default'.tr, 'light'.tr, 'dark'.tr];
 
   List<String> selectedSpeed = [];
   List<String> selectedLanguage = [];
@@ -334,11 +336,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 String language;
                 if (selectedLanguage.first == 'english'.tr) {
                   language = 'english';
-                  _settingsController.currentLocale.value = _settingsController.languageNameToLocale('english');
+                  _settingsController.currentLocale.value =
+                      _settingsController.languageNameToLocale('english');
                   Get.updateLocale(_settingsController.currentLocale.value);
                 } else {
                   language = 'thai';
-                  _settingsController.currentLocale.value = _settingsController.languageNameToLocale('thai');
+                  _settingsController.currentLocale.value =
+                      _settingsController.languageNameToLocale('thai');
                   Get.updateLocale(_settingsController.currentLocale.value);
                 }
 
@@ -351,7 +355,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
-                await _prepareData(); //TODO ใส่แล้วcontrollerไม่เลือกค่าในitempicker
+                await _prepareData();
 
                 setState(() {});
               }
@@ -406,7 +410,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 });
 
                 await storage.write(key: 'settings_value', value: settingsData);
-                // await _prepareData();
 
                 setState(() {});
               }

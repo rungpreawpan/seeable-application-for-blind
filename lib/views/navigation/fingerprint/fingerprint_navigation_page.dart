@@ -1,13 +1,19 @@
 import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/navigation/fingerprint/controller/fingerprint_controller.dart';
-import 'package:seeable/views/navigation/fingerprint/controller/test_ble_controller.dart';
-import 'package:seeable/widgets/custom_submit_button.dart';
+import 'package:seeable/views/navigation/fingerprint/model/obstacle_model.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/main_template.dart';
+import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
+import 'package:translator/translator.dart';
 
 class FingerprintNavigationPage extends StatefulWidget {
   const FingerprintNavigationPage({super.key});
@@ -18,63 +24,101 @@ class FingerprintNavigationPage extends StatefulWidget {
 }
 
 class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
-  // final TestBleController _testBleController = Get.put(TestBleController());
+  final SettingsController _settingsController = Get.find();
   final FingerprintController _fingerprintController =
       Get.put(FingerprintController());
 
-  // Timer? _scanBle;
-  // Timer? _readRssi;
-
   Timer? _scanning;
+  Timer? _obstacleScanning;
 
-  Timer? _localize;
+  List<CameraDescription>? _cameras;
+  CameraController? _cameraController;
+
+  final FlutterTts flutterTts = FlutterTts();
+  final translator = GoogleTranslator();
 
   @override
   void initState() {
     super.initState();
 
+    _initializeCamera();
     _prepareData();
   }
 
   _prepareData() async {
-    // await _testBleController.clearData();
-    //
-    // _scanBle = Timer.periodic(
-    //   const Duration(seconds: 5),
-    //   (Timer t) async {
-    //     await _testBleController.scanDevices();
-    //   },
-    // );
-    //
-    // _readRssi = Timer.periodic(
-    //   const Duration(seconds: 1),
-    //   (Timer t) async {
-    //     await _testBleController.readRssi();
-    //   },
-    // );
-
     _scanning = Timer.periodic(
       const Duration(seconds: 3),
-      (Timer t) async {
+      (timer) async {
         await _fingerprintController.scanDevices();
       },
     );
+    _obstacleScanning = Timer.periodic(
+      const Duration(seconds: 5),
+      (timer) {
+        _obstacle();
+      },
+    );
+  }
+
+  Future<void> _initializeCamera([int cameraIndex = 0]) async {
+    try {
+      _cameras = await availableCameras();
+
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _cameraController = CameraController(
+          _cameras![cameraIndex],
+          ResolutionPreset.high,
+          enableAudio: false,
+          imageFormatGroup: ImageFormatGroup.jpeg,
+        );
+
+        await _cameraController!.initialize();
+
+        if (!mounted) return;
+
+        setState(() {});
+      } else {
+        log('No cameras available');
+      }
+    } catch (e) {
+      log('Error initializing camera: $e');
+    }
+  }
+
+  _obstacle() async {
+    XFile? file = await _cameraController!.takePicture();
+    _fingerprintController.obstacleList.clear();
+
+    await _fingerprintController.uploadObstacle(File(file.path));
+
+    if (_fingerprintController.obstacleList.isNotEmpty) {
+      for (ObstacleModel obstacle in _fingerprintController.obstacleList) {
+        if (obstacle.priority! >= 0.5) {
+          if (_settingsController.currentLocale.value.languageCode == 'th') {
+            var translate = await translator.translate(obstacle.message!,
+                from: 'en', to: 'th');
+            await flutterTts.speak(translate.toString());
+          } else {
+            var translate = await translator.translate(obstacle.message!,
+                from: 'th', to: 'en');
+            await flutterTts.speak(translate.toString());
+          }
+        }
+      }
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
 
-    // _scanBle?.cancel();
-    // _scanBle = null;
-    //
-    // _readRssi?.cancel();
-    // _readRssi = null;
-    //
-    // _testBleController.clearData();
-
     _scanning?.cancel();
     _scanning = null;
+
+    _obstacleScanning?.cancel();
+    _obstacleScanning = null;
+
+    _cameraController?.dispose();
   }
 
   @override
@@ -96,9 +140,19 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
   }
 
   _map() {
-    return Container(
-      height: 200.0,
-      color: Colors.grey.shade300,
+    return InkWell(
+      onTap: () async {
+        XFile? result =
+            await Get.bottomSheet(const SelectCameraGalleryBottomSheet());
+
+        if (result != null) {
+          await _fingerprintController.uploadObstacle(File(result.path));
+        }
+      },
+      child: Container(
+        height: 200.0,
+        color: Colors.grey.shade300,
+      ),
     );
   }
 
@@ -106,8 +160,9 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: () {
-        _fingerprintController.sendRssi();
+      onTap: () async {
+        await _fingerprintController.sendRssi();
+        // _fingerprintController.uploadObstacle();
       },
       child: Container(
         height: 50.0,

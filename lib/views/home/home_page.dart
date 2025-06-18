@@ -36,7 +36,11 @@ class _HomePageState extends State<HomePage> {
 
   UserModel? userInfo;
 
-  late stt.SpeechToText _speech;
+  // late stt.SpeechToText _speech;
+  // String? _text;
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  String _lastWords = '';
 
   List featuresList = [
     {'title': 'navigation'.tr, 'icon_path': 'assets/icons/navigation_icon.svg'},
@@ -52,7 +56,9 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     _startAdvertiseBluetooth();
-    _speech = stt.SpeechToText();
+    // _speech = stt.SpeechToText();
+
+    // _initSpeech();
   }
 
   _stopAdvertiseBluetooth() async {
@@ -98,20 +104,66 @@ class _HomePageState extends State<HomePage> {
     log('bluetooth advertise: ${advertiseData.localName} | ${advertiseData.serviceUuid}');
   }
 
-  void _listen() async {
-    bool available = await _speech.initialize();
+  Future<void> _initSpeech() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'done' || status == 'notListening') {
+          _startWakeWordListening();
+        }
+      },
+    );
     if (available) {
-      _speech.listen(
-        localeId: _settingsController.localeToString(_settingsController.currentLocale.value),
-        onResult: (val) {
-          if (val.hasConfidenceRating && val.confidence > 0) {
-            print(val.recognizedWords); //TODO
-          }
-        },
-      );
+      _startWakeWordListening();
     }
   }
 
+  void _startWakeWordListening() {
+    _speech.listen(
+      localeId: _settingsController
+          .localeToString(_settingsController.currentLocale.value),
+      onResult: (val) {
+        if (val.recognizedWords.isNotEmpty) {
+          print("ได้ยิน: ${val.recognizedWords}");
+          _lastWords = val.recognizedWords.toLowerCase();
+          if (_lastWords.contains("สิริ")) {
+            print("เรียก wake word แล้ว!");
+            _speech.stop();
+            _startCommandListening();
+          }
+        }
+      },
+    );
+  }
+
+  void _startCommandListening() {
+    _speech.listen(
+      localeId: _settingsController
+          .localeToString(_settingsController.currentLocale.value),
+      onResult: (val) {
+        if (val.finalResult) {
+          print("คำสั่ง: ${val.recognizedWords}");
+          _startWakeWordListening();
+        }
+      },
+      listenFor: Duration(seconds: 5),
+    );
+  }
+
+  // void _listen() async {
+  //   bool available = await _speech.initialize();
+  //   if (available) {
+  //     _speech.listen(
+  //       localeId: _settingsController
+  //           .localeToString(_settingsController.currentLocale.value),
+  //       onResult: (val) {
+  //         if (val.hasConfidenceRating && val.confidence > 0) {
+  //           _text = val.recognizedWords;
+  //           setState(() {});
+  //         }
+  //       },
+  //     );
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -123,7 +175,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _listen,
+      // onTap: _listen,
       child: NavigationMainTemplate(
         appBarTitle: '',
         items: featuresList,

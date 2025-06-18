@@ -101,8 +101,6 @@ class _SplashPageState extends State<SplashPage> {
       // print(Get.locale);
       // print(WidgetsBinding.instance.platformDispatcher.platformBrightness);
     }
-
-
   }
 
   @override

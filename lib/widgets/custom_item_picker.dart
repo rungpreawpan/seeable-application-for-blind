@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/custom_submit_button.dart';
 import 'package:seeable/widgets/custom_textfield.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class CustomItemPicker extends StatefulWidget {
-  final bool isIngredientPage;
-  final bool isProductTypePage;
   final String title;
   final String? hintText;
   final double? hintSize;
@@ -27,8 +26,6 @@ class CustomItemPicker extends StatefulWidget {
 
   const CustomItemPicker({
     super.key,
-    this.isIngredientPage = false,
-    this.isProductTypePage = false,
     required this.title,
     this.hintText,
     this.hintSize,
@@ -48,6 +45,8 @@ class CustomItemPicker extends StatefulWidget {
 }
 
 class _CustomItemPickerState extends State<CustomItemPicker> {
+  final SettingsController _settingsController = Get.find();
+
   final TextEditingController _searchController = TextEditingController();
   List _filteredItems = [];
 
@@ -127,17 +126,7 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
             itemCount: _filteredItems.length,
             itemBuilder: (context, index) {
               var item = _filteredItems[index];
-              bool isSelected;
-              if (widget.isIngredientPage) {
-                isSelected = widget.selectedItems
-                    .map((e) => e.ingredientName)
-                    .contains(item.ingredientName);
-              } else if (widget.isProductTypePage) {
-                isSelected =
-                    widget.selectedItems.map((e) => e.name).contains(item.name);
-              } else {
-                isSelected = widget.selectedItems.contains(item);
-              }
+              bool isSelected = widget.selectedItems.contains(item);
 
               return InkWell(
                 onTap: widget.enabledSelect
@@ -188,15 +177,22 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
                 onTap: () {
                   Get.back(result: widget.selectedItems);
                 },
-                title: 'ยืนยัน',
+                title: 'confirm'.tr,
                 fontSize: fontSizeL,
                 borderRadius: 10,
-                buttonColor: primaryColor,
+                buttonColor:
+                    _settingsController.themeMode.value == ThemeMode.light
+                        ? primaryColor
+                        : Colors.grey.shade300,
+                fontColor:
+                    _settingsController.themeMode.value == ThemeMode.light
+                        ? Colors.white
+                        : Colors.black,
                 buttonMargin: const EdgeInsets.all(marginX2),
               )
             : CustomSubmitButton(
                 onTap: () {},
-                title: 'ยืนยัน',
+                title: 'confirm'.tr,
                 fontSize: fontSizeL,
                 borderRadius: 10,
                 buttonColor: Colors.transparent,

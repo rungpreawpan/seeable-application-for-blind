@@ -117,7 +117,7 @@ class _SettingsLabelState extends State<SettingsLabel> {
             children: [
               TextFontStyle(
                 widget.title,
-                size: fontSizeM,
+                style: theme.textTheme.displaySmall,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
