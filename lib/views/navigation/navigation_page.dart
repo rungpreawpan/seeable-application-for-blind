@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/views/navigation/controller/fingerprint_controller.dart';
+import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -25,8 +25,8 @@ class FingerprintNavigationPage extends StatefulWidget {
 
 class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
   final SettingsController _settingsController = Get.find();
-  final FingerprintController _fingerprintController =
-      Get.put(FingerprintController());
+  final NavigationController _fingerprintController =
+      Get.put(NavigationController());
 
   Timer? _scanning;
   Timer? _obstacleScanning;

@@ -10,7 +10,7 @@ import 'package:seeable/utils/alert.dart';
 import 'package:seeable/views/navigation/model/fingerprint_model.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 
-class FingerprintController extends GetxController {
+class NavigationController extends GetxController {
   var isLoading = false.obs;
   var isScanning = false.obs;
 
