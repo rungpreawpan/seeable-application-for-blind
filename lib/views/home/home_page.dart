@@ -8,11 +8,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
-import 'package:seeable/views/navigation/ble_with_server/location/location_list_page.dart';
-import 'package:seeable/views/navigation/controller/ble_controller.dart';
-import 'package:seeable/views/navigation/fingerprint/fingerprint_navigation_page.dart';
-import 'package:seeable/views/object_detection/server/object_detect_server_page.dart';
-import 'package:seeable/views/object_detection/server/real_time_object_detect_server_page.dart';
+import 'package:seeable/views/navigation/fingerprint_navigation_page.dart';
+import 'package:seeable/views/object_detection/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/listview_button.dart';
@@ -27,7 +24,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final BleController _bleController = Get.put(BleController());
   final AppInfoController _appInfoController = Get.find();
   final SettingsController _settingsController = Get.find();
   final FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
@@ -185,16 +181,8 @@ class _HomePageState extends State<HomePage> {
           return ListViewButton(
             onTap: () async {
               if (item['title'] == 'navigation'.tr) {
-                // await FlutterBlePeripheral().stop();
-                // _stopAdvertiseBluetooth();
-                // Get.to(() => const LocationListPage()); //server
                 Get.to(() => const FingerprintNavigationPage());
               } else if (item['title'] == 'object detection'.tr) {
-                // Get.to(() => const ObjectDetectionPage());
-                // Get.to(() => const RealtimeObjectDetectionPage());
-                // Get.to(() => const RealtimePage());
-                // Get.to(() => const CameraObjectDetectionPage());
-                // Get.to(() => const ObjectDetectServerPage());
                 Get.to(() => const RealTimeObjectDetectServerPage());
               } else if (item['title'] == 'scan text'.tr) {
                 Get.to(() => const ScanTextPage());

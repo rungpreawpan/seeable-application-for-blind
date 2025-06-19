@@ -7,8 +7,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
-import 'package:seeable/views/navigation/fingerprint/model/fingerprint_model.dart';
-import 'package:seeable/views/navigation/fingerprint/model/obstacle_model.dart';
+import 'package:seeable/views/navigation/model/fingerprint_model.dart';
+import 'package:seeable/views/navigation/model/obstacle_model.dart';
 
 class FingerprintController extends GetxController {
   var isLoading = false.obs;
