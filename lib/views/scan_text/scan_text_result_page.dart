@@ -12,7 +12,7 @@ import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class ScanTextResultPage extends StatefulWidget {
-  final File? imageFile;
+  final File imageFile;
 
   const ScanTextResultPage({
     super.key,
@@ -88,12 +88,10 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
             padding: const EdgeInsets.all(marginX2),
             child: Column(
               children: [
-                widget.imageFile != null
-                    ? Image.file(
-                        widget.imageFile!,
-                        fit: BoxFit.fitWidth,
-                      )
-                    : const SizedBox(),
+                Image.file(
+                  widget.imageFile!,
+                  fit: BoxFit.fitWidth,
+                ),
                 const SizedBox(height: marginX2),
                 TextFontStyle(
                   _ocrController.ocrText != null

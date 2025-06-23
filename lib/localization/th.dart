@@ -82,9 +82,14 @@ const Map<String, String> th = {
   // object detection
   'upload photo': 'อัพโหลดรูปภาพ',
   'real time': 'เรียลไทม์',
+  'object detection results': 'ผลการตรวจจับวัตถุ',
+  'detected': 'ตรวจพบ',
+  'unable to detect objects': 'ไม่สามารถตรวจจับวัตถุได้',
+  'start object detection': 'เริ่มการตรวจจับวัตถุ',
+  'stop object detection': 'หยุดการตรวจจับวัตถุ',
 
   // scan text
-  'scan result': 'ผลการสแกน',
+  'scan results': 'ผลการสแกน',
 
   // settings
   'sound': 'เสียง',

@@ -132,8 +132,10 @@ class _ScanTextPageState extends State<ScanTextPage> {
                               );
 
                               if (file != null) {
-                                await _ocrController.uploadImage(File(file.path));
-                                Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
+                                await _ocrController
+                                    .uploadImage(File(file.path));
+                                Get.to(() => ScanTextResultPage(
+                                    imageFile: File(file.path)));
                               }
                             },
                             thumbnailImage: _thumbnailImage,
@@ -177,8 +179,13 @@ class _ScanTextPageState extends State<ScanTextPage> {
     final XFile picture = await _cameraController!.takePicture();
     _imageFile = File(picture.path);
 
-    await _ocrController.uploadImage(_imageFile!);
-    Get.to(() => ScanTextResultPage(imageFile: _imageFile));
+    if (_imageFile != null) {
+      await _ocrController.uploadImage(_imageFile!);
+
+      if (_ocrController.ocrText != null) {
+        Get.to(() => ScanTextResultPage(imageFile: _imageFile!));
+      }
+    }
   }
 
   _loading() {

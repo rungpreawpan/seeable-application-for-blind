@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class CustomCameraButton extends StatelessWidget {
   final Function() onTap;
+  final Widget? icon;
 
   const CustomCameraButton({
     super.key,
     required this.onTap,
+    this.icon,
   });
 
   @override
@@ -35,6 +37,9 @@ class CustomCameraButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(33.0),
+                ),
+                child: Center(
+                  child: icon,
                 ),
               ),
             ),

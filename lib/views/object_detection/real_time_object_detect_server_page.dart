@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -13,6 +14,8 @@ import 'package:photo_manager/photo_manager.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/object_detection/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/model/object_detection_model.dart';
+import 'package:seeable/views/object_detection/object_detection_result_page.dart';
+import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/custom_camera_button.dart';
 import 'package:seeable/widgets/custom_gallery_button.dart';
@@ -35,6 +38,7 @@ class _RealTimeObjectDetectServerPageState
     extends State<RealTimeObjectDetectServerPage> {
   final ObjectDetectionController _objectDetectionController =
       Get.put(ObjectDetectionController());
+  final SettingsController _settingsController = Get.find();
 
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -47,10 +51,12 @@ class _RealTimeObjectDetectServerPageState
   CameraController? _cameraController;
   int _selectedCameraIndex = 0;
 
-  File? _imageFile;
-  Size? _imageSize;
+  Timer? _autoCaptureTimer;
+  bool _isCapturing = false;
 
   Uint8List? _thumbnailImage;
+
+  String? translatedText;
 
   @override
   void initState() {
@@ -138,22 +144,35 @@ class _RealTimeObjectDetectServerPageState
   Future _speak() async {
     if (_objectDetectionController.objectDetected?.boxes != null) {
       List<String> objects = [];
+      translatedText = null;
+
       for (BoxesModel object
           in _objectDetectionController.objectDetected!.boxes!) {
-        objects.add(object.label!);
+        if (object.label != null) {
+          objects.add(object.label!);
+        }
       }
 
       if (objects.isNotEmpty) {
-        List<String> translateObjects = [];
-        for (String obj in objects) {
-          var translation =
-              await translator.translate(obj, from: 'en', to: 'th'); //todo ต้องแปลจากth to enด้วยต้องเช็คจากsettings
-          translateObjects.add(translation.text);
-        }
+        List translations = await Future.wait(
+          objects.map((obj) async {
+            // TODO
+            Translation? translation;
 
-        await flutterTts.speak('ตรวจพบวัตถุดังนี้ $translateObjects');
+            if (_settingsController.currentLocale.value.languageCode == 'th') {
+              translation = await translator.translate(obj, to: 'th');
+            } else {
+              translation = await translator.translate(obj, to: 'en');
+            }
+
+            return translation.text;
+          }),
+        );
+
+        translatedText = translations.toSet().toList().join(', ');
+        await flutterTts.speak('${'detected'.tr} $translatedText');
       } else {
-        await flutterTts.speak('ไม่สามารถตรวจจับวัตถุได้');
+        await flutterTts.speak('unable to detect objects'.tr);
       }
     }
   }
@@ -164,6 +183,9 @@ class _RealTimeObjectDetectServerPageState
 
     flutterTts.stop();
     _cameraController?.dispose();
+
+    _autoCaptureTimer?.cancel();
+    _autoCaptureTimer = null;
   }
 
   @override
@@ -171,86 +193,144 @@ class _RealTimeObjectDetectServerPageState
     return MainTemplate(
       appBarTitle: 'object detection'.tr,
       showBackButton: true,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Container(
-              color: Colors.black,
-              child: Stack(
+      body: SafeArea(
+        child: Container(
+          color: Colors.black,
+          child: Stack(
+            children: [
+              Stack(
                 children: [
                   _cameraController != null
                       ? CameraPreview(_cameraController!)
                       : const SizedBox(),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: marginX2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          CustomGalleryButton(
-                            onTap: () async {
-                              XFile? file = await ImagePicker().pickImage(
-                                source: ImageSource.gallery,
-                              );
-
-                              if (file != null) {
-                                _imageSize =
-                                    await getImageSize(File(file.path));
-                                await _objectDetectionController
-                                    .uploadObject(File(file.path));
-                                await _speak();
-                              }
-                              //TODO: กดถ่าย = ถ่ายอัตโนมัติทุก 3-5 วิแล้วแสดงผลที่หน้าจอเป็น snack bar
-                            },
-                            thumbnailImage: _thumbnailImage,
-                          ),
-                          CustomCameraButton(
-                            onTap: () async {
-                              //TODO: to result page
-                              XFile? file =
-                                  await _cameraController!.takePicture();
-
-                              _imageSize = await getImageSize(File(file.path));
-                              await _objectDetectionController
-                                  .uploadObject(File(file.path));
-                              await _speak();
-                              // _imageFile = File(picture.path);
-                            },
-                          ),
-                          CustomSwitchCameraButton(
-                            onTap: () {
-                              if (_cameras == null || _cameras!.length < 2) {
-                                return;
-                              }
-
-                              if (_selectedCameraIndex == 0) {
-                                _selectedCameraIndex =
-                                    (_selectedCameraIndex + 1) %
-                                        _cameras!.length;
-                              } else {
-                                _selectedCameraIndex = 0;
-                              }
-                              _initializeCamera(_selectedCameraIndex);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _loading(),
                 ],
               ),
-            ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: marginX2),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _galleryThumbnail(),
+                      _cameraButton(),
+                      _switchCamera(),
+                    ],
+                  ),
+                ),
+              ),
+              translatedText != null
+                  ? Align(
+                      alignment: Alignment.topCenter,
+                      child: _resultBox(
+                        result: translatedText,
+                      ),
+                    )
+                  : const SizedBox(),
+            ],
           ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: _resultBox(
-              result: 'test', //TODO add real result
-            ),
-          ),
-          _loading(),
-        ],
+        ),
       ),
+    );
+  }
+
+  void _startAutoCapture() async {
+    await flutterTts.speak('start object detection'.tr);
+    _isCapturing = true;
+
+    _autoCaptureTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (timer) async {
+        XFile file = await _cameraController!.takePicture();
+
+        await _objectDetectionController.uploadObject(File(file.path));
+        await _speak();
+
+        setState(() {});
+      },
+    );
+  }
+
+  void _stopAutoCapture() async {
+    _autoCaptureTimer?.cancel();
+    flutterTts.stop();
+    _autoCaptureTimer = null;
+    _isCapturing = false;
+    translatedText = null;
+    setState(() {});
+
+    await flutterTts.speak('stop object detection'.tr);
+  }
+
+  _cameraButton() {
+    return CustomCameraButton(
+      onTap: () async {
+        if (_isCapturing) {
+          _isCapturing = false;
+          _stopAutoCapture();
+        } else {
+          _isCapturing = true;
+          _startAutoCapture();
+        }
+
+        setState(() {});
+      },
+      icon: _isCapturing
+          ? const Icon(
+              Icons.stop_rounded,
+              size: 28.0,
+              color: Colors.black,
+            )
+          : null,
+    );
+  }
+
+  _switchCamera() {
+    return CustomSwitchCameraButton(
+      onTap: () {
+        if (_cameras == null || _cameras!.length < 2) {
+          return;
+        }
+
+        if (_selectedCameraIndex == 0) {
+          _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras!.length;
+        } else {
+          _selectedCameraIndex = 0;
+        }
+        _initializeCamera(_selectedCameraIndex);
+      },
+    );
+  }
+
+  _galleryThumbnail() {
+    return CustomGalleryButton(
+      onTap: () async {
+        XFile? file = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+        );
+
+        if (file != null) {
+          await _objectDetectionController.uploadObject(File(file.path));
+
+          Get.to(
+            () => ObjectDetectionResultPage(
+              imageFile: File(file.path),
+            ),
+          );
+        }
+      },
+      // onTap: () async {
+      //   XFile? file = await ImagePicker().pickImage(
+      //     source: ImageSource.gallery,
+      //   );
+      //
+      //   if (file != null) {
+      //     await _objectDetectionController.uploadObject(File(file.path));
+      //     await _speak();
+      //   }
+      // },
+      thumbnailImage: _thumbnailImage,
     );
   }
 

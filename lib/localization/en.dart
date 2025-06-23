@@ -82,9 +82,14 @@ const Map<String, String> en = {
   // object detection
   'upload photo': 'Upload Photo',
   'real time': 'Real-Time',
+  'object detection results': 'Object Detection Results',
+  'detected': 'Detected',
+  'unable to detect objects': 'Unable to detect objects',
+  'start object detection': 'Start object detection',
+  'stop object detection': 'Stop object detection',
 
   // scan text
-  'scan result': 'Scan Result',
+  'scan results': 'Scan Results',
 
   // settings
   'sound': 'Sound',

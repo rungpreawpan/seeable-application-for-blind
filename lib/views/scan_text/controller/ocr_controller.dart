@@ -61,6 +61,7 @@ class OcrController extends GetxController {
 
     try {
       isLoading.value = true;
+      ocrText = null;
 
       var response = await RequestService().request(
         '/ocr-result',

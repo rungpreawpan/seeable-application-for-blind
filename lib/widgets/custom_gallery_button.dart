@@ -24,13 +24,16 @@ class CustomGalleryButton extends StatelessWidget {
         ),
         child: thumbnailImage != null
             ? ClipRRect(
-          borderRadius: BorderRadius.circular(10.0),
-          child: Image.memory(
-            thumbnailImage!,
-            fit: BoxFit.cover,
-          ),
-        )
-            : const SizedBox(),
+                borderRadius: BorderRadius.circular(10.0),
+                child: Image.memory(
+                  thumbnailImage!,
+                  fit: BoxFit.cover,
+                ),
+              )
+            : const Icon(
+                Icons.image_outlined,
+                color: Colors.black,
+              ),
       ),
     );
   }
