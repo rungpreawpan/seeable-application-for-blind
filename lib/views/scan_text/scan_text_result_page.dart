@@ -1,11 +1,10 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
 import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -28,7 +27,7 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
 
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  final FlutterTts flutterTts = FlutterTts();
+  final ttsManager = TtsManager();
 
   SettingsModel? settingsInfo;
 
@@ -36,34 +35,12 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
   void initState() {
     super.initState();
 
-    _ttsSettings();
-  }
-
-  _ttsSettings() async {
-    String? settingsData = await storage.read(key: 'settings_value');
-    if (settingsData != null) {
-      Map<String, dynamic> settingsValueMap = json.decode(settingsData);
-      settingsInfo = SettingsModel.fromJSON(settingsValueMap);
-
-      if (settingsInfo?.useSpeechRecognition == false) {
-        return;
-      } else {
-        if (settingsInfo?.speed == 'slow') {
-          await flutterTts.setSpeechRate(0.0);
-        } else if (settingsInfo?.speed == 'fast') {
-          await flutterTts.setSpeechRate(1.0);
-        } else {
-          await flutterTts.setSpeechRate(0.5);
-        }
-      }
-    }
-
     _speak();
   }
 
   Future _speak() async {
     if (_ocrController.ocrText?.text != null) {
-      await flutterTts.speak(_ocrController.ocrText!.text!);
+      await ttsManager.speak(_ocrController.ocrText!.text!);
     }
   }
 
@@ -71,7 +48,7 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
   void dispose() {
     super.dispose();
 
-    flutterTts.stop();
+    ttsManager.stop();
   }
 
   @override
@@ -89,7 +66,7 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
             child: Column(
               children: [
                 Image.file(
-                  widget.imageFile!,
+                  widget.imageFile,
                   fit: BoxFit.fitWidth,
                 ),
                 const SizedBox(height: marginX2),

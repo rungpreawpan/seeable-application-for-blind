@@ -1,17 +1,15 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:image/image.dart' as img;
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/views/object_detection/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/model/object_detection_model.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
-import 'package:seeable/views/settings/model/settings_model.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
@@ -36,10 +34,8 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
 
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  final FlutterTts flutterTts = FlutterTts();
+  final ttsManager = TtsManager();
   final translator = GoogleTranslator();
-
-  SettingsModel? _settingsInfo;
 
   Size? _imageSize;
   final Map<int, Color> _objectColors = {};
@@ -51,7 +47,6 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
     super.initState();
 
     _prepareData();
-    _ttsSettings();
   }
 
   _prepareData() async {
@@ -67,26 +62,6 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
     setState(() {});
 
     _speak();
-  }
-
-  _ttsSettings() async {
-    String? settingsData = await storage.read(key: 'settings_value');
-    if (settingsData != null) {
-      Map<String, dynamic> settingsValueMap = json.decode(settingsData);
-      _settingsInfo = SettingsModel.fromJSON(settingsValueMap);
-
-      if (_settingsInfo?.useSpeechRecognition == false) {
-        return;
-      } else {
-        if (_settingsInfo?.speed == 'slow') {
-          await flutterTts.setSpeechRate(0.0);
-        } else if (_settingsInfo?.speed == 'fast') {
-          await flutterTts.setSpeechRate(1.0);
-        } else {
-          await flutterTts.setSpeechRate(0.5);
-        }
-      }
-    }
   }
 
   Future _speak() async {
@@ -118,9 +93,9 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
         );
 
         translatedText = translations.toSet().toList().join(', ');
-        await flutterTts.speak('${'detected'.tr} $translatedText');
+        await ttsManager.speak('${'detected'.tr} $translatedText');
       } else {
-        await flutterTts.speak('unable to detect objects'.tr);
+        await ttsManager.speak('unable to detect objects'.tr);
       }
     }
   }
@@ -129,7 +104,7 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
   void dispose() {
     super.dispose();
 
-    flutterTts.stop();
+    ttsManager.stop();
   }
 
   @override
@@ -145,6 +120,7 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
               child: Padding(
                 padding: const EdgeInsets.all(marginX2),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _objectImage(),
                     const SizedBox(height: marginX2),
@@ -236,7 +212,10 @@ class _ObjectDetectionResultPageState extends State<ObjectDetectionResultPage> {
               );
             },
           )
-        : const SizedBox();
+        : TextFontStyle(
+            'unable to detect objects'.tr,
+            style: theme.textTheme.displaySmall,
+          );
   }
 
   Future<Size?> getImageSize(File imageFile) async {

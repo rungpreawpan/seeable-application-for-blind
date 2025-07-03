@@ -4,9 +4,9 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
@@ -34,8 +34,10 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
   List<CameraDescription>? _cameras;
   CameraController? _cameraController;
 
-  final FlutterTts flutterTts = FlutterTts();
+  final ttsManager = TtsManager();
   final translator = GoogleTranslator();
+
+  String? translatedText;
 
   @override
   void initState() {
@@ -93,15 +95,15 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
 
     if (_fingerprintController.obstacleList.isNotEmpty) {
       for (ObstacleModel obstacle in _fingerprintController.obstacleList) {
-        if (obstacle.priority! >= 0.5) {
+        if (obstacle.priority! >= 0.3) {
           if (_settingsController.currentLocale.value.languageCode == 'th') {
-            var translate = await translator.translate(obstacle.message!,
-                from: 'en', to: 'th');
-            await flutterTts.speak(translate.toString());
+            var translate =
+                await translator.translate(obstacle.message!, to: 'th');
+            await ttsManager.speak(translate.toString());
           } else {
-            var translate = await translator.translate(obstacle.message!,
-                from: 'th', to: 'en');
-            await flutterTts.speak(translate.toString());
+            var translate =
+                await translator.translate(obstacle.message!, to: 'en');
+            await ttsManager.speak(translate.toString());
           }
         }
       }
@@ -119,6 +121,8 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
     _obstacleScanning = null;
 
     _cameraController?.dispose();
+
+    ttsManager.stop();
   }
 
   @override

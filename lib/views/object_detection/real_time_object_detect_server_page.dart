@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/views/object_detection/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/model/object_detection_model.dart';
 import 'package:seeable/views/object_detection/object_detection_result_page.dart';
@@ -42,7 +42,7 @@ class _RealTimeObjectDetectServerPageState
 
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  final FlutterTts flutterTts = FlutterTts();
+  final ttsManager = TtsManager();
   final translator = GoogleTranslator();
 
   SettingsModel? settingsInfo;
@@ -64,7 +64,6 @@ class _RealTimeObjectDetectServerPageState
 
     _initializeCamera();
     _loadLatestImage();
-    _ttsSettings();
   }
 
   Future<void> _initializeCamera([int cameraIndex = 0]) async {
@@ -121,26 +120,6 @@ class _RealTimeObjectDetectServerPageState
     }
   }
 
-  _ttsSettings() async {
-    String? settingsData = await storage.read(key: 'settings_value');
-    if (settingsData != null) {
-      Map<String, dynamic> settingsValueMap = json.decode(settingsData);
-      settingsInfo = SettingsModel.fromJSON(settingsValueMap);
-
-      if (settingsInfo?.useSpeechRecognition == false) {
-        return;
-      } else {
-        if (settingsInfo?.speed == 'slow') {
-          await flutterTts.setSpeechRate(0.0);
-        } else if (settingsInfo?.speed == 'fast') {
-          await flutterTts.setSpeechRate(1.0);
-        } else {
-          await flutterTts.setSpeechRate(0.5);
-        }
-      }
-    }
-  }
-
   Future _speak() async {
     if (_objectDetectionController.objectDetected?.boxes != null) {
       List<String> objects = [];
@@ -156,7 +135,6 @@ class _RealTimeObjectDetectServerPageState
       if (objects.isNotEmpty) {
         List translations = await Future.wait(
           objects.map((obj) async {
-            // TODO
             Translation? translation;
 
             if (_settingsController.currentLocale.value.languageCode == 'th') {
@@ -170,9 +148,9 @@ class _RealTimeObjectDetectServerPageState
         );
 
         translatedText = translations.toSet().toList().join(', ');
-        await flutterTts.speak('${'detected'.tr} $translatedText');
+        await ttsManager.speak('${'detected'.tr} $translatedText');
       } else {
-        await flutterTts.speak('unable to detect objects'.tr);
+        await ttsManager.speak('unable to detect objects'.tr);
       }
     }
   }
@@ -181,12 +159,18 @@ class _RealTimeObjectDetectServerPageState
   void dispose() {
     super.dispose();
 
-    flutterTts.stop();
+    ttsManager.stop();
     _cameraController?.dispose();
 
     _autoCaptureTimer?.cancel();
     _autoCaptureTimer = null;
   }
+
+  bool get _isFrontCamera =>
+      _cameras != null &&
+      _cameras!.isNotEmpty &&
+      _cameras![_selectedCameraIndex].lensDirection ==
+          CameraLensDirection.front;
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +185,13 @@ class _RealTimeObjectDetectServerPageState
               Stack(
                 children: [
                   _cameraController != null
-                      ? CameraPreview(_cameraController!)
+                      ? _isFrontCamera
+                          ? Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()..rotateY(math.pi),
+                              child: CameraPreview(_cameraController!),
+                            )
+                          : CameraPreview(_cameraController!)
                       : const SizedBox(),
                   _loading(),
                 ],
@@ -236,7 +226,7 @@ class _RealTimeObjectDetectServerPageState
   }
 
   void _startAutoCapture() async {
-    await flutterTts.speak('start object detection'.tr);
+    await ttsManager.speak('start object detection'.tr);
     _isCapturing = true;
 
     _autoCaptureTimer = Timer.periodic(
@@ -254,13 +244,13 @@ class _RealTimeObjectDetectServerPageState
 
   void _stopAutoCapture() async {
     _autoCaptureTimer?.cancel();
-    flutterTts.stop();
+    ttsManager.stop();
     _autoCaptureTimer = null;
     _isCapturing = false;
     translatedText = null;
     setState(() {});
 
-    await flutterTts.speak('stop object detection'.tr);
+    await ttsManager.speak('stop object detection'.tr);
   }
 
   _cameraButton() {
@@ -320,16 +310,6 @@ class _RealTimeObjectDetectServerPageState
           );
         }
       },
-      // onTap: () async {
-      //   XFile? file = await ImagePicker().pickImage(
-      //     source: ImageSource.gallery,
-      //   );
-      //
-      //   if (file != null) {
-      //     await _objectDetectionController.uploadObject(File(file.path));
-      //     await _speak();
-      //   }
-      // },
       thumbnailImage: _thumbnailImage,
     );
   }

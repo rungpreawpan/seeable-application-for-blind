@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
+import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
 import 'package:seeable/views/settings/model/settings_model.dart';
@@ -12,16 +13,21 @@ import 'package:seeable/widgets/custom_alert_dialog.dart';
 class SettingsController extends GetxController {
   var isLoading = false.obs;
 
+  final ttsManager = TtsManager();
   final storage = const FlutterSecureStorage();
   var themeMode = ThemeMode.light.obs;
   var currentLocale = const Locale('th', 'TH').obs;
+  var speechSpeed = 'normal'.obs;
+  var useSpeechRecognition = true.obs;
 
   @override
   void onInit() async {
     super.onInit();
 
-    await loadThemeFromSettings();
+    await loadUseSpeechRecognition();
+    await loadSpeechSpeedFromSettings();
     await loadLanguageFromSettings();
+    await loadThemeFromSettings();
   }
 
   //TODO: แก้ไขเวลาตั้งค่าว่าsystemแล้วไม่ยอมเปลี่ยนตามsystemจริงๆ
@@ -204,6 +210,104 @@ class SettingsController extends GetxController {
       log(e.toString());
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  void setSpeechSpeed(String? speed) async {
+    speechSpeed.value = 'normal';
+
+    final existingData = await storage.read(key: 'settings_value');
+    SettingsModel settings;
+
+    if (existingData != null) {
+      settings = SettingsModel.fromJSON(json.decode(existingData));
+    } else {
+      settings = SettingsModel();
+    }
+
+    print(speed);
+
+    settings.speed = speed;
+    speechSpeed.value = speed ?? 'normal';
+    await ttsManager.setSpeechSpeed(speechSpeed.value);
+
+    await storage.write(
+        key: 'settings_value', value: jsonEncode(settings.toJSON()));
+  }
+
+  Future<void> loadSpeechSpeedFromSettings() async {
+    final data = await storage.read(key: 'settings_value');
+
+    if (data != null) {
+      try {
+        final jsonData = json.decode(data);
+        final settings = SettingsModel.fromJSON(jsonData);
+
+        switch (settings.speed?.toLowerCase()) {
+          case 'normal':
+            speechSpeed.value = 'normal';
+            break;
+          case 'slow':
+            speechSpeed.value = 'slow';
+            break;
+          case 'fast':
+            speechSpeed.value = 'fast';
+            break;
+          default:
+            speechSpeed.value = 'normal';
+        }
+      } catch (e) {
+        speechSpeed.value = 'normal';
+      }
+    } else {
+      speechSpeed.value = 'normal';
+    }
+
+    await ttsManager.setSpeechSpeed(speechSpeed.value);
+  }
+
+  void setUseSpeechRecognition(bool? useRecognition) async {
+    useSpeechRecognition.value = true;
+
+    final existingData = await storage.read(key: 'settings_value');
+    SettingsModel settings;
+
+    if (existingData != null) {
+      settings = SettingsModel.fromJSON(json.decode(existingData));
+    } else {
+      settings = SettingsModel();
+    }
+
+    settings.useSpeechRecognition = useRecognition;
+    useSpeechRecognition.value = useRecognition ?? true;
+
+    await storage.write(
+        key: 'settings_value', value: jsonEncode(settings.toJSON()));
+  }
+
+  Future<void> loadUseSpeechRecognition() async {
+    final data = await storage.read(key: 'settings_value');
+
+    if (data != null) {
+      try {
+        final jsonData = json.decode(data);
+        final settings = SettingsModel.fromJSON(jsonData);
+
+        switch (settings.useSpeechRecognition) {
+          case true:
+            useSpeechRecognition.value = true;
+            break;
+          case false:
+            useSpeechRecognition.value = false;
+            break;
+          default:
+            useSpeechRecognition.value = true;
+        }
+      } catch (e) {
+        useSpeechRecognition.value = true;
+      }
+    } else {
+      useSpeechRecognition.value = true;
     }
   }
 }

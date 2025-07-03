@@ -33,8 +33,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
-  bool _speechRecognitionValue = false;
-
   List<String> get speedList => ['slow'.tr, 'normal'.tr, 'fast'.tr];
 
   List<String> get languageList => ['thai'.tr, 'english'.tr];
@@ -67,18 +65,12 @@ class _SettingsPageState extends State<SettingsPage> {
     if (settingsData != null) {
       Map<String, dynamic> settingsValueMap = json.decode(settingsData);
       settingsInfo = SettingsModel.fromJSON(settingsValueMap);
-      _setSpeechRecognition();
       _setSpeedValue();
       _setLanguageValue();
       _setThemeValue();
     }
 
     setState(() {});
-  }
-
-  _setSpeechRecognition() {
-    _speechRecognitionValue =
-        settingsInfo?.useSpeechRecognition == true ? true : false;
   }
 
   _setSpeedValue() {
@@ -180,7 +172,6 @@ class _SettingsPageState extends State<SettingsPage> {
         decoration: BoxDecoration(
           color: Colors.grey.shade300,
           borderRadius: BorderRadius.circular(10.0),
-          // boxShadow: customBoxShadow,
         ),
         child: Row(
           children: [
@@ -228,18 +219,16 @@ class _SettingsPageState extends State<SettingsPage> {
           SettingsLabel(
             title: 'voice control'.tr,
             settingsLabelStyle: SettingsLabelStyle.onOff,
-            switchValue: _speechRecognitionValue,
+            switchValue: _settingsController.useSpeechRecognition.value,
             onChanged: (value) async {
-              _speechRecognitionValue = !_speechRecognitionValue;
+              if (_settingsController.useSpeechRecognition.value) {
+                _settingsController.useSpeechRecognition.value = false;
+              } else {
+                _settingsController.useSpeechRecognition.value = true;
+              }
 
-              String settingsData = jsonEncode({
-                'use_speech_recognition': _speechRecognitionValue,
-                'speed': settingsInfo?.speed ?? 'normal',
-                'language': settingsInfo?.language ?? 'thai',
-                'theme': settingsInfo?.theme ?? 'system default',
-              });
-
-              await storage.write(key: 'settings_value', value: settingsData);
+              _settingsController.setUseSpeechRecognition(
+                  _settingsController.useSpeechRecognition.value);
 
               setState(() {});
             },
@@ -278,15 +267,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   speed = 'normal';
                 }
 
-                String settingsData = jsonEncode({
-                  'use_speech_recognition':
-                      settingsInfo?.useSpeechRecognition ?? true,
-                  'speed': speed,
-                  'language': settingsInfo?.language ?? 'thai',
-                  'theme': settingsInfo?.theme ?? 'system default',
-                });
-
-                await storage.write(key: 'settings_value', value: settingsData);
+                _settingsController.setSpeechSpeed(speed);
 
                 setState(() {});
               }
@@ -333,28 +314,15 @@ class _SettingsPageState extends State<SettingsPage> {
               );
 
               if (result != null) {
-                String language;
-                if (selectedLanguage.first == 'english'.tr) {
-                  language = 'english';
-                  _settingsController.currentLocale.value =
-                      _settingsController.languageNameToLocale('english');
-                  Get.updateLocale(_settingsController.currentLocale.value);
+                Locale locale;
+
+                if (selectedLanguage.first == 'thai'.tr) {
+                  locale = _settingsController.languageNameToLocale('thai');
                 } else {
-                  language = 'thai';
-                  _settingsController.currentLocale.value =
-                      _settingsController.languageNameToLocale('thai');
-                  Get.updateLocale(_settingsController.currentLocale.value);
+                  locale = _settingsController.languageNameToLocale('english');
                 }
 
-                String settingsData = jsonEncode({
-                  'use_speech_recognition':
-                      settingsInfo?.useSpeechRecognition ?? true,
-                  'speed': settingsInfo?.speed ?? 'normal',
-                  'language': language,
-                  'theme': settingsInfo?.theme ?? 'system default',
-                });
-
-                await storage.write(key: 'settings_value', value: settingsData);
+                _settingsController.setLanguage(locale);
                 await _prepareData();
 
                 setState(() {});
@@ -387,29 +355,17 @@ class _SettingsPageState extends State<SettingsPage> {
               );
 
               if (result != null) {
-                String theme;
+                ThemeMode mode;
+
                 if (selectedTheme.first == 'light'.tr) {
-                  theme = 'light';
-                  _settingsController.themeMode.value = ThemeMode.light;
-                  Get.changeThemeMode(ThemeMode.light);
+                  mode = ThemeMode.light;
                 } else if (selectedTheme.first == 'dark'.tr) {
-                  theme = 'dark';
-                  _settingsController.themeMode.value = ThemeMode.dark;
-                  Get.changeThemeMode(ThemeMode.dark);
+                  mode = ThemeMode.dark;
                 } else {
-                  theme = 'system default';
-                  _settingsController.themeMode.value = ThemeMode.system;
+                  mode = ThemeMode.system;
                 }
 
-                String settingsData = jsonEncode({
-                  'use_speech_recognition':
-                      settingsInfo?.useSpeechRecognition ?? true,
-                  'speed': settingsInfo?.speed ?? 'normal',
-                  'language': settingsInfo?.language ?? 'thai',
-                  'theme': theme,
-                });
-
-                await storage.write(key: 'settings_value', value: settingsData);
+                _settingsController.setThemeMode(mode);
 
                 setState(() {});
               }
