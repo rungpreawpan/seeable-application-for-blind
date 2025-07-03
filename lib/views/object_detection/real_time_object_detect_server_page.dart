@@ -149,6 +149,7 @@ class _RealTimeObjectDetectServerPageState
 
         translatedText = translations.toSet().toList().join(', ');
         await ttsManager.speak('${'detected'.tr} $translatedText');
+        HapticFeedback.heavyImpact();
       } else {
         await ttsManager.speak('unable to detect objects'.tr);
       }
@@ -264,6 +265,7 @@ class _RealTimeObjectDetectServerPageState
           _startAutoCapture();
         }
 
+        HapticFeedback.selectionClick();
         setState(() {});
       },
       icon: _isCapturing

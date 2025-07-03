@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -143,6 +144,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
                           CustomCameraButton(
                             onTap: () {
                               _scanText();
+                              HapticFeedback.selectionClick();
                             },
                           ),
                           CustomSwitchCameraButton(

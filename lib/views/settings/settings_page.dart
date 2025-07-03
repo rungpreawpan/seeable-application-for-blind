@@ -39,6 +39,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   List<String> get themeList => ['system default'.tr, 'light'.tr, 'dark'.tr];
 
+  bool useSpeechRecognition = false;
   List<String> selectedSpeed = [];
   List<String> selectedLanguage = [];
   List<String> selectedTheme = [];
@@ -65,12 +66,17 @@ class _SettingsPageState extends State<SettingsPage> {
     if (settingsData != null) {
       Map<String, dynamic> settingsValueMap = json.decode(settingsData);
       settingsInfo = SettingsModel.fromJSON(settingsValueMap);
+      _setUseSpeechRecognition();
       _setSpeedValue();
       _setLanguageValue();
       _setThemeValue();
     }
 
     setState(() {});
+  }
+
+  _setUseSpeechRecognition() {
+    useSpeechRecognition = _settingsController.useSpeechRecognition.value;
   }
 
   _setSpeedValue() {
@@ -219,13 +225,11 @@ class _SettingsPageState extends State<SettingsPage> {
           SettingsLabel(
             title: 'voice control'.tr,
             settingsLabelStyle: SettingsLabelStyle.onOff,
-            switchValue: _settingsController.useSpeechRecognition.value,
+            switchValue: useSpeechRecognition,
             onChanged: (value) async {
-              if (_settingsController.useSpeechRecognition.value) {
-                _settingsController.useSpeechRecognition.value = false;
-              } else {
-                _settingsController.useSpeechRecognition.value = true;
-              }
+              useSpeechRecognition = !useSpeechRecognition;
+              _settingsController.useSpeechRecognition.value =
+                  useSpeechRecognition;
 
               _settingsController.setUseSpeechRecognition(
                   _settingsController.useSpeechRecognition.value);
