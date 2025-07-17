@@ -37,7 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   List<String> get languageList => ['thai'.tr, 'english'.tr];
 
-  List<String> get themeList => ['system default'.tr, 'light'.tr, 'dark'.tr];
+  List<String> get themeList => ['light'.tr, 'dark'.tr];
 
   bool useSpeechRecognition = false;
   List<String> selectedSpeed = [];
@@ -108,14 +108,12 @@ class _SettingsPageState extends State<SettingsPage> {
   _setThemeValue() {
     selectedTheme.clear();
 
-    if (settingsInfo?.theme == 'system default') {
-      selectedTheme.add('system default'.tr);
-    } else if (settingsInfo?.theme == 'light') {
+    if (settingsInfo?.theme == 'light') {
       selectedTheme.add('light'.tr);
     } else if (settingsInfo?.theme == 'dark') {
       selectedTheme.add('dark'.tr);
     } else {
-      selectedSpeed.add('normal'.tr);
+      selectedSpeed.add('light'.tr);
     }
 
     setState(() {});
@@ -338,7 +336,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: 'theme'.tr,
             buttonInitialValue: selectedTheme.isNotEmpty
                 ? selectedTheme.first
-                : 'system default'.tr,
+                : 'light'.tr,
             settingsLabelStyle: SettingsLabelStyle.interact,
             onTap: () async {
               List? result = await Get.to(

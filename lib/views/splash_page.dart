@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -35,7 +33,6 @@ class _SplashPageState extends State<SplashPage> {
 
     _checkFirstRun();
     _checkVersion();
-    _settings();
     _redirect();
   }
 
@@ -81,25 +78,6 @@ class _SplashPageState extends State<SplashPage> {
           Get.off(() => const CustomNavBar());
         }
       }
-    }
-  }
-
-  _settings() async {
-    String? settingsValue = await storage.read(key: 'settings_value');
-
-    if (settingsValue == null) {
-      //todo get theme and language from phone
-      String settingsData = jsonEncode({
-        'use_speech_recognition': true,
-        'speed': 'normal',
-        'language': Get.locale.toString() == 'th' ? 'thai' : 'english',
-        'theme': 'system default',
-      });
-
-      await storage.write(key: 'settings_value', value: settingsData);
-
-      // print(Get.locale);
-      // print(WidgetsBinding.instance.platformDispatcher.platformBrightness);
     }
   }
 

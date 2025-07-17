@@ -103,7 +103,6 @@ const Map<String, String> en = {
   'thai': 'Thai',
   'english': 'English',
   'theme': 'Theme',
-  'system default': 'System default',
   'light': 'Light',
   'dark': 'Dark',
   'about application': 'About application',

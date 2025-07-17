@@ -103,7 +103,6 @@ const Map<String, String> th = {
   'thai': 'ภาษาไทย',
   'english': 'ภาษาอังกฤษ',
   'theme': 'ธีม',
-  'system default': 'ค่าเริ่มต้นของระบบ',
   'light': 'สว่าง',
   'dark': 'มืด',
   'about application': 'เกี่ยวกับแอปพลิเคชัน',

@@ -65,9 +65,6 @@ class SettingsController extends GetxController {
           case 'dark':
             themeMode.value = ThemeMode.dark;
             break;
-          case 'system default':
-            themeMode.value = ThemeMode.system;
-            break;
           default:
             themeMode.value = ThemeMode.light;
         }
@@ -89,8 +86,8 @@ class SettingsController extends GetxController {
         return 'light';
       case ThemeMode.dark:
         return 'dark';
-      case ThemeMode.system:
-        return 'system default';
+      default:
+        return 'light';
     }
   }
 
@@ -224,8 +221,6 @@ class SettingsController extends GetxController {
     } else {
       settings = SettingsModel();
     }
-
-    print(speed);
 
     settings.speed = speed;
     speechSpeed.value = speed ?? 'normal';
