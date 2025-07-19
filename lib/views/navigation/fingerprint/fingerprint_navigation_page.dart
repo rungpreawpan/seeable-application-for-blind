@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/views/navigation/fingerprint/controller/fingerprint_controller.dart';
@@ -15,47 +14,47 @@ class FingerprintNavigationPage extends StatefulWidget {
 
 class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
   final FingerprintController _fingerprintController =
-      Get.put(FingerprintController());
+  Get.put(FingerprintController());
 
-  Timer? _scanBle;
   Timer? _readRssi;
 
   @override
   void initState() {
     super.initState();
-
     _prepareData();
   }
 
-  _prepareData() async {
+  void _prepareData() async {
     await _fingerprintController.clearData();
 
-    _scanBle = Timer.periodic(
-      const Duration(seconds: 5),
-      (Timer t) async {
-        await _fingerprintController.scanDevices();
-      },
-    );
+    _startAutoScan();
 
+    // RSSI อัปเดตทุก 1 วิ
     _readRssi = Timer.periodic(
       const Duration(seconds: 1),
-      (Timer t) async {
+          (Timer t) async {
         await _fingerprintController.readRssi();
       },
     );
   }
 
+  void _startAutoScan() async {
+    if (!mounted) return;
+
+    await _fingerprintController.scanDevices();
+
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) _startAutoScan();
+    });
+  }
+
   @override
   void dispose() {
-    super.dispose();
-
-    _scanBle?.cancel();
-    _scanBle = null;
-
     _readRssi?.cancel();
     _readRssi = null;
 
     _fingerprintController.clearData();
+    super.dispose();
   }
 
   @override
@@ -64,7 +63,21 @@ class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
       appBarTitle: 'navigation'.tr,
       showBackButton: true,
       body: Column(
-        children: [],
+        children: [
+          Obx(
+                () => Text(
+              _fingerprintController.isScanning.value
+                  ? "Scanning..."
+                  : "Idle",
+              style: const TextStyle(fontSize: 18),
+            ),
+          ),
+          Obx(
+                () => Text(
+              "Connected devices: ${_fingerprintController.connectedList.length}",
+            ),
+          ),
+        ],
       ),
     );
   }
