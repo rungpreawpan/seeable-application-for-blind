@@ -123,6 +123,7 @@ const Map<String, String> th = {
   'registered uuid': 'รหัสเครื่องที่ลงทะเบียน',
   'uuid not match': 'รหัสเครื่องที่ใช้งานไม่ตรงกับรหัสเครื่องที่ลงทะเบียน',
   'do you want to logout': 'คุณต้องการออกจากระบบหรือไม่',
+  'no internet connection': 'ไม่มีสัญญาณอินเตอร์เน็ต',
 
   // widget
   'camera': 'กล้อง',

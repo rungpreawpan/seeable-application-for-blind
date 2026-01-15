@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/custom_back_button.dart';
 import 'package:seeable/widgets/text_font_style.dart';

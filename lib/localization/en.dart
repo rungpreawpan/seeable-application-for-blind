@@ -123,6 +123,7 @@ const Map<String, String> en = {
   'registered uuid': 'Registered UUID',
   'uuid not match': 'The UUID does not match the registered UUID',
   'do you want to logout': 'Do you want to logout?',
+  'no internet connection': 'No Internet connection',
 
   // widget
   'camera': 'Camera',

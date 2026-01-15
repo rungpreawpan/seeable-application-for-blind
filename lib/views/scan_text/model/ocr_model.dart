@@ -1,5 +1,3 @@
-import 'package:intl/intl.dart';
-
 class OcrModel {
   String? text;
   String? language;

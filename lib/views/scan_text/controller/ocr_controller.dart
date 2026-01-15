@@ -16,7 +16,7 @@ class OcrController extends GetxController {
     bool isOnline = await RequestService().checkInternetConnection();
 
     if (!isOnline) {
-      showAlert('ไม่มีสัญญาณอินเตอร์เน็ต');
+      showAlert('no internet connection'.tr);
       isLoading.value = false;
 
       return;
@@ -53,7 +53,7 @@ class OcrController extends GetxController {
     bool isOnline = await RequestService().checkInternetConnection();
 
     if (!isOnline) {
-      showAlert('ไม่มีสัญญาณอินเตอร์เน็ต');
+      showAlert('no internet connection'.tr);
       isLoading.value = false;
 
       return;

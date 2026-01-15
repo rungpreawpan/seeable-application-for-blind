@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
+import 'package:seeable/views/navigation/ar_navigation_page.dart';
 import 'package:seeable/views/navigation/navigation_page.dart';
 import 'package:seeable/views/object_detection/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
@@ -181,7 +182,8 @@ class _HomePageState extends State<HomePage> {
           return ListViewButton(
             onTap: () async {
               if (item['title'] == 'navigation'.tr) {
-                Get.to(() => const FingerprintNavigationPage());
+                // Get.to(() => const NavigationPage());
+                Get.to(() => const ArNavigationPage());
               } else if (item['title'] == 'object detection'.tr) {
                 Get.to(() => const RealTimeObjectDetectServerPage());
               } else if (item['title'] == 'scan text'.tr) {

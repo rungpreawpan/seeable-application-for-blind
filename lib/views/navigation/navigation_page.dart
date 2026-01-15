@@ -15,15 +15,15 @@ import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:translator/translator.dart';
 
-class FingerprintNavigationPage extends StatefulWidget {
-  const FingerprintNavigationPage({super.key});
+class NavigationPage extends StatefulWidget {
+  const NavigationPage({super.key});
 
   @override
-  State<FingerprintNavigationPage> createState() =>
-      _FingerprintNavigationPageState();
+  State<NavigationPage> createState() =>
+      _NavigationPageState();
 }
 
-class _FingerprintNavigationPageState extends State<FingerprintNavigationPage> {
+class _NavigationPageState extends State<NavigationPage> {
   final SettingsController _settingsController = Get.find();
   final NavigationController _fingerprintController =
       Get.put(NavigationController());

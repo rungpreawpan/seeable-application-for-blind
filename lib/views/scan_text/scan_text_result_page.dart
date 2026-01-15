@@ -56,7 +56,7 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
     final theme = Theme.of(context);
 
     return MainTemplate(
-      appBarTitle: 'scan result'.tr,
+      appBarTitle: 'scan results'.tr,
       showBackButton: true,
       body: SafeArea(
         child: SingleChildScrollView(
