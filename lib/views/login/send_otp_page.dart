@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/login/controller/forget_password_controller.dart';
-import 'package:seeable/views/login/reset_password_page.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_otp.dart';
 import 'package:seeable/widgets/custom_submit_button.dart';

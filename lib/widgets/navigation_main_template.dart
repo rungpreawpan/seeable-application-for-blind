@@ -64,22 +64,24 @@ class _NavigationMainTemplateState extends State<NavigationMainTemplate> {
         toolbarHeight: 90.0,
         elevation: 0.0,
       ),
-      body: widget.items.isNotEmpty
-          ? ListView.separated(
-              padding: const EdgeInsets.all(marginX2),
-              physics: const BouncingScrollPhysics(),
-              itemCount: widget.items.length,
-              itemBuilder: widget.itemWidget,
-              separatorBuilder: (context, index) {
-                return const SizedBox(height: marginX2);
-              },
-            )
-          : Center(
-              child: TextFontStyle(
-                'data not found'.tr,
-                size: fontSizeM,
+      body: SafeArea(
+        child: widget.items.isNotEmpty
+            ? ListView.separated(
+                padding: const EdgeInsets.all(marginX2),
+                physics: const BouncingScrollPhysics(),
+                itemCount: widget.items.length,
+                itemBuilder: widget.itemWidget,
+                separatorBuilder: (context, index) {
+                  return const SizedBox(height: marginX2);
+                },
+              )
+            : Center(
+                child: TextFontStyle(
+                  'data not found'.tr,
+                  size: fontSizeM,
+                ),
               ),
-            ),
+      ),
     );
   }
 }

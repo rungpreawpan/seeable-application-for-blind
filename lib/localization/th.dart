@@ -33,8 +33,15 @@ const Map<String, String> th = {
   // navigation
   'location': 'สถานที่',
   'start navigation': 'เริ่มนำทาง',
+  'your location': 'ตำแหน่งของคุณ',
+  'choose destination': 'เลือกเป้าหมาย',
+  'search locations': 'ค้นหาสถานที่',
+  'marker not found': 'ไม่พบมาร์กเกอร์',
+  'please scan again': 'กรุณาสแกนอีกครั้ง',
+  'marker scan': 'สแกนมาร์กเกอร์',
 
   // building list
+  'building': 'อาคาร',
   'building a': 'อาคาร A',
   'building b': 'อาคาร B',
   'building c': 'อาคาร C',

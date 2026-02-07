@@ -1,15 +1,9 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
-import 'package:seeable/views/navigation/ar_navigation_page.dart';
-import 'package:seeable/views/navigation/navigation_page.dart';
+import 'package:seeable/views/navigation/selected_place_page.dart';
 import 'package:seeable/views/object_detection/real_time_object_detect_server_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
@@ -27,7 +21,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final AppInfoController _appInfoController = Get.find();
   final SettingsController _settingsController = Get.find();
-  final FlutterBlePeripheral blePeripheral = FlutterBlePeripheral();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -52,53 +45,9 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    _startAdvertiseBluetooth();
     // _speech = stt.SpeechToText();
 
     // _initSpeech();
-  }
-
-  _stopAdvertiseBluetooth() async {
-    if (await FlutterBlePeripheral().isAdvertising) {
-      await FlutterBlePeripheral().stop();
-    }
-  }
-
-  _startAdvertiseBluetooth() async {
-    String? userData = await storage.read(key: 'user_data');
-
-    if (userData == null) return;
-
-    Map<String, dynamic> userDataMap = json.decode(userData);
-    userInfo = UserModel.fromJSON(userDataMap);
-
-    String convertHexToUUID(String hex) {
-      String padded = hex.padRight(32, '0');
-      return '${padded.substring(0, 8)}-'
-          '${padded.substring(8, 12)}-'
-          '${padded.substring(12, 16)}-'
-          '${padded.substring(16, 20)}-'
-          '${padded.substring(20, 32)}';
-    }
-
-    AdvertiseData advertiseData = AdvertiseData(
-      serviceUuid: convertHexToUUID(userInfo!.uuid!),
-      localName: 'seeable',
-      manufacturerId: 1234,
-      manufacturerData:
-          Uint8List.fromList('seeable-${userInfo!.uuid!}'.codeUnits),
-      includeDeviceName: true,
-    );
-
-    await FlutterBlePeripheral().start(
-      advertiseData: advertiseData,
-      advertiseSettings: AdvertiseSettings(
-        advertiseMode: AdvertiseMode.advertiseModeLowLatency,
-        txPowerLevel: AdvertiseTxPower.advertiseTxPowerHigh,
-        timeout: 0,
-      ),
-    );
-    log('bluetooth advertise: ${advertiseData.localName} | ${advertiseData.serviceUuid}');
   }
 
   Future<void> _initSpeech() async {
@@ -163,13 +112,6 @@ class _HomePageState extends State<HomePage> {
   // }
 
   @override
-  void dispose() {
-    super.dispose();
-
-    _stopAdvertiseBluetooth();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       // onTap: _listen,
@@ -182,8 +124,8 @@ class _HomePageState extends State<HomePage> {
           return ListViewButton(
             onTap: () async {
               if (item['title'] == 'navigation'.tr) {
-                // Get.to(() => const NavigationPage());
-                Get.to(() => const ArNavigationPage());
+                Get.to(() => const SelectedPlacePage());
+                // Get.to(() => const BuildingPage());
               } else if (item['title'] == 'object detection'.tr) {
                 Get.to(() => const RealTimeObjectDetectServerPage());
               } else if (item['title'] == 'scan text'.tr) {

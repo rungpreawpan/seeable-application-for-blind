@@ -27,7 +27,7 @@ class _CustomItemPickerCellState extends State<CustomItemPickerCell> {
       width: Get.width,
       padding: const EdgeInsets.symmetric(
         horizontal: marginX2,
-        vertical: 10.0,
+        vertical: margin,
       ),
       decoration: BoxDecoration(
         // color: widget.isSelected ? primaryColor : Colors.white,
@@ -37,7 +37,6 @@ class _CustomItemPickerCellState extends State<CustomItemPickerCell> {
                 : Colors.grey.shade600
             : Colors.white,
         borderRadius: BorderRadius.circular(10.0),
-        boxShadow: customBoxShadow,
       ),
       child: Row(
         children: [

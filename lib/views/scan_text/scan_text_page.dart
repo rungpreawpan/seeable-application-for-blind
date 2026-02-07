@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/utils/camera_service.dart';
+import 'package:seeable/utils/gallery_service.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
 import 'package:seeable/views/scan_text/scan_text_result_page.dart';
 import 'package:seeable/widgets/custom_camera_button.dart';
@@ -28,9 +29,8 @@ class ScanTextPage extends StatefulWidget {
 class _ScanTextPageState extends State<ScanTextPage> {
   final OcrController _ocrController = Get.put(OcrController());
 
-  List<CameraDescription>? _cameras;
-  CameraController? _cameraController;
-  int _selectedCameraIndex = 0;
+  late CameraService _cameraService;
+  final GalleryService _galleryService = GalleryService();
 
   File? _imageFile;
   Uint8List? _thumbnailImage;
@@ -39,69 +39,21 @@ class _ScanTextPageState extends State<ScanTextPage> {
   void initState() {
     super.initState();
 
-    _initializeCamera();
-    _loadLatestImage();
+    _cameraService = CameraService();
+    _initCamera();
   }
 
-  Future<void> _initializeCamera([int cameraIndex = 0]) async {
-    try {
-      _cameras = await availableCameras();
+  Future<void> _initCamera() async {
+    await _cameraService.initializeCamera();
+    _thumbnailImage = await _galleryService.loadLatestImage();
 
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        _cameraController = CameraController(
-          _cameras![cameraIndex],
-          ResolutionPreset.high,
-          enableAudio: false,
-          imageFormatGroup: ImageFormatGroup.jpeg,
-        );
-
-        await _cameraController!.initialize();
-
-        if (!mounted) return;
-
-        setState(() {});
-      } else {
-        log('No cameras available');
-      }
-    } catch (e) {
-      log('Error initializing camera: $e');
-    }
-  }
-
-  Future<void> _loadLatestImage() async {
-    final permission = await PhotoManager.requestPermissionExtend();
-
-    if (permission.isAuth || permission == PermissionState.limited) {
-      final albums = await PhotoManager.getAssetPathList(
-        type: RequestType.image,
-        onlyAll: true,
-      );
-
-      if (albums.isNotEmpty) {
-        final recentAlbum = albums.first;
-        final recentAssets =
-            await recentAlbum.getAssetListPaged(page: 0, size: 1);
-
-        if (recentAssets.isNotEmpty) {
-          final asset = recentAssets.first;
-          final thumb =
-              await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
-          _thumbnailImage = thumb;
-          setState(() {});
-        }
-      }
-
-      if (permission == PermissionState.limited) {
-        await PhotoManager.presentLimited();
-      }
-    }
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _cameraService.dispose();
     super.dispose();
-
-    _cameraController?.dispose();
   }
 
   @override
@@ -116,9 +68,23 @@ class _ScanTextPageState extends State<ScanTextPage> {
               color: Colors.black,
               child: Stack(
                 children: [
-                  _cameraController != null
-                      ? CameraPreview(_cameraController!)
-                      : const SizedBox(),
+                  Stack(
+                    children: [
+                      _cameraService.controller != null &&
+                              _cameraService.controller!.value.isInitialized
+                          ? _cameraService.isFrontCamera
+                              ? Transform(
+                                  alignment: Alignment.center,
+                                  transform: Matrix4.identity()
+                                    ..rotateY(math.pi),
+                                  child:
+                                      CameraPreview(_cameraService.controller!),
+                                )
+                              : CameraPreview(_cameraService.controller!)
+                          : const SizedBox(),
+                      _loading(),
+                    ],
+                  ),
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: Padding(
@@ -126,43 +92,9 @@ class _ScanTextPageState extends State<ScanTextPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          CustomGalleryButton(
-                            onTap: () async {
-                              XFile? file = await ImagePicker().pickImage(
-                                source: ImageSource.gallery,
-                              );
-
-                              if (file != null) {
-                                await _ocrController
-                                    .uploadImage(File(file.path));
-                                Get.to(() => ScanTextResultPage(
-                                    imageFile: File(file.path)));
-                              }
-                            },
-                            thumbnailImage: _thumbnailImage,
-                          ),
-                          CustomCameraButton(
-                            onTap: () {
-                              _scanText();
-                              HapticFeedback.selectionClick();
-                            },
-                          ),
-                          CustomSwitchCameraButton(
-                            onTap: () {
-                              if (_cameras == null || _cameras!.length < 2) {
-                                return;
-                              }
-
-                              if (_selectedCameraIndex == 0) {
-                                _selectedCameraIndex =
-                                    (_selectedCameraIndex + 1) %
-                                        _cameras!.length;
-                              } else {
-                                _selectedCameraIndex = 0;
-                              }
-                              _initializeCamera(_selectedCameraIndex);
-                            },
-                          ),
+                          _galleryThumbnail(),
+                          _cameraButton(),
+                          _switchCamera(),
                         ],
                       ),
                     ),
@@ -177,17 +109,48 @@ class _ScanTextPageState extends State<ScanTextPage> {
     );
   }
 
-  _scanText() async {
-    final XFile picture = await _cameraController!.takePicture();
-    _imageFile = File(picture.path);
+  _cameraButton() {
+    return CustomCameraButton(
+      onTap: () async {
+        HapticFeedback.selectionClick();
 
-    if (_imageFile != null) {
-      await _ocrController.uploadImage(_imageFile!);
+        XFile? file = await _cameraService.takePicture();
 
-      if (_ocrController.ocrText != null) {
-        Get.to(() => ScanTextResultPage(imageFile: _imageFile!));
-      }
-    }
+        if (file != null) {
+          _imageFile = File(file.path);
+          await _ocrController.uploadImage(_imageFile!);
+
+          if (_ocrController.ocrText != null) {
+            Get.to(() => ScanTextResultPage(imageFile: _imageFile!));
+          }
+        }
+      },
+    );
+  }
+
+  _switchCamera() {
+    return CustomSwitchCameraButton(
+      onTap: () async {
+        await _cameraService.switchCamera();
+        if (mounted) setState(() {});
+      },
+    );
+  }
+
+  _galleryThumbnail() {
+    return CustomGalleryButton(
+      onTap: () async {
+        XFile? file = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+        );
+
+        if (file != null) {
+          await _ocrController.uploadImage(File(file.path));
+          Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
+        }
+      },
+      thumbnailImage: _thumbnailImage,
+    );
   }
 
   _loading() {

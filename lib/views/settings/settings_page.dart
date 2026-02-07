@@ -18,7 +18,6 @@ import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_ok_cancel_dialog.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
-import 'package:share_plus/share_plus.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -394,19 +393,6 @@ class _SettingsPageState extends State<SettingsPage> {
             settingsLabelStyle: SettingsLabelStyle.interact,
             onTap: () {
               Get.to(() => const ContactDevPage());
-            },
-          ),
-          const SizedBox(height: marginX2),
-          SettingsLabel(
-            title: 'share application'.tr,
-            settingsLabelStyle: SettingsLabelStyle.interact,
-            onTap: () async {
-              //TODO: add link
-              await SharePlus.instance.share(
-                ShareParams(
-                  text: 'download seeable app for android and ios'.tr,
-                ),
-              );
             },
           ),
           const SizedBox(height: marginX2),

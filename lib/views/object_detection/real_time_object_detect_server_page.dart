@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -9,9 +8,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:photo_manager/photo_manager.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
+import 'package:seeable/utils/camera_service.dart';
+import 'package:seeable/utils/gallery_service.dart';
 import 'package:seeable/views/object_detection/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/model/object_detection_model.dart';
 import 'package:seeable/views/object_detection/object_detection_result_page.dart';
@@ -47,9 +47,8 @@ class _RealTimeObjectDetectServerPageState
 
   SettingsModel? settingsInfo;
 
-  List<CameraDescription>? _cameras;
-  CameraController? _cameraController;
-  int _selectedCameraIndex = 0;
+  late CameraService _cameraService;
+  final GalleryService _galleryService = GalleryService();
 
   Timer? _autoCaptureTimer;
   bool _isCapturing = false;
@@ -62,62 +61,15 @@ class _RealTimeObjectDetectServerPageState
   void initState() {
     super.initState();
 
-    _initializeCamera();
-    _loadLatestImage();
+    _cameraService = CameraService();
+    _initCamera();
   }
 
-  Future<void> _initializeCamera([int cameraIndex = 0]) async {
-    try {
-      _cameras = await availableCameras();
+  Future<void> _initCamera() async {
+    await _cameraService.initializeCamera();
+    _thumbnailImage = await _galleryService.loadLatestImage();
 
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        _cameraController = CameraController(
-          _cameras![cameraIndex],
-          ResolutionPreset.high,
-          enableAudio: false,
-          imageFormatGroup: ImageFormatGroup.jpeg,
-        );
-
-        await _cameraController!.initialize();
-
-        if (!mounted) return;
-
-        setState(() {});
-      } else {
-        log('No cameras available');
-      }
-    } catch (e) {
-      log('Error initializing camera: $e');
-    }
-  }
-
-  Future<void> _loadLatestImage() async {
-    final permission = await PhotoManager.requestPermissionExtend();
-
-    if (permission.isAuth || permission == PermissionState.limited) {
-      final albums = await PhotoManager.getAssetPathList(
-        type: RequestType.image,
-        onlyAll: true,
-      );
-
-      if (albums.isNotEmpty) {
-        final recentAlbum = albums.first;
-        final recentAssets =
-            await recentAlbum.getAssetListPaged(page: 0, size: 1);
-
-        if (recentAssets.isNotEmpty) {
-          final asset = recentAssets.first;
-          final thumb =
-              await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
-          _thumbnailImage = thumb;
-          setState(() {});
-        }
-      }
-
-      if (permission == PermissionState.limited) {
-        await PhotoManager.presentLimited();
-      }
-    }
+    if (mounted) setState(() {});
   }
 
   Future _speak() async {
@@ -161,17 +113,11 @@ class _RealTimeObjectDetectServerPageState
     super.dispose();
 
     ttsManager.stop();
-    _cameraController?.dispose();
 
+    _cameraService.dispose();
     _autoCaptureTimer?.cancel();
     _autoCaptureTimer = null;
   }
-
-  bool get _isFrontCamera =>
-      _cameras != null &&
-      _cameras!.isNotEmpty &&
-      _cameras![_selectedCameraIndex].lensDirection ==
-          CameraLensDirection.front;
 
   @override
   Widget build(BuildContext context) {
@@ -185,14 +131,15 @@ class _RealTimeObjectDetectServerPageState
             children: [
               Stack(
                 children: [
-                  _cameraController != null
-                      ? _isFrontCamera
-                          ? Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.identity()..rotateY(math.pi),
-                              child: CameraPreview(_cameraController!),
-                            )
-                          : CameraPreview(_cameraController!)
+                  _cameraService.controller != null &&
+                      _cameraService.controller!.value.isInitialized
+                      ? _cameraService.isFrontCamera
+                      ? Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(math.pi),
+                    child: CameraPreview(_cameraService.controller!),
+                  )
+                      : CameraPreview(_cameraService.controller!)
                       : const SizedBox(),
                   _loading(),
                 ],
@@ -233,12 +180,14 @@ class _RealTimeObjectDetectServerPageState
     _autoCaptureTimer = Timer.periodic(
       const Duration(seconds: 3),
       (timer) async {
-        XFile file = await _cameraController!.takePicture();
+        XFile? file = await _cameraService.takePicture();
 
-        await _objectDetectionController.uploadObject(File(file.path));
-        await _speak();
+        if (file != null) {
+          await _objectDetectionController.uploadObject(File(file.path));
+          await _speak();
 
-        setState(() {});
+          setState(() {});
+        }
       },
     );
   }
@@ -249,6 +198,7 @@ class _RealTimeObjectDetectServerPageState
     _autoCaptureTimer = null;
     _isCapturing = false;
     translatedText = null;
+
     setState(() {});
 
     await ttsManager.speak('stop object detection'.tr);
@@ -280,17 +230,9 @@ class _RealTimeObjectDetectServerPageState
 
   _switchCamera() {
     return CustomSwitchCameraButton(
-      onTap: () {
-        if (_cameras == null || _cameras!.length < 2) {
-          return;
-        }
-
-        if (_selectedCameraIndex == 0) {
-          _selectedCameraIndex = (_selectedCameraIndex + 1) % _cameras!.length;
-        } else {
-          _selectedCameraIndex = 0;
-        }
-        _initializeCamera(_selectedCameraIndex);
+      onTap: () async {
+        await _cameraService.switchCamera();
+        if (mounted) setState(() {});
       },
     );
   }

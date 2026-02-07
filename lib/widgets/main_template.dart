@@ -63,11 +63,13 @@ class _MainTemplateState extends State<MainTemplate> {
         ),
         actions: widget.actions,
         centerTitle: true,
-        toolbarHeight: 90.0,
+        toolbarHeight: 80.0,
         elevation: 0.0,
       ),
-      body: SizedBox.expand(
-        child: widget.body,
+      body: SafeArea(
+        child: SizedBox.expand(
+          child: widget.body,
+        ),
       ),
       floatingActionButton: widget.floatingActionButton,
     );

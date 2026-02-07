@@ -33,8 +33,15 @@ const Map<String, String> en = {
   // navigation
   'location': 'Locations',
   'start navigation': 'Start Navigation',
+  'your location': 'Your location',
+  'choose destination': 'Choose destination',
+  'search locations': 'Search locations',
+  'marker not found': 'Marker not found',
+  'please scan again': 'Please scan again',
+  'marker scan': 'Marker scan',
 
   // building list
+  'building': 'Building',
   'building a': 'Building A',
   'building b': 'Building B',
   'building c': 'Building C',

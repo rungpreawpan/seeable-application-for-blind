@@ -26,7 +26,7 @@ class ObjectDetectionController extends GetxController {
       isLoading.value = true;
 
       var reqData = {
-        "image":
+        "images":
             MultipartFile.fromFileSync(object.path, filename: 'object_image'),
       };
 

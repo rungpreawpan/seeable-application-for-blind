@@ -1,38 +1,37 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
+import 'package:seeable/utils/camera_service.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
+import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
-import 'package:seeable/widgets/select_camera_gallery_bottomsheet.dart';
-import 'package:seeable/widgets/text_font_style.dart';
 import 'package:translator/translator.dart';
 
 class NavigationPage extends StatefulWidget {
   const NavigationPage({super.key});
 
   @override
-  State<NavigationPage> createState() =>
-      _NavigationPageState();
+  State<NavigationPage> createState() => _NavigationPageState();
 }
 
 class _NavigationPageState extends State<NavigationPage> {
   final SettingsController _settingsController = Get.find();
-  final NavigationController _fingerprintController =
+  final NavigationController _navigationController =
       Get.put(NavigationController());
+
+  late CameraService _cameraService;
 
   Timer? _scanning;
   Timer? _obstacleScanning;
-
-  List<CameraDescription>? _cameras;
-  CameraController? _cameraController;
 
   final ttsManager = TtsManager();
   final translator = GoogleTranslator();
@@ -43,15 +42,24 @@ class _NavigationPageState extends State<NavigationPage> {
   void initState() {
     super.initState();
 
-    _initializeCamera();
+    _cameraService = CameraService();
+
+    _initCamera();
     _prepareData();
   }
 
+  Future<void> _initCamera() async {
+    await _cameraService.initializeCamera();
+
+    if (mounted) setState(() {});
+  }
+
+  //TODO
   _prepareData() async {
     _scanning = Timer.periodic(
-      const Duration(seconds: 3),
+      const Duration(seconds: 2),
       (timer) async {
-        await _fingerprintController.scanDevices();
+        _updatePosition();
       },
     );
     _obstacleScanning = Timer.periodic(
@@ -62,65 +70,57 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  Future<void> _initializeCamera([int cameraIndex = 0]) async {
-    try {
-      _cameras = await availableCameras();
+  Future<XFile?> _takePicture() async {
+    XFile? file = await _cameraService.takePicture();
 
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        _cameraController = CameraController(
-          _cameras![cameraIndex],
-          ResolutionPreset.high,
-          enableAudio: false,
-          imageFormatGroup: ImageFormatGroup.jpeg,
-        );
-
-        await _cameraController!.initialize();
-
-        if (!mounted) return;
-
-        setState(() {});
-      } else {
-        log('No cameras available');
-      }
-    } catch (e) {
-      log('Error initializing camera: $e');
-    }
+    return file;
   }
 
   _obstacle() async {
-    XFile? file = await _cameraController!.takePicture();
-    _fingerprintController.obstacleList.clear();
+    XFile? file = await _takePicture();
 
-    await _fingerprintController.uploadObstacle(File(file.path));
+    if (file != null) {
+      _navigationController.obstacleList.clear();
+      await _navigationController.uploadObstacle(File(file.path));
 
-    if (_fingerprintController.obstacleList.isNotEmpty) {
-      for (ObstacleModel obstacle in _fingerprintController.obstacleList) {
-        if (obstacle.priority! >= 0.3) {
-          if (_settingsController.currentLocale.value.languageCode == 'th') {
-            var translate =
-                await translator.translate(obstacle.message!, to: 'th');
-            await ttsManager.speak(translate.toString());
-          } else {
-            var translate =
-                await translator.translate(obstacle.message!, to: 'en');
-            await ttsManager.speak(translate.toString());
+      if (_navigationController.obstacleList.isNotEmpty) {
+        for (ObstacleModel obstacle in _navigationController.obstacleList) {
+          if (obstacle.priority! >= 0.3) {
+            if (_settingsController.currentLocale.value.languageCode == 'th') {
+              var translate =
+                  await translator.translate(obstacle.message!, to: 'th');
+              await ttsManager.speak(translate.toString());
+            } else {
+              var translate =
+                  await translator.translate(obstacle.message!, to: 'en');
+              await ttsManager.speak(translate.toString());
+            }
           }
         }
       }
     }
   }
 
+  _updatePosition() async {
+    XFile? file = await _takePicture();
+
+    if (file != null) {
+      File markerImage = File(file.path);
+
+      _navigationController.updatePosition(markerImage: markerImage);
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
+    _cameraService.dispose();
 
     _scanning?.cancel();
     _scanning = null;
 
     _obstacleScanning?.cancel();
     _obstacleScanning = null;
-
-    _cameraController?.dispose();
 
     ttsManager.stop();
   }
@@ -130,57 +130,27 @@ class _NavigationPageState extends State<NavigationPage> {
     return MainTemplate(
       appBarTitle: 'navigation'.tr,
       showBackButton: true,
-      body: Padding(
-        padding: const EdgeInsets.all(marginX2),
-        child: Column(
+      body: Container(
+        color: Colors.black,
+        child: Stack(
           children: [
-            _map(),
-            const SizedBox(height: marginX2),
-            _navigationButton(),
+            _cameraService.controller != null &&
+                    _cameraService.controller!.value.isInitialized
+                ? CameraPreview(_cameraService.controller!)
+                : const SizedBox(),
+            _loading(),
           ],
         ),
       ),
     );
   }
 
-  _map() {
-    return InkWell(
-      onTap: () async {
-        XFile? result =
-            await Get.bottomSheet(const SelectCameraGalleryBottomSheet());
-
-        if (result != null) {
-          await _fingerprintController.uploadObstacle(File(result.path));
-        }
-      },
-      child: Container(
-        height: 200.0,
-        color: Colors.grey.shade300,
-      ),
-    );
-  }
-
-  _navigationButton() {
-    final theme = Theme.of(context);
-
-    return InkWell(
-      onTap: () async {
-        await _fingerprintController.sendRssi();
-        // _fingerprintController.uploadObstacle();
-      },
-      child: Container(
-        height: 50.0,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(35.0),
-        ),
-        child: Center(
-          child: TextFontStyle(
-            'start'.tr,
-            style: theme.textTheme.labelLarge,
-          ),
-        ),
-      ),
-    );
+  _loading() {
+    return Obx(() {
+      return Visibility(
+        visible: _navigationController.isLoading.value,
+        child: const CustomLoading(),
+      );
+    });
   }
 }

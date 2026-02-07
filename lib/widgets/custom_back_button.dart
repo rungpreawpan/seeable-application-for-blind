@@ -33,7 +33,7 @@ class _CustomBackButtonState extends State<CustomBackButton> {
         child: Container(
           height: 40.0,
           width: 40.0,
-          margin: const EdgeInsets.symmetric(vertical: 25.0),
+          margin: const EdgeInsets.symmetric(vertical: 20.0),
           decoration: BoxDecoration(
             border: Border.all(
               color: _settingsController.themeMode.value == ThemeMode.light

@@ -2,108 +2,38 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
-import 'package:seeable/views/navigation/model/fingerprint_model.dart';
+import 'package:seeable/views/navigation/model/ar_markers_model.dart';
+import 'package:seeable/views/navigation/model/check_marker_model.dart';
+import 'package:seeable/views/navigation/model/navigation_path_model.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
+import 'package:seeable/views/navigation/model/update_position_model.dart';
+import 'package:seeable/widgets/custom_alert_dialog.dart';
 
 class NavigationController extends GetxController {
   var isLoading = false.obs;
   var isScanning = false.obs;
 
-  RxList<ScanResult> scanList = <ScanResult>[].obs;
+  bool navigateByScan = false;
 
-  RxMap<String, List<int>> rssiMap = <String, List<int>>{}.obs;
+  List<ArMarkersModel> markersList = [];
+  List<ArMarkersModel> selectedStartMarker = [];
+  List<ArMarkersModel> selectedDestinationMarker = [];
 
-  FingerprintModel? position;
+  CheckMarkerModel? checkedMarker;
+
+  File? destinationMarkerImage;
+
+  NavigationPathModel? navigationData;
+  String? sessionId;
+
+  UpdatePositionModel? positionData;
 
   List<ObstacleModel> obstacleList = [];
 
-  scanDevices() async {
-    if (kDebugMode) {
-      print('start scan');
-    }
-
-    isScanning.value = true;
-
-    var subscription = FlutterBluePlus.onScanResults.listen(
-      (results) {
-        if (results.isNotEmpty) {
-          scanList.value = results
-              .where((e) {
-                if (kDebugMode) {
-                  e.device.platformName.contains('Ruuvi')
-                      ? print('${e.device.remoteId} ${e.device.platformName}')
-                      : null;
-                }
-
-                return e.device.platformName.contains('Ruuvi');
-              })
-              .map((e) => e)
-              .toList();
-
-          readRssi();
-        }
-      },
-      onError: (e) {
-        log(e);
-      },
-    );
-
-    FlutterBluePlus.cancelWhenScanComplete(subscription);
-
-    await FlutterBluePlus.adapterState
-        .where((val) => val == BluetoothAdapterState.on)
-        .first;
-
-    await FlutterBluePlus.startScan(timeout: const Duration(seconds: 3));
-
-    await FlutterBluePlus.isScanning.where((val) => val == false).first;
-
-    isScanning.value = false;
-
-    if (kDebugMode) {
-      print('scan complete');
-    }
-  }
-
-  readRssi() async {
-    for (var result in scanList) {
-      int rssi = result.rssi;
-      String deviceKey = result.device.platformName;
-
-      if (!rssiMap.containsKey(deviceKey)) {
-        rssiMap[deviceKey] = [];
-      }
-
-      rssiMap[deviceKey]!.add(rssi);
-
-      if (rssiMap[deviceKey]!.length > 20) {
-        rssiMap[deviceKey]!.removeAt(0);
-      }
-
-      if (kDebugMode) {
-        print('Updated RSSI for $deviceKey: $rssi');
-        print('All RSSI values for $deviceKey: ${rssiMap[deviceKey]}');
-      }
-    }
-  }
-
-  Map<String, List<int>> convertRssiMap(Map<String, List<int>> rssiMap) {
-    Map<String, List<int>> transformed = {};
-
-    rssiMap.forEach((key, values) {
-      String newKey = key.replaceAll(' ', '_');
-      transformed[newKey] = values;
-    });
-
-    return transformed;
-  }
-
-  sendRssi() async {
+  getAllMarkers() async {
     bool isOnline = await RequestService().checkInternetConnection();
 
     if (!isOnline) {
@@ -117,18 +47,159 @@ class NavigationController extends GetxController {
       isLoading.value = true;
 
       var response = await RequestService().request(
-        '/localize',
-        method: HttpMethod.post,
-        data: {
-          'rssi_map': convertRssiMap(rssiMap),
-        },
+        '/ar-markers',
+        method: HttpMethod.get,
       );
 
       if (response != null && response.statusCode == 200) {
         var dataJSON = response.data;
-        position = FingerprintModel.fromJSON(dataJSON);
+        markersList = dataJSON
+            .map<ArMarkersModel>((json) => ArMarkersModel.fromJSON(json))
+            .toList();
 
-        print('position: ${position?.x},${position?.y}');
+        print(dataJSON);
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  getAllFrontDoors() async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('no internet connection'.tr);
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      var response = await RequestService().request(
+        '/ar-markers/front',
+        method: HttpMethod.get,
+      );
+
+      if (response != null && response.statusCode == 200) {
+        var dataJSON = response.data;
+        markersList = dataJSON
+            .map<ArMarkersModel>((json) => ArMarkersModel.fromJSON(json))
+            .toList();
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  detectAndNavigate({
+    File? markerImage,
+    String startMarker = '',
+    required String destination,
+  }) async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('no internet connection'.tr);
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      FormData formData = FormData();
+
+      if (markerImage != null) {
+        var reqData = {
+          "images": MultipartFile.fromFileSync(markerImage.path,
+              filename: 'marker_image'),
+        };
+
+        formData = FormData.fromMap({
+          'images': reqData,
+          'destination': destination,
+        });
+      }
+
+      var response = await RequestService().request(
+        '/ar-markers/detect-and-navigate',
+        method: HttpMethod.post,
+        data: markerImage != null
+            ? formData
+            : {
+                'start_marker': startMarker,
+                'destination': destination,
+              },
+      );
+
+      if (response != null && response.statusCode == 200) {
+        Map<String, dynamic> dataMap = response.data;
+
+        navigationData = NavigationPathModel.fromJSON(dataMap);
+        sessionId = navigationData?.sessionId;
+
+        print(dataMap);
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  updatePosition({
+    File? markerImage,
+    String detectMarker = '',
+  }) async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('no internet connection'.tr);
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      FormData formData = FormData();
+
+      if (markerImage != null) {
+        var reqData = {
+          "images": MultipartFile.fromFileSync(markerImage.path,
+              filename: 'marker_image'),
+        };
+
+        formData = FormData.fromMap({
+          'session_id': sessionId,
+          'images': reqData,
+        });
+      }
+
+      print(detectMarker);
+      var response = await RequestService().request(
+        '/ar-markers/update-position',
+        method: HttpMethod.post,
+        data: markerImage != null
+            ? formData
+            : {
+                'session_id': sessionId,
+                'detected_marker': detectMarker,
+              },
+      );
+
+      if (response != null && response.statusCode == 200) {
+        Map<String, dynamic> dataMap = response.data;
+
+        print(dataMap);
       }
     } catch (e) {
       log(e.toString());
@@ -151,7 +222,7 @@ class NavigationController extends GetxController {
       isLoading.value = true;
 
       var reqData = {
-        "image": MultipartFile.fromFileSync(obstacle.path,
+        "images": MultipartFile.fromFileSync(obstacle.path,
             filename: 'obstacle_image'),
       };
 
@@ -166,6 +237,63 @@ class NavigationController extends GetxController {
       if (response != null && response.statusCode == 200) {
         print(response);
         await getObstacle();
+      }
+    } catch (e) {
+      log(e.toString());
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  uploadMarker(File marker) async {
+    bool isOnline = await RequestService().checkInternetConnection();
+
+    if (!isOnline) {
+      showAlert('no internet connection'.tr);
+      isLoading.value = false;
+
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      var reqData = {
+        "images":
+            MultipartFile.fromFileSync(marker.path, filename: 'marker_image'),
+      };
+
+      FormData formData = FormData.fromMap(reqData);
+
+      var response = await RequestService().request(
+        '/ar-markers/check',
+        method: HttpMethod.post,
+        data: formData,
+      );
+
+      if (response != null && response.statusCode == 200) {
+        Map<String, dynamic> dataMap = response.data;
+
+        checkedMarker = CheckMarkerModel.fromJSON(dataMap);
+
+        if (checkedMarker?.confidence != null &&
+            checkedMarker!.confidence! >= 0.3) {
+          for (ArMarkersModel marker in markersList) {
+            if (checkedMarker!.markerId == marker.markerId) {
+              selectedStartMarker.clear();
+              selectedStartMarker.add(marker);
+
+              Get.back(result: selectedStartMarker);
+            }
+          }
+        } else {
+          Get.dialog(
+            CustomAlertDialog(
+              title: 'marker not found'.tr,
+              content: 'please scan again'.tr,
+            ),
+          );
+        }
       }
     } catch (e) {
       log(e.toString());
@@ -206,5 +334,11 @@ class NavigationController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  clearData() {
+    selectedStartMarker.clear();
+    selectedDestinationMarker.clear();
+    destinationMarkerImage = null;
   }
 }

@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/custom_submit_button.dart';
@@ -50,13 +47,12 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
   final TextEditingController _searchController = TextEditingController();
   List _filteredItems = [];
 
-  late StreamSubscription<bool> _keyboardSubscription;
-  bool _keyboardIsVisible = false;
   late int _maximumItem;
 
   @override
   void initState() {
     super.initState();
+
     _filteredItems = widget.items;
 
     if (widget.pickMultipleItem) {
@@ -64,20 +60,13 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
     } else {
       _maximumItem = 1;
     }
-
-    _keyboardSubscription = KeyboardVisibilityController().onChange.listen(
-      (bool visible) {
-        _keyboardIsVisible = visible;
-        setState(() {});
-      },
-    );
   }
 
   @override
   void dispose() {
-    _keyboardSubscription.cancel();
-    _searchController.dispose();
     super.dispose();
+
+    _searchController.dispose();
   }
 
   @override
@@ -104,11 +93,14 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
   _searchBar() {
     return widget.showSearchBar
         ? Padding(
-            padding: const EdgeInsets.all(marginX2),
+            padding: const EdgeInsets.only(
+              left: marginX2,
+              right: marginX2,
+              top: marginX2,
+            ),
             child: CustomTextField(
               textEditingController: _searchController,
               hintText: widget.hintText,
-              padding: const EdgeInsets.all(marginX2),
               onChanged: (value) {
                 _filteredItems = widget.onSearch(value);
                 setState(() {});
@@ -120,42 +112,50 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
 
   _dataList() {
     return _filteredItems.isNotEmpty
-        ? ListView.separated(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: marginX2),
-            itemCount: _filteredItems.length,
-            itemBuilder: (context, index) {
-              var item = _filteredItems[index];
-              bool isSelected = widget.selectedItems.contains(item);
+        ? MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: ListView.separated(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(
+                left: marginX2,
+                right: marginX2,
+                top: 4.0,
+              ),
+              itemCount: _filteredItems.length,
+              itemBuilder: (context, index) {
+                var item = _filteredItems[index];
+                bool isSelected = widget.selectedItems.contains(item);
 
-              return InkWell(
-                onTap: widget.enabledSelect
-                    ? () {
-                        if (isSelected) {
-                          widget.selectedItems.remove(item);
-                        } else {
-                          if (widget.pickMultipleItem) {
-                            if (widget.selectedItems.length < _maximumItem) {
-                              widget.selectedItems.insert(0, item);
-                            }
+                return InkWell(
+                  onTap: widget.enabledSelect
+                      ? () {
+                          if (isSelected) {
+                            widget.selectedItems.remove(item);
                           } else {
-                            widget.selectedItems.clear();
-                            widget.selectedItems.add(item);
+                            if (widget.pickMultipleItem) {
+                              if (widget.selectedItems.length < _maximumItem) {
+                                widget.selectedItems.insert(0, item);
+                              }
+                            } else {
+                              widget.selectedItems.clear();
+                              widget.selectedItems.add(item);
+                            }
                           }
-                        }
 
-                        setState(() {});
-                      }
-                    : null,
-                child: widget.itemWidget(
-                  item,
-                  isSelected,
-                ),
-              );
-            },
-            separatorBuilder: (context, index) {
-              return const SizedBox(height: marginX2);
-            },
+                          setState(() {});
+                        }
+                      : null,
+                  child: widget.itemWidget(
+                    item,
+                    isSelected,
+                  ),
+                );
+              },
+              separatorBuilder: (context, index) {
+                return const Divider();
+              },
+            ),
           )
         : const Padding(
             padding: EdgeInsets.all(20.0),
@@ -170,7 +170,7 @@ class _CustomItemPickerState extends State<CustomItemPicker> {
     bool enabled = widget.selectedItems.isNotEmpty;
 
     return Visibility(
-      visible: widget.showConfirmButton && !_keyboardIsVisible,
+      visible: widget.showConfirmButton,
       child: SafeArea(
         child: enabled
             ? CustomSubmitButton(

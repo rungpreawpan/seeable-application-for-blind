@@ -26,7 +26,7 @@ class OcrController extends GetxController {
       isLoading.value = true;
 
       var reqData = {
-        "image":
+        "images":
             MultipartFile.fromFileSync(image.path, filename: 'object_image'),
         "lang": 'tha+eng',
       };
