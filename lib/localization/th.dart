@@ -6,7 +6,6 @@ const Map<String, String> th = {
   'username': 'ชื่อผู้ใช้',
   'password': 'รหัสผ่าน',
   'email': 'อีเมล',
-  'uuid': 'รหัสเครื่อง',
   'please enter your': 'กรุณากรอก',
   'register success': 'ลงทะเบียนสำเร็จ',
   'already have account': 'มีบัญชีอยู่แล้ว? เข้าสู่ระบบที่นี่',

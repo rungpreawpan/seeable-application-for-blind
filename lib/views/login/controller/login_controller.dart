@@ -77,11 +77,11 @@ class LoginController extends GetxController {
         user = UserModel.fromJSON(dataJSON);
 
         String userData = jsonEncode({
-          'uuid': user?.uuid,
+          'id': user?.id,
           'firstname': user?.firstname,
           'lastname': user?.lastname,
           'email': user?.email,
-          'username': username,
+          'username': user?.username,
         });
 
         await storage.write(key: 'register', value: 'true');
@@ -97,7 +97,7 @@ class LoginController extends GetxController {
     }
   }
 
-  getUser({required String uuid}) async {
+  getUser({required int? id}) async {
     bool isOnline = await RequestService().checkInternetConnection();
 
     if (!isOnline) {
@@ -111,7 +111,7 @@ class LoginController extends GetxController {
       isLoading.value = true;
 
       var response = await RequestService().request(
-        '/user/$uuid',
+        '/user/$id',
         method: HttpMethod.get,
       );
 
@@ -119,11 +119,11 @@ class LoginController extends GetxController {
         user = UserModel.fromJSON(response.data);
 
         String userData = jsonEncode({
-          'uuid': user?.uuid,
+          'id': user?.id,
           'firstname': user?.firstname,
           'lastname': user?.lastname,
-          'email': user?.email,
           'username': user?.username,
+          'email': user?.email,
         });
 
         await storage.write(key: 'user_data', value: userData);
@@ -136,7 +136,7 @@ class LoginController extends GetxController {
   }
 
   updateUser({
-    required String uuid,
+    required int? id,
     required dynamic data,
   }) async {
     bool isOnline = await RequestService().checkInternetConnection();
@@ -152,13 +152,13 @@ class LoginController extends GetxController {
       isLoading.value = true;
 
       var response = await RequestService().request(
-        '/users/$uuid',
+        '/users/$id',
         method: HttpMethod.put,
         data: data,
       );
 
       if (response != null && response.statusCode == 200) {
-        await getUser(uuid: uuid);
+        await getUser(id: id);
 
         Get.dialog(
           CustomAlertDialog(

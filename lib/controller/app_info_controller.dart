@@ -10,7 +10,6 @@ class AppInfoController extends GetxController {
   var appVersion = ''.obs;
   var model = ''.obs;
   var os = ''.obs;
-  var uuid = ''.obs;
 
   var cameraGranted = false.obs;
   var micGranted = false.obs;
@@ -38,16 +37,12 @@ class AppInfoController extends GetxController {
       final String? androidId = await androidIdPlugin.getId();
 
       model(androidInfo.model);
-      uuid(androidId);
       os(osVersion);
     } else if (Platform.isIOS) {
       IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
 
       model(iosInfo.modelName);
       os('${iosInfo.systemName} ${iosInfo.systemVersion}');
-      uuid(iosInfo.identifierForVendor);
     }
-
-    await storage.write(key: 'uuid', value: uuid.value);
   }
 }

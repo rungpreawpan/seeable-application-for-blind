@@ -4,14 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/controller/login_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/settings/components/settings_label.dart';
 import 'package:seeable/views/settings/update_info/update_email_page.dart';
 import 'package:seeable/views/settings/update_info/update_name_page.dart';
 import 'package:seeable/views/settings/update_info/update_username_page.dart';
-import 'package:seeable/views/settings/update_info/update_uuid_page.dart';
 import 'package:seeable/widgets/main_template.dart';
 
 class UpdateUserInfoPage extends StatefulWidget {
@@ -23,7 +21,6 @@ class UpdateUserInfoPage extends StatefulWidget {
 
 class _UpdateUserInfoPageState extends State<UpdateUserInfoPage> {
   final LoginController _loginController = Get.put(LoginController());
-  final AppInfoController _appInfoController = Get.find();
 
   FlutterSecureStorage storage = const FlutterSecureStorage();
 
@@ -73,7 +70,7 @@ class _UpdateUserInfoPageState extends State<UpdateUserInfoPage> {
             onTap: () async {
               bool? result = await Get.to(
                 () => UpdateNamePage(
-                  uuid: userInfo?.uuid ?? '',
+                  id: userInfo?.id ?? 0,
                   firstname: userInfo?.firstname,
                   lastname: userInfo?.lastname,
                 ),
@@ -93,7 +90,7 @@ class _UpdateUserInfoPageState extends State<UpdateUserInfoPage> {
             onTap: () async {
               bool? result = await Get.to(
                 () => UpdateEmailPage(
-                  uuid: userInfo?.uuid ?? '',
+                  id: userInfo?.id,
                   email: userInfo?.email,
                 ),
               );
@@ -112,27 +109,8 @@ class _UpdateUserInfoPageState extends State<UpdateUserInfoPage> {
             onTap: () async {
               bool? result = await Get.to(
                 () => UpdateUsernamePage(
-                  uuid: userInfo?.uuid ?? '',
+                  id: userInfo?.id,
                   username: userInfo?.username,
-                ),
-              );
-
-              if (result != null) {
-                _prepareData();
-              }
-            },
-          ),
-          _divider(),
-          //TODO: เช็คว่าในdbตรงกับรหัสเครื่องตอนนี้มั้ยถ้าไม่ตรงให้แก้ไข
-          SettingsLabel(
-            title: 'uuid'.tr,
-            settingsLabelStyle: SettingsLabelStyle.updateInfo,
-            buttonInitialValue: _appInfoController.uuid.value,
-            showWarning: userInfo?.uuid != _appInfoController.uuid.value,
-            onTap: () async {
-              bool? result = await Get.to(
-                () => UpdateUuidPage(
-                  uuid: userInfo?.uuid ?? '',
                 ),
               );
 

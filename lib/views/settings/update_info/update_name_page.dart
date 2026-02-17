@@ -8,13 +8,13 @@ import 'package:seeable/views/settings/components/update_info_template.dart';
 import 'package:seeable/widgets/custom_textfield.dart';
 
 class UpdateNamePage extends StatefulWidget {
-  final String uuid;
+  final int? id;
   final String? firstname;
   final String? lastname;
 
   const UpdateNamePage({
     super.key,
-    required this.uuid,
+    required this.id,
     required this.firstname,
     required this.lastname,
   });
@@ -56,7 +56,7 @@ class _UpdateNamePageState extends State<UpdateNamePage> {
           _lastnameController.text != widget.lastname,
       onTap: () {
         _loginController.updateUser(
-          uuid: widget.uuid,
+          id: widget.id,
           data: jsonEncode({
             'firstname': _firstnameController.text,
             'lastname': _lastnameController.text,

@@ -14,7 +14,6 @@ class RegisterController extends GetxController {
   validateRegister({
     required String firstname,
     required String lastname,
-    required String uuid,
     required String username,
     required String password,
     required String email,
@@ -30,14 +29,6 @@ class RegisterController extends GetxController {
     if (lastname == '') {
       Get.dialog(
         CustomAlertDialog(title: '${'please enter your'.tr}${'lastname'.tr}'),
-      );
-
-      return;
-    }
-
-    if (uuid == '') {
-      Get.dialog(
-        CustomAlertDialog(title: '${'please enter your'.tr}${'uuid'.tr}'),
       );
 
       return;
@@ -70,7 +61,6 @@ class RegisterController extends GetxController {
     await register(
       firstname: firstname,
       lastname: lastname,
-      uuid: uuid,
       username: username,
       password: password,
       email: email,
@@ -80,7 +70,6 @@ class RegisterController extends GetxController {
   register({
     required String firstname,
     required String lastname,
-    required String uuid,
     required String username,
     required String password,
     required String email,
@@ -103,7 +92,6 @@ class RegisterController extends GetxController {
         data: {
           'firstname': firstname,
           'lastname': lastname,
-          'uuid': uuid,
           'username': username,
           'password': password,
           'email': email,

@@ -6,7 +6,6 @@ const Map<String, String> en = {
   'username': 'Username',
   'password': 'Password',
   'email': 'Email',
-  'uuid': 'UUID',
   'please enter your': 'Please enter your ',
   'register success': 'Successfully registered',
   'already have account': 'Already have an account? Log in here',

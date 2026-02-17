@@ -68,6 +68,7 @@ class _ScanTextResultPageState extends State<ScanTextResultPage> {
                 Image.file(
                   widget.imageFile,
                   fit: BoxFit.fitWidth,
+                  height: Get.height / 2,
                 ),
                 const SizedBox(height: marginX2),
                 TextFontStyle(

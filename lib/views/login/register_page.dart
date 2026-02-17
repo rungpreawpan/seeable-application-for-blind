@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/controller/register_controller.dart';
 import 'package:seeable/views/login/login_page.dart';
 import 'package:seeable/widgets/custom_loading.dart';
@@ -19,26 +18,12 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final RegisterController _registerController = Get.put(RegisterController());
-  final AppInfoController _appInfoController = Get.find();
 
   final TextEditingController _firstnameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _uuidController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-
-    _getUuid();
-  }
-
-  _getUuid() {
-    _uuidController.text = _appInfoController.uuid.value;
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,12 +72,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: marginX2),
             CustomTextField(
-              textEditingController: _uuidController,
-              labelText: 'uuid'.tr,
-              isEnabled: false,
-            ),
-            const SizedBox(height: marginX2),
-            CustomTextField(
               textEditingController: _usernameController,
               labelText: 'username'.tr,
             ),
@@ -133,7 +112,6 @@ class _RegisterPageState extends State<RegisterPage> {
         await _registerController.validateRegister(
           firstname: _firstnameController.text,
           lastname: _lastNameController.text,
-          uuid: _uuidController.text,
           username: _usernameController.text,
           password: _passwordController.text,
           email: _emailController.text,

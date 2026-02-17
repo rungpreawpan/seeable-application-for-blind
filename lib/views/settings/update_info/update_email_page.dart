@@ -7,12 +7,12 @@ import 'package:seeable/views/settings/components/update_info_template.dart';
 import 'package:seeable/widgets/custom_textfield.dart';
 
 class UpdateEmailPage extends StatefulWidget {
-  final String uuid;
+  final int? id;
   final String? email;
 
   const UpdateEmailPage({
     super.key,
-    required this.uuid,
+    required this.id,
     required this.email,
   });
 
@@ -47,7 +47,7 @@ class _UpdateEmailPageState extends State<UpdateEmailPage> {
       isChange: _emailController.text != widget.email,
       onTap: () {
         _loginController.updateUser(
-          uuid: widget.uuid,
+          id: widget.id,
           data: jsonEncode({
             'email': _emailController.text,
           }),

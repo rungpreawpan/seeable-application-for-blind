@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/utils/camera_service.dart';
+import 'package:seeable/views/navigation/components/navigation_direction_popup.dart';
+import 'package:seeable/views/navigation/components/obstacle_alert_popup.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
@@ -44,8 +46,8 @@ class _NavigationPageState extends State<NavigationPage> {
 
     _cameraService = CameraService();
 
-    _initCamera();
-    _prepareData();
+    // _initCamera();
+    // _prepareData();
   }
 
   Future<void> _initCamera() async {
@@ -127,6 +129,37 @@ class _NavigationPageState extends State<NavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    // return MainTemplate(
+    //   appBarTitle: 'navigation'.tr,
+    //   showBackButton: true,
+    //   body: Container(
+    //     color: Colors.black,
+        // child: Stack(
+        //   children: [
+        //     SingleChildScrollView(
+        //       scrollDirection: Axis.horizontal,
+        //       child: Row(
+        //         mainAxisAlignment: MainAxisAlignment.end,
+        //         children: [
+        //           Image.asset(
+        //             // 'assets/test/arrived.jpg',
+        //             'assets/test/obstacle.jpg',
+        //             fit: BoxFit.fitHeight,
+        //             height: Get.height,
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //     Column(
+        //       children: [
+        //         NavigationDirectionPopup(),
+        //         ObstacleAlertPopup(),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+    //   ),
+    // );
     return MainTemplate(
       appBarTitle: 'navigation'.tr,
       showBackButton: true,
