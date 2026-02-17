@@ -107,7 +107,7 @@ class IntroTemplate extends StatelessWidget {
 
   _actionButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      padding: const EdgeInsets.only(left: 30.0, right: 30.0, bottom: marginX2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

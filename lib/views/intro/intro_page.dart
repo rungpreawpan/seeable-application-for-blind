@@ -87,16 +87,6 @@ class _IntroPageState extends State<IntroPage> {
           );
 
         case 6:
-          return IntroTemplate(
-            iconPath: 'assets/intro/bluetooth.svg',
-            description: 'bluetooth intro description'.tr,
-            next: _bluetoothPermission,
-            back: () {
-              _introController.currentPage(5);
-            },
-          );
-
-        case 7:
           return const RegisterPage();
 
         default:
@@ -166,19 +156,7 @@ class _IntroPageState extends State<IntroPage> {
       _appInfoController.locationGranted(false);
     }
 
-    _introController.currentPage(6);
-  }
-
-  _bluetoothPermission() async {
-    var result = await Permission.bluetoothConnect.request();
-
-    if (result == PermissionStatus.granted) {
-      _appInfoController.bluetooth(true);
-    } else {
-      _appInfoController.bluetooth(false);
-    }
-
     await storage.write(key: 'permission', value: 'true');
-    _introController.currentPage(7);
+    _introController.currentPage(6);
   }
 }
