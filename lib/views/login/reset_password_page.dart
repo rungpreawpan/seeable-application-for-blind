@@ -62,17 +62,22 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           textEditingController: _newPasswordController,
           labelText: 'password'.tr,
           obscureText: _obscureNewPassword,
-          suffix: InkWell(
-            onTap: () {
-              _obscureNewPassword = !_obscureNewPassword;
-              setState(() {});
-            },
-            child: Icon(
-              _obscureNewPassword
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
-              color: Colors.grey,
-              size: 20.0,
+          suffix: Semantics(
+            button: true,
+            label:
+                _obscureNewPassword ? 'hide password'.tr : 'show password'.tr,
+            child: InkWell(
+              onTap: () {
+                _obscureNewPassword = !_obscureNewPassword;
+                setState(() {});
+              },
+              child: Icon(
+                _obscureNewPassword
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                color: Colors.grey,
+                size: 20.0,
+              ),
             ),
           ),
         ),
@@ -81,17 +86,23 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           textEditingController: _confirmPasswordController,
           labelText: 'confirm password'.tr,
           obscureText: _obscureConfirmPassword,
-          suffix: InkWell(
-            onTap: () {
-              _obscureConfirmPassword = !_obscureConfirmPassword;
-              setState(() {});
-            },
-            child: Icon(
-              _obscureConfirmPassword
-                  ? Icons.visibility_rounded
-                  : Icons.visibility_off_rounded,
-              color: Colors.grey,
-              size: 20.0,
+          suffix: Semantics(
+            button: true,
+            label: _obscureConfirmPassword
+                ? 'hide password'.tr
+                : 'show password'.tr,
+            child: InkWell(
+              onTap: () {
+                _obscureConfirmPassword = !_obscureConfirmPassword;
+                setState(() {});
+              },
+              child: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility_rounded
+                    : Icons.visibility_off_rounded,
+                color: Colors.grey,
+                size: 20.0,
+              ),
             ),
           ),
         ),
@@ -103,7 +114,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   _resetPasswordButton() {
     return CustomSubmitButton(
       onTap: () async {
-        _forgetPasswordController.validateResetPassword(
+        await _forgetPasswordController.validateResetPassword(
           newPassword: _newPasswordController.text,
           confirmPassword: _confirmPasswordController.text,
         );

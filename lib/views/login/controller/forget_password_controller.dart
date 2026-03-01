@@ -178,7 +178,7 @@ class ForgetPasswordController extends GetxController {
 
       var response = await RequestService().request(
         '/forget/reset-password',
-        method: HttpMethod.post,
+        method: HttpMethod.put,
         data: {
           'username': user,
           'new_password': newPassword,

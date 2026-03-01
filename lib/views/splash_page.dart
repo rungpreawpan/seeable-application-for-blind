@@ -55,9 +55,9 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(seconds: 2));
 
     // for dev only
-    // await storage.delete(key: 'register');
-    // await storage.delete(key: 'login');
-    // await storage.delete(key: 'permission');
+    await storage.delete(key: 'register');
+    await storage.delete(key: 'login');
+    await storage.delete(key: 'permission');
 
     // await storage.write(key: 'login', value: 'true');
 
@@ -111,13 +111,18 @@ class _SplashPageState extends State<SplashPage> {
 
   _appVersion() {
     return Obx(() {
-      return TextFontStyle(
-        'v ${_appInfoController.appVersion.value}',
-        size: fontSizeM,
-        weight: FontWeight.bold,
-        color: _settingsController.themeMode.value == ThemeMode.light
-            ? primaryColor
-            : Colors.white,
+      return Column(
+        children: [
+          TextFontStyle(
+            'v ${_appInfoController.appVersion.value}',
+            size: fontSizeM,
+            weight: FontWeight.bold,
+            color: _settingsController.themeMode.value == ThemeMode.light
+                ? primaryColor
+                : Colors.white,
+          ),
+          const SizedBox(height: marginX2),
+        ],
       );
     });
   }

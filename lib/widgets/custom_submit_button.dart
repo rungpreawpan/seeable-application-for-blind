@@ -42,49 +42,53 @@ class CustomSubmitButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final SettingsController settingsController = Get.find();
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: buttonHeight,
-        width: buttonWidth,
-        margin: buttonMargin,
-        decoration: BoxDecoration(
-          color: settingsController.themeMode.value == ThemeMode.light
-              ? buttonColor
-              : Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: showBorder
-              ? Border.all(
-                  color: borderColor,
-                  width: borderWidth,
-                )
-              : null,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Visibility(
-              visible: icon != null,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  icon ?? const SizedBox(),
-                  const SizedBox(width: margin),
-                ],
+    return Semantics(
+      button: true,
+      label: title,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: buttonHeight,
+          width: buttonWidth,
+          margin: buttonMargin,
+          decoration: BoxDecoration(
+            color: settingsController.themeMode.value == ThemeMode.light
+                ? buttonColor
+                : Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: showBorder
+                ? Border.all(
+                    color: borderColor,
+                    width: borderWidth,
+                  )
+                : null,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Visibility(
+                visible: icon != null,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    icon ?? const SizedBox(),
+                    const SizedBox(width: margin),
+                  ],
+                ),
               ),
-            ),
-            TextFontStyle(
-              title,
-              size: fontSize,
-              weight: fontWeight,
-              color: settingsController.themeMode.value == ThemeMode.light
-                  ? fontColor
-                  : Colors.black,
-            ),
-          ],
+              TextFontStyle(
+                title,
+                size: fontSize,
+                weight: fontWeight,
+                color: settingsController.themeMode.value == ThemeMode.light
+                    ? fontColor
+                    : Colors.black,
+              ),
+            ],
+          ),
         ),
       ),
     );

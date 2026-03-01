@@ -101,6 +101,7 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
 
   _cameraButton() {
     return CustomCameraButton(
+      semanticsLabel: 'scan marker'.tr,
       onTap: () async {
         HapticFeedback.selectionClick();
 
@@ -116,6 +117,7 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
 
   _switchCamera() {
     return CustomSwitchCameraButton(
+      isFrontCamera: _cameraService.selectedCameraIndex == 1,
       onTap: () async {
         await _cameraService.switchCamera();
         if (mounted) setState(() {});

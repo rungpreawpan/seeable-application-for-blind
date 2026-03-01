@@ -82,13 +82,14 @@ class _NavigationPageState extends State<NavigationPage> {
     XFile? file = await _takePicture();
 
     if (file != null) {
-      _navigationController.obstacleList.clear();
+      _navigationController.obstacleDetected = null;
       await _navigationController.uploadObstacle(File(file.path));
 
-      if (_navigationController.obstacleList.isNotEmpty) {
-        for (ObstacleModel obstacle in _navigationController.obstacleList) {
-          if (obstacle.priority! >= 0.3) {
-            if (_settingsController.currentLocale.value.languageCode == 'th') {
+      if (_navigationController.obstacleDetected != null) {
+        if (_navigationController.obstacleDetected!.boxes!.isNotEmpty) {
+          for (ObstacleBoxesModel obstacle
+              in _navigationController.obstacleDetected!.boxes!) {
+            if (obstacle.priority! >= 0.3) {
               var translate =
                   await translator.translate(obstacle.message!, to: 'th');
               await ttsManager.speak(translate.toString());
@@ -109,7 +110,8 @@ class _NavigationPageState extends State<NavigationPage> {
     if (file != null) {
       File markerImage = File(file.path);
 
-      _navigationController.updatePosition(markerImage: markerImage);
+      await _navigationController.updatePosition(markerImage: markerImage);
+      //TODO add tts
     }
   }
 
@@ -134,30 +136,30 @@ class _NavigationPageState extends State<NavigationPage> {
     //   showBackButton: true,
     //   body: Container(
     //     color: Colors.black,
-        // child: Stack(
-        //   children: [
-        //     SingleChildScrollView(
-        //       scrollDirection: Axis.horizontal,
-        //       child: Row(
-        //         mainAxisAlignment: MainAxisAlignment.end,
-        //         children: [
-        //           Image.asset(
-        //             // 'assets/test/arrived.jpg',
-        //             'assets/test/obstacle.jpg',
-        //             fit: BoxFit.fitHeight,
-        //             height: Get.height,
-        //           ),
-        //         ],
-        //       ),
-        //     ),
-        //     Column(
-        //       children: [
-        //         NavigationDirectionPopup(),
-        //         ObstacleAlertPopup(),
-        //       ],
-        //     ),
-        //   ],
-        // ),
+    //     child: Stack(
+    //       children: [
+    //         SingleChildScrollView(
+    //           scrollDirection: Axis.horizontal,
+    //           child: Row(
+    //             mainAxisAlignment: MainAxisAlignment.end,
+    //             children: [
+    //               Image.asset(
+    //                 // 'assets/test/arrived.jpg',
+    //                 'assets/test/obstacle.jpg',
+    //                 fit: BoxFit.fitHeight,
+    //                 height: Get.height,
+    //               ),
+    //             ],
+    //           ),
+    //         ),
+    //         Column(
+    //           children: [
+    //             NavigationDirectionPopup(),
+    //             ObstacleAlertPopup(),
+    //           ],
+    //         ),
+    //       ],
+    //     ),
     //   ),
     // );
     return MainTemplate(

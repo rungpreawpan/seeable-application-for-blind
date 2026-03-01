@@ -94,14 +94,18 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   _redirectToLogin() {
-    return InkWell(
-      onTap: () {
-        Get.offAll(() => const LoginPage());
-      },
-      child: TextFontStyle(
-        'already have account'.tr,
-        color: primaryColor,
-        underline: true,
+    return Semantics(
+      button: true,
+      label: 'already have account'.tr,
+      child: InkWell(
+        onTap: () {
+          Get.offAll(() => const LoginPage());
+        },
+        child: TextFontStyle(
+          'already have account'.tr,
+          color: primaryColor,
+          underline: true,
+        ),
       ),
     );
   }

@@ -12,7 +12,7 @@ class OcrController extends GetxController {
 
   OcrModel? ocrText;
 
-  uploadImage(File image) async {
+  uploadText(File image) async {
     bool isOnline = await RequestService().checkInternetConnection();
 
     if (!isOnline) {
@@ -33,38 +33,9 @@ class OcrController extends GetxController {
       FormData formData = FormData.fromMap(reqData);
 
       var response = await RequestService().request(
-        '/upload-ocr',
+        '/ocr',
         method: HttpMethod.post,
         data: formData,
-      );
-
-      if (response != null && response.statusCode == 200) {
-        await ocrResults();
-      }
-    } catch (e) {
-      log(e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  ocrResults() async {
-    bool isOnline = await RequestService().checkInternetConnection();
-
-    if (!isOnline) {
-      showAlert('no internet connection'.tr);
-      isLoading.value = false;
-
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-      ocrText = null;
-
-      var response = await RequestService().request(
-        '/ocr-result',
-        method: HttpMethod.get,
       );
 
       if (response != null && response.statusCode == 200) {

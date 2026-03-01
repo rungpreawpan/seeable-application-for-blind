@@ -10,14 +10,12 @@ class CustomOkCancelDialog extends StatelessWidget {
   final Color? titleColor;
   final String? content;
   final Color? contentColor;
-  final String okTestKey;
   final Function()? onOK;
   final String? okText;
   final bool isGradient;
   final Color? gradientColor1;
   final Color? gradientColor2;
   final bool showCancel;
-  final String cancelTestKey;
   final Function()? onCancel;
   final String? cancelText;
 
@@ -28,14 +26,12 @@ class CustomOkCancelDialog extends StatelessWidget {
     this.titleColor,
     this.content,
     this.contentColor,
-    this.okTestKey = '',
     this.onOK,
     this.okText,
     this.isGradient = false,
     this.gradientColor1,
     this.gradientColor2,
     this.showCancel = true,
-    this.cancelTestKey = '',
     this.onCancel,
     this.cancelText,
   });
@@ -60,18 +56,21 @@ class CustomOkCancelDialog extends StatelessWidget {
           children: [
             icon != null
                 ? Column(
-              children: [
-                icon!,
-                const SizedBox(height: margin),
-              ],
-            )
+                    children: [
+                      icon!,
+                      const SizedBox(height: margin),
+                    ],
+                  )
                 : const SizedBox(),
-            TextFontStyle(
-              title,
-              color: titleColor ?? Colors.black,
-              size: fontSizeL,
-              weight: FontWeight.bold,
-              align: TextAlign.center,
+            Semantics(
+              header: true,
+              child: TextFontStyle(
+                title,
+                color: titleColor ?? Colors.black,
+                size: fontSizeL,
+                weight: FontWeight.bold,
+                align: TextAlign.center,
+              ),
             ),
             Visibility(
               visible: content != null,
@@ -97,7 +96,6 @@ class CustomOkCancelDialog extends StatelessWidget {
           children: [
             Expanded(
               child: CustomSubmitButton(
-                key: ValueKey(okTestKey),
                 onTap: () {
                   Get.back(result: true);
 
@@ -105,7 +103,7 @@ class CustomOkCancelDialog extends StatelessWidget {
                     onOK!();
                   }
                 },
-                title: okText ?? 'ยืนยัน',
+                title: okText ?? 'confirm'.tr,
                 borderRadius: 10,
                 buttonHeight: 45.0,
                 buttonColor: primaryColor,
@@ -114,23 +112,22 @@ class CustomOkCancelDialog extends StatelessWidget {
             showCancel ? const SizedBox(width: margin) : const SizedBox(),
             showCancel
                 ? Expanded(
-              child: CustomSubmitButton(
-                key: ValueKey(cancelTestKey),
-                onTap: () {
-                  Get.back();
+                    child: CustomSubmitButton(
+                      onTap: () {
+                        Get.back();
 
-                  if (onCancel != null) {
-                    onCancel!();
-                  }
-                },
-                title: cancelText ?? 'ยกเลิก',
-                borderRadius: 10,
-               showBorder: true,
-                fontColor: Colors.grey,
-                buttonColor: Colors.transparent,
-                buttonHeight: 45.0,
-              ),
-            )
+                        if (onCancel != null) {
+                          onCancel!();
+                        }
+                      },
+                      title: cancelText ?? 'cancel'.tr,
+                      borderRadius: 10,
+                      showBorder: true,
+                      fontColor: Colors.grey,
+                      buttonColor: Colors.transparent,
+                      buttonHeight: 45.0,
+                    ),
+                  )
                 : Container(),
           ],
         ),

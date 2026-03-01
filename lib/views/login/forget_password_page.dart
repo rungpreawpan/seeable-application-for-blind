@@ -73,7 +73,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   _forgetPasswordButton() {
     return CustomSubmitButton(
       onTap: () async {
-        _forgetPasswordController.validateForgetPassword(
+        await _forgetPasswordController.validateForgetPassword(
           username: _usernameController.text,
           email: _emailController.text,
         );

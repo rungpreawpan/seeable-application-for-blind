@@ -13,6 +13,8 @@ const Map<String, String> en = {
   // login
   'login': 'Login',
   'dont have account': "Don't have an account? Register here",
+  'show password': 'Show password',
+  'hide password': 'Hide password',
 
   // forget password
   'forget password': 'Forget Password',
@@ -38,28 +40,9 @@ const Map<String, String> en = {
   'marker not found': 'Marker not found',
   'please scan again': 'Please scan again',
   'marker scan': 'Marker scan',
-
-  // building list
-  'building': 'Building',
-  'building a': 'Building A',
-  'building b': 'Building B',
-  'building c': 'Building C',
-
-  // list in building
-  'near you': 'Near you',
-  'favorite': 'Favorite',
-  'all categories': 'All categories',
-  'level': 'Level',
-
-  // category
-  'class room': 'Class room',
-  'office': 'Office',
-  'elevator': 'Elevator',
-  'toilet': 'Toilet',
-  'exit': 'Exit',
-
-  // navigation
   'start': 'Start',
+  'destination': 'Destination',
+  'swap location': 'Swap location',
 
   // application page
   'main page': 'Main Page',
@@ -69,16 +52,17 @@ const Map<String, String> en = {
   // intro
   'welcome to seeable': 'Welcome to Seeable\nApplication for the visually impaired',
   'back': 'Back',
+  'next': 'Next',
   'start application': 'Start Application',
   'camera intro description': 'Application wants to access your Camera',
   'mic intro description': 'Application wants to access your Microphone',
   'stt intro description': 'Application wants to access Speech-To-Text',
   'accessibility intro description': 'Application wants to access Accessibility',
   'location intro description': 'Application wants to access your Location',
-  'bluetooth intro description': 'Application wants to access your Bluetooth',
 
   // etc
   'data not found': 'Data not found',
+  'loading': 'Loading',
 
   // navigation
   'straight ahead': 'Go Ahead',
@@ -96,6 +80,9 @@ const Map<String, String> en = {
 
   // scan text
   'scan results': 'Scan Results',
+
+  // scan marker
+  'scan marker': 'Scan marker',
 
   // settings
   'sound': 'Sound',
@@ -121,17 +108,22 @@ const Map<String, String> en = {
   'application version': 'Application version',
   'confirm': 'Confirm',
   'cancel': 'Cancel',
-  'download seeable app for android and ios': 'Download Seeable application for Android and iOS',
   'user information': 'User information',
   'name': 'Name',
   'save': 'Save',
   'data update successful': 'Data update successful',
-  'registered uuid': 'Registered UUID',
-  'uuid not match': 'The UUID does not match the registered UUID',
   'do you want to logout': 'Do you want to logout?',
   'no internet connection': 'No Internet connection',
+  'double tap to change': 'Double tap to change',
+  'open': 'Open',
+  'close': 'Close',
 
-  // widget
+  // camera
   'camera': 'Camera',
   'gallery': 'Gallery',
+  'take a picture': 'Take a picture',
+  'switch camera': 'Switch camera',
+  'select photo from gallery': 'Select a photo from gallery',
+  'using front camera': 'Using front camera',
+  'using back camera': 'Using back camera',
 };

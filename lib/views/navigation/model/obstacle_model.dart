@@ -1,4 +1,26 @@
 class ObstacleModel {
+  List<ObstacleBoxesModel>? boxes;
+  int? imageWidth;
+  int? imageHeight;
+
+  ObstacleModel({
+    this.boxes,
+    this.imageWidth,
+    this.imageHeight,
+  });
+
+  factory ObstacleModel.fromJSON(Map<String, dynamic> json) {
+    return ObstacleModel(
+      boxes: List.from(json['boxes'])
+          .map((e) => ObstacleBoxesModel.fromJSON(e))
+          .toList(),
+      imageWidth: int.parse(json['image_width'].toString()),
+      imageHeight: int.parse(json['image_height'].toString()),
+    );
+  }
+}
+
+class ObstacleBoxesModel {
   String? label;
   double? confidence;
   int? x1;
@@ -10,7 +32,7 @@ class ObstacleModel {
   double? priority;
   String? message;
 
-  ObstacleModel({
+  ObstacleBoxesModel({
     this.label,
     this.confidence,
     this.x1,
@@ -23,8 +45,8 @@ class ObstacleModel {
     this.message,
   });
 
-  factory ObstacleModel.fromJSON(Map<String, dynamic> json) {
-    return ObstacleModel(
+  factory ObstacleBoxesModel.fromJSON(Map<String, dynamic> json) {
+    return ObstacleBoxesModel(
       label: json['label'],
       confidence: json['confidence'],
       x1: json['x1'],

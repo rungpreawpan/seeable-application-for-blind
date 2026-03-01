@@ -23,39 +23,42 @@ class _CustomItemPickerCellState extends State<CustomItemPickerCell> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: Get.width,
-      padding: const EdgeInsets.symmetric(
-        horizontal: marginX2,
-        vertical: margin,
-      ),
-      decoration: BoxDecoration(
-        // color: widget.isSelected ? primaryColor : Colors.white,
-        color: widget.isSelected
-            ? _settingsController.themeMode.value == ThemeMode.light
-                ? primaryColor
-                : Colors.grey.shade600
-            : Colors.white,
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextFontStyle(
-              widget.title,
-              size: fontSizeL,
-              color: widget.isSelected ? Colors.white : Colors.black,
+    return Semantics(
+      button: true,
+      label: widget.title,
+      child: Container(
+        width: Get.width,
+        padding: const EdgeInsets.symmetric(
+          horizontal: marginX2,
+          vertical: margin,
+        ),
+        decoration: BoxDecoration(
+          color: widget.isSelected
+              ? _settingsController.themeMode.value == ThemeMode.light
+                  ? primaryColor
+                  : Colors.grey.shade600
+              : Colors.white,
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextFontStyle(
+                widget.title,
+                size: fontSizeL,
+                color: widget.isSelected ? Colors.white : Colors.black,
+              ),
             ),
-          ),
-          Visibility(
-            visible: widget.isSelected ? true : false,
-            child: const Icon(
-              Icons.check,
-              size: 24.0,
-              color: Colors.white,
+            Visibility(
+              visible: widget.isSelected ? true : false,
+              child: const Icon(
+                Icons.check,
+                size: 24.0,
+                color: Colors.white,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -111,6 +111,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
   _cameraButton() {
     return CustomCameraButton(
+      semanticsLabel: 'scan text'.tr,
       onTap: () async {
         HapticFeedback.selectionClick();
 
@@ -118,7 +119,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
         if (file != null) {
           _imageFile = File(file.path);
-          await _ocrController.uploadImage(_imageFile!);
+          await _ocrController.uploadText(_imageFile!);
 
           if (_ocrController.ocrText != null) {
             Get.to(() => ScanTextResultPage(imageFile: _imageFile!));
@@ -130,6 +131,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
   _switchCamera() {
     return CustomSwitchCameraButton(
+      isFrontCamera: _cameraService.selectedCameraIndex == 1,
       onTap: () async {
         await _cameraService.switchCamera();
         if (mounted) setState(() {});
@@ -145,7 +147,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
         );
 
         if (file != null) {
-          await _ocrController.uploadImage(File(file.path));
+          await _ocrController.uploadText(File(file.path));
           Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
         }
       },

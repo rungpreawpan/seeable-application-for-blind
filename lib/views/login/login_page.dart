@@ -70,17 +70,22 @@ class _LoginPageState extends State<LoginPage> {
               textEditingController: _passwordController,
               labelText: 'password'.tr,
               obscureText: _obscurePassword,
-              suffix: InkWell(
-                onTap: () {
-                  _obscurePassword = !_obscurePassword;
-                  setState(() {});
-                },
-                child: Icon(
-                  _obscurePassword
-                      ? Icons.visibility_rounded
-                      : Icons.visibility_off_rounded,
-                  color: Colors.grey,
-                  size: 20.0,
+              suffix: Semantics(
+                button: true,
+                label:
+                    _obscurePassword ? 'hide password'.tr : 'show password'.tr,
+                child: InkWell(
+                  onTap: () {
+                    _obscurePassword = !_obscurePassword;
+                    setState(() {});
+                  },
+                  child: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_rounded
+                        : Icons.visibility_off_rounded,
+                    color: Colors.grey,
+                    size: 20.0,
+                  ),
                 ),
               ),
             ),
@@ -99,27 +104,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _redirectToRegister() {
-    return InkWell(
-      onTap: () {
-        Get.offAll(() => const RegisterPage());
-      },
-      child: TextFontStyle(
-        'dont have account'.tr,
-        color: primaryColor,
-        underline: true,
+    return Semantics(
+      button: true,
+      label: 'dont have account'.tr,
+      child: InkWell(
+        onTap: () {
+          Get.offAll(() => const RegisterPage());
+        },
+        child: TextFontStyle(
+          'dont have account'.tr,
+          color: primaryColor,
+          underline: true,
+        ),
       ),
     );
   }
 
   _forgetPasswordButton() {
-    return InkWell(
-      onTap: () {
-        Get.to(() => const ForgetPasswordPage());
-      },
-      child: TextFontStyle(
-        'forget password'.tr,
-        color: primaryColor,
-        underline: true,
+    return Semantics(
+      button: true,
+      label: 'forget password'.tr,
+      child: InkWell(
+        onTap: () {
+          Get.to(() => const ForgetPasswordPage());
+        },
+        child: TextFontStyle(
+          'forget password'.tr,
+          color: primaryColor,
+          underline: true,
+        ),
       ),
     );
   }

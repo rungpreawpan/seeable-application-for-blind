@@ -111,26 +111,34 @@ class IntroTemplate extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          InkWell(
-            onTap: back,
-            child: TextFontStyle(
-              'back'.tr,
-              size: fontSizeL,
+          Semantics(
+            button: true,
+            label: 'back'.tr,
+            child: InkWell(
+              onTap: back,
+              child: TextFontStyle(
+                'back'.tr,
+                size: fontSizeL,
+              ),
             ),
           ),
-          InkWell(
-            onTap: next,
-            child: Container(
-              height: 50.0,
-              width: 50.0,
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(25.0),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: Colors.white,
+          Semantics(
+            button: true,
+            label: 'next'.tr,
+            child: InkWell(
+              onTap: next,
+              child: Container(
+                height: 50.0,
+                width: 50.0,
+                decoration: BoxDecoration(
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(25.0),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

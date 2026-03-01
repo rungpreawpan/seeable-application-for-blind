@@ -159,50 +159,54 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   _userInfo(ThemeData theme) {
-    return InkWell(
-      onTap: () {
-        Get.to(() => const UpdateUserInfoPage());
-      },
-      child: Container(
-        width: Get.width,
-        padding: const EdgeInsets.only(
-          left: marginX2,
-          right: margin,
-          top: marginX2,
-          bottom: marginX2,
-        ),
-        margin: const EdgeInsets.all(marginX2),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextFontStyle(
-                    userInfo?.firstname != null && userInfo?.lastname != null
-                        ? '${userInfo!.firstname} ${userInfo!.lastname}'
-                        : '-',
-                    size: fontSizeXL,
-                    weight: FontWeight.bold,
-                  ),
-                  const SizedBox(height: margin),
-                  TextFontStyle(
-                    userInfo?.email != null ? '${userInfo!.email}' : '-',
-                  ),
-                ],
+    return Semantics(
+      button: true,
+      label: 'user information'.tr,
+      child: InkWell(
+        onTap: () {
+          Get.to(() => const UpdateUserInfoPage());
+        },
+        child: Container(
+          width: Get.width,
+          padding: const EdgeInsets.only(
+            left: marginX2,
+            right: margin,
+            top: marginX2,
+            bottom: marginX2,
+          ),
+          margin: const EdgeInsets.all(marginX2),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextFontStyle(
+                      userInfo?.firstname != null && userInfo?.lastname != null
+                          ? '${userInfo!.firstname} ${userInfo!.lastname}'
+                          : '-',
+                      size: fontSizeXL,
+                      weight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: margin),
+                    TextFontStyle(
+                      userInfo?.email != null ? '${userInfo!.email}' : '-',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Icon(
-              Icons.navigate_next_rounded,
-              size: 30.0,
-              color: Colors.black,
-            ),
-          ],
+              const Icon(
+                Icons.navigate_next_rounded,
+                size: 30.0,
+                color: Colors.black,
+              ),
+            ],
+          ),
         ),
       ),
     );

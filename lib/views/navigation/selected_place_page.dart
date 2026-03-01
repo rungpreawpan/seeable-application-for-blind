@@ -127,25 +127,31 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
 
   _start() {
     return _selectedButton(
-      child: Row(
-        children: [
-          TextFontStyle(
-            _navigationController.selectedStartMarker.isNotEmpty
-                ? _navigationController.selectedStartMarker.first.markerName
-                        ?.substring(0, 4) ??
-                    '-'
-                : 'your location'.tr,
-            size: fontSizeL,
-          ),
-          const SizedBox(width: 4.0),
-          Visibility(
-            visible: _navigationController.selectedStartMarker.isEmpty,
-            child: SvgPicture.asset(
-              'assets/icons/navigation_45_icon.svg',
-              height: 16.0,
+      child: Semantics(
+        button: true,
+        label: _navigationController.selectedStartMarker.isNotEmpty
+            ? '${'your location'.tr} ${_navigationController.selectedStartMarker.first.markerName?.substring(0, 4)}'
+            : 'your location'.tr,
+        child: Row(
+          children: [
+            TextFontStyle(
+              _navigationController.selectedStartMarker.isNotEmpty
+                  ? _navigationController.selectedStartMarker.first.markerName
+                          ?.substring(0, 4) ??
+                      '-'
+                  : 'your location'.tr,
+              size: fontSizeL,
             ),
-          ),
-        ],
+            const SizedBox(width: 4.0),
+            Visibility(
+              visible: _navigationController.selectedStartMarker.isEmpty,
+              child: SvgPicture.asset(
+                'assets/icons/navigation_45_icon.svg',
+                height: 16.0,
+              ),
+            ),
+          ],
+        ),
       ),
       iconPath: 'assets/icons/scan_icon.svg',
       onTap: () async {
@@ -196,13 +202,19 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
 
   _destination() {
     return _selectedButton(
-      child: TextFontStyle(
-        _navigationController.selectedDestinationMarker.isNotEmpty
-            ? _navigationController.selectedDestinationMarker.first.markerName
-                    ?.substring(0, 4) ??
-                '-'
+      child: Semantics(
+        button: true,
+        label: _navigationController.selectedDestinationMarker.isNotEmpty
+            ? '${'destination'.tr} ${_navigationController.selectedDestinationMarker.first.markerName?.substring(0, 4)}'
             : 'choose destination'.tr,
-        size: fontSizeL,
+        child: TextFontStyle(
+          _navigationController.selectedDestinationMarker.isNotEmpty
+              ? _navigationController.selectedDestinationMarker.first.markerName
+                      ?.substring(0, 4) ??
+                  '-'
+              : 'choose destination'.tr,
+          size: fontSizeL,
+        ),
       ),
       iconPath: 'assets/icons/swap_icon.svg',
       onTap: () async {
@@ -285,11 +297,19 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
       height: 50.0,
       child: Row(
         children: [
-          Expanded(child: InkWell(onTap: onTap, child: child)),
+          Expanded(
+            child: InkWell(onTap: onTap, child: child),
+          ),
           const SizedBox(width: marginX2),
-          InkWell(
-            onTap: onIconTap,
-            child: SvgPicture.asset(iconPath),
+          Semantics(
+            button: true,
+            label: iconPath.contains('scan_icon')
+                ? 'scan marker'.tr
+                : 'swap location'.tr,
+            child: InkWell(
+              onTap: onIconTap,
+              child: SvgPicture.asset(iconPath),
+            ),
           ),
         ],
       ),

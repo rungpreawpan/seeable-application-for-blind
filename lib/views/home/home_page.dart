@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:seeable/controller/app_info_controller.dart';
 import 'package:seeable/views/login/model/user_model.dart';
 import 'package:seeable/views/navigation/selected_place_page.dart';
-import 'package:seeable/views/object_detection/real_time_object_detect_server_page.dart';
+import 'package:seeable/views/object_detection/object_detect_page.dart';
 import 'package:seeable/views/scan_text/scan_text_page.dart';
 import 'package:seeable/views/settings/controller/settings_controller.dart';
 import 'package:seeable/widgets/listview_button.dart';
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                 Get.to(() => const SelectedPlacePage());
                 // Get.to(() => const BuildingPage());
               } else if (item['title'] == 'object detection'.tr) {
-                Get.to(() => const RealTimeObjectDetectServerPage());
+                Get.to(() => const ObjectDetectPage());
               } else if (item['title'] == 'scan text'.tr) {
                 Get.to(() => const ScanTextPage());
               } else {

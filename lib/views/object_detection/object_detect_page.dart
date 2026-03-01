@@ -26,16 +26,14 @@ import 'package:image/image.dart' as img;
 import 'package:seeable/widgets/text_font_style.dart';
 import 'package:translator/translator.dart';
 
-class RealTimeObjectDetectServerPage extends StatefulWidget {
-  const RealTimeObjectDetectServerPage({super.key});
+class ObjectDetectPage extends StatefulWidget {
+  const ObjectDetectPage({super.key});
 
   @override
-  State<RealTimeObjectDetectServerPage> createState() =>
-      _RealTimeObjectDetectServerPageState();
+  State<ObjectDetectPage> createState() => _ObjectDetectPageState();
 }
 
-class _RealTimeObjectDetectServerPageState
-    extends State<RealTimeObjectDetectServerPage> {
+class _ObjectDetectPageState extends State<ObjectDetectPage> {
   final ObjectDetectionController _objectDetectionController =
       Get.put(ObjectDetectionController());
   final SettingsController _settingsController = Get.find();
@@ -132,14 +130,14 @@ class _RealTimeObjectDetectServerPageState
               Stack(
                 children: [
                   _cameraService.controller != null &&
-                      _cameraService.controller!.value.isInitialized
+                          _cameraService.controller!.value.isInitialized
                       ? _cameraService.isFrontCamera
-                      ? Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..rotateY(math.pi),
-                    child: CameraPreview(_cameraService.controller!),
-                  )
-                      : CameraPreview(_cameraService.controller!)
+                          ? Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()..rotateY(math.pi),
+                              child: CameraPreview(_cameraService.controller!),
+                            )
+                          : CameraPreview(_cameraService.controller!)
                       : const SizedBox(),
                   _loading(),
                 ],
@@ -206,6 +204,9 @@ class _RealTimeObjectDetectServerPageState
 
   _cameraButton() {
     return CustomCameraButton(
+      semanticsLabel: _isCapturing
+          ? 'start object detection'.tr
+          : 'stop object detection'.tr,
       onTap: () async {
         if (_isCapturing) {
           _isCapturing = false;
@@ -230,6 +231,7 @@ class _RealTimeObjectDetectServerPageState
 
   _switchCamera() {
     return CustomSwitchCameraButton(
+      isFrontCamera: _cameraService.selectedCameraIndex == 1,
       onTap: () async {
         await _cameraService.switchCamera();
         if (mounted) setState(() {});

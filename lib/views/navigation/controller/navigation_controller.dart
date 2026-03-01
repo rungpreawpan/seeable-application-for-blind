@@ -31,7 +31,7 @@ class NavigationController extends GetxController {
 
   UpdatePositionModel? positionData;
 
-  List<ObstacleModel> obstacleList = [];
+  ObstacleModel? obstacleDetected;
 
   getAllMarkers() async {
     bool isOnline = await RequestService().checkInternetConnection();
@@ -56,8 +56,6 @@ class NavigationController extends GetxController {
         markersList = dataJSON
             .map<ArMarkersModel>((json) => ArMarkersModel.fromJSON(json))
             .toList();
-
-        print(dataJSON);
       }
     } catch (e) {
       log(e.toString());
@@ -141,11 +139,10 @@ class NavigationController extends GetxController {
 
       if (response != null && response.statusCode == 200) {
         Map<String, dynamic> dataMap = response.data;
+        log(dataMap.toString());
 
         navigationData = NavigationPathModel.fromJSON(dataMap);
         sessionId = navigationData?.sessionId;
-
-        print(dataMap);
       }
     } catch (e) {
       log(e.toString());
@@ -184,7 +181,6 @@ class NavigationController extends GetxController {
         });
       }
 
-      print(detectMarker);
       var response = await RequestService().request(
         '/ar-markers/update-position',
         method: HttpMethod.post,
@@ -198,8 +194,7 @@ class NavigationController extends GetxController {
 
       if (response != null && response.statusCode == 200) {
         Map<String, dynamic> dataMap = response.data;
-
-        print(dataMap);
+        log(dataMap.toString());
       }
     } catch (e) {
       log(e.toString());
@@ -229,14 +224,17 @@ class NavigationController extends GetxController {
       FormData formData = FormData.fromMap(reqData);
 
       var response = await RequestService().request(
-        '/upload-obstacle',
+        '/obstacle-detection',
         method: HttpMethod.post,
         data: formData,
       );
 
       if (response != null && response.statusCode == 200) {
-        print(response);
-        await getObstacle();
+        Map<String, dynamic> dataMap = response.data;
+        Map<String, dynamic> dataJSON = dataMap['obstacle'];
+        log(dataJSON.toString());
+
+        obstacleDetected = ObstacleModel.fromJSON(dataJSON);
       }
     } catch (e) {
       log(e.toString());
@@ -302,39 +300,39 @@ class NavigationController extends GetxController {
     }
   }
 
-  getObstacle() async {
-    bool isOnline = await RequestService().checkInternetConnection();
-
-    if (!isOnline) {
-      showAlert('no internet connection'.tr);
-      isLoading.value = false;
-
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-
-      var response = await RequestService().request(
-        '/obstacle-results',
-        method: HttpMethod.get,
-      );
-
-      if (response != null && response.statusCode == 200) {
-        Map<String, dynamic> dataMap = response.data;
-        var dataJSON = dataMap['obstacle'];
-        log(dataJSON.toString());
-
-        obstacleList = dataJSON
-            .map<ObstacleModel>((json) => ObstacleModel.fromJSON(json))
-            .toList();
-      }
-    } catch (e) {
-      log(e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  // getObstacle() async {
+  //   bool isOnline = await RequestService().checkInternetConnection();
+  //
+  //   if (!isOnline) {
+  //     showAlert('no internet connection'.tr);
+  //     isLoading.value = false;
+  //
+  //     return;
+  //   }
+  //
+  //   try {
+  //     isLoading.value = true;
+  //
+  //     var response = await RequestService().request(
+  //       '/obstacle-results',
+  //       method: HttpMethod.get,
+  //     );
+  //
+  //     if (response != null && response.statusCode == 200) {
+  //       Map<String, dynamic> dataMap = response.data;
+  //       var dataJSON = dataMap['obstacle'];
+  //       log(dataJSON.toString());
+  //
+  //       obstacleList = dataJSON
+  //           .map<ObstacleModel>((json) => ObstacleModel.fromJSON(json))
+  //           .toList();
+  //     }
+  //   } catch (e) {
+  //     log(e.toString());
+  //   } finally {
+  //     isLoading.value = false;
+  //   }
+  // }
 
   clearData() {
     selectedStartMarker.clear();

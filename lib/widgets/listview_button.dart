@@ -31,50 +31,54 @@ class ListViewButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 100.0,
-        padding: const EdgeInsets.symmetric(horizontal: marginX2),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade300,
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Row(
-          children: [
-            Visibility(
-              visible: iconPath != '',
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    iconPath,
-                    height: iconSize,
-                    color: iconColor,
-                  ),
-                  const SizedBox(width: 20.0),
-                ],
+    return Semantics(
+      button: true,
+      label: title,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 100.0,
+          padding: const EdgeInsets.symmetric(horizontal: marginX2),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(10.0),
+          ),
+          child: Row(
+            children: [
+              Visibility(
+                visible: iconPath != '',
+                child: Row(
+                  children: [
+                    SvgPicture.asset(
+                      iconPath,
+                      height: iconSize,
+                      color: iconColor,
+                    ),
+                    const SizedBox(width: 20.0),
+                  ],
+                ),
               ),
-            ),
-            TextFontStyle(
-              title,
-              size: fontSize,
-              weight: fontWeight,
-            ),
-            const Spacer(),
-            showArrow
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.arrow_forward_ios_rounded),
-                      SizedBox(height: showDistance ? 10.0 : 0),
-                      showDistance
-                          ? _distanceBox(distance: distance)
-                          : const SizedBox(),
-                    ],
-                  )
-                : const SizedBox(),
-          ],
+              TextFontStyle(
+                title,
+                size: fontSize,
+                weight: fontWeight,
+              ),
+              const Spacer(),
+              showArrow
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.arrow_forward_ios_rounded),
+                        SizedBox(height: showDistance ? 10.0 : 0),
+                        showDistance
+                            ? _distanceBox(distance: distance)
+                            : const SizedBox(),
+                      ],
+                    )
+                  : const SizedBox(),
+            ],
+          ),
         ),
       ),
     );

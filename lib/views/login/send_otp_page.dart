@@ -82,7 +82,7 @@ class _SendOtpPageState extends State<SendOtpPage> {
 
         String otp = '$otp1$otp2$otp3$otp4$otp5$otp6';
 
-        _forgetPasswordController.validateSendOTP(otp: otp);
+        await _forgetPasswordController.validateSendOTP(otp: otp);
       },
       title: 'forget password'.tr,
     );

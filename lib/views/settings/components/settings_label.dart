@@ -67,8 +67,42 @@ class _SettingsLabelState extends State<SettingsLabel> {
         break;
 
       case SettingsLabelStyle.interact:
-        labelStyle = InkWell(
-          onTap: widget.onTap,
+        labelStyle = Semantics(
+          button: true,
+          label: '${widget.title} ${widget.buttonInitialValue}',
+          hint: widget.buttonInitialValue != ''
+              ? '${'double tap to change'.tr} ${widget.title}'
+              : null,
+          child: InkWell(
+            onTap: widget.onTap,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextFontStyle(
+                  widget.title,
+                  style: theme.textTheme.labelSmall,
+                ),
+                widget.buttonInitialValue != ''
+                    ? TextFontStyle(
+                        widget.buttonInitialValue,
+                        style: theme.textTheme.labelMedium,
+                      )
+                    : const SizedBox(
+                        width: 20.0,
+                        child: Icon(
+                          Icons.navigate_next_rounded,
+                          size: 30.0,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+        );
+        break;
+
+      case SettingsLabelStyle.showData:
+        labelStyle = Semantics(
+          label: '${widget.title} ${widget.buttonInitialValue}',
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -76,84 +110,48 @@ class _SettingsLabelState extends State<SettingsLabel> {
                 widget.title,
                 style: theme.textTheme.labelSmall,
               ),
-              widget.buttonInitialValue != ''
-                  ? TextFontStyle(
-                      widget.buttonInitialValue,
-                      style: theme.textTheme.labelMedium,
-                    )
-                  : const SizedBox(
-                      width: 20.0,
-                      child: Icon(
-                        Icons.navigate_next_rounded,
-                        size: 30.0,
-                      ),
-                    ),
+              TextFontStyle(
+                widget.buttonInitialValue,
+                style: theme.textTheme.labelMedium,
+              ),
             ],
           ),
         );
         break;
 
-      case SettingsLabelStyle.showData:
-        labelStyle = Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextFontStyle(
-              widget.title,
-              style: theme.textTheme.labelSmall,
-            ),
-            TextFontStyle(
-              widget.buttonInitialValue,
-              style: theme.textTheme.labelMedium,
-            ),
-          ],
-        );
-        break;
-
       case SettingsLabelStyle.updateInfo:
-        labelStyle = InkWell(
-          onTap: widget.onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFontStyle(
-                widget.title,
-                style: theme.textTheme.displaySmall,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      TextFontStyle(
-                        widget.buttonInitialValue,
-                        style: theme.textTheme.labelMedium,
-                      ),
-                      Visibility(
-                        visible: widget.showWarning,
-                        child: const Row(
-                          children: [
-                            SizedBox(width: margin),
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: Colors.red,
-                              size: 20.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    width: 20.0,
-                    child: Icon(
-                      Icons.navigate_next_rounded,
-                      size: 28.0,
-                      color: theme.iconTheme.color,
+        labelStyle = Semantics(
+          button: true,
+          label: '${widget.title} ${widget.buttonInitialValue}',
+          hint: '${'double tap to change'.tr} ${widget.title}',
+          child: InkWell(
+            onTap: widget.onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFontStyle(
+                  widget.title,
+                  style: theme.textTheme.displaySmall,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextFontStyle(
+                      widget.buttonInitialValue,
+                      style: theme.textTheme.labelMedium,
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    SizedBox(
+                      width: 20.0,
+                      child: Icon(
+                        Icons.navigate_next_rounded,
+                        size: 28.0,
+                        color: theme.iconTheme.color,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
         break;
@@ -166,12 +164,18 @@ class _SettingsLabelState extends State<SettingsLabel> {
     required bool value,
     void Function(bool)? onChanged,
   }) {
-    return CupertinoSwitch(
-      value: value,
-      onChanged: onChanged,
-      activeTrackColor: _settingsController.themeMode.value == ThemeMode.light
-          ? primaryColor
-          : Colors.grey.shade700,
+    return Semantics(
+      button: true,
+      label: widget.switchValue == true
+          ? '${'close'.tr} ${widget.title}'
+          : '${'open'.tr} ${widget.title}',
+      child: CupertinoSwitch(
+        value: value,
+        onChanged: onChanged,
+        activeTrackColor: _settingsController.themeMode.value == ThemeMode.light
+            ? primaryColor
+            : Colors.grey.shade700,
+      ),
     );
   }
 }

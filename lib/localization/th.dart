@@ -13,6 +13,8 @@ const Map<String, String> th = {
   // login
   'login': 'เข้าสู่ระบบ',
   'dont have account': 'ยังไม่มีบัญชี? ลงทะเบียนที่นี่',
+  'show password': 'แสดงรหัสผ่าน',
+  'hide password': 'ซ่อนรหัสผ่าน',
 
   // forget password
   'forget password': 'ลืมรหัสผ่าน',
@@ -38,28 +40,9 @@ const Map<String, String> th = {
   'marker not found': 'ไม่พบมาร์กเกอร์',
   'please scan again': 'กรุณาสแกนอีกครั้ง',
   'marker scan': 'สแกนมาร์กเกอร์',
-
-  // building list
-  'building': 'อาคาร',
-  'building a': 'อาคาร A',
-  'building b': 'อาคาร B',
-  'building c': 'อาคาร C',
-
-  // list in building
-  'near you': 'ใกล้คุณ',
-  'favorite': 'รายการโปรด',
-  'all categories': 'หมวดหมู่ทั้งหมด',
-  'level': 'ชั้น',
-
-  // category
-  'class room': 'ห้องเรียน',
-  'office': 'สำนักงาน',
-  'elevator': 'ลิฟต์',
-  'toilet': 'ห้องน้ำ',
-  'exit': 'ทางออก',
-
-  // navigation
   'start': 'นำทาง',
+  'destination': 'เป้าหมาย',
+  'swap location': 'สลับตำแหน่ง',
 
   // application page
   'main page': 'หน้าหลัก',
@@ -69,16 +52,17 @@ const Map<String, String> th = {
   // intro
   'welcome to seeable': 'ยินดีต้อนรับสู่ Seeable\nแอปพลิเคชันสำหรับผู้พิการทางสายตา',
   'back': 'ย้อนกลับ',
+  'next': 'ถัดไป',
   'start application': 'เริ่มต้นใช้งานแอปพลิเคชัน',
   'camera intro description': 'แอปพลิเคชันต้องการเข้าถึงกล้อง',
   'mic intro description': 'แอปพลิเคชันต้องการเข้าถึงไมโครโฟน',
   'stt intro description': 'แอปพลิเคชันต้องการเข้าถึง\nการสั่งการด้วยเสียง',
   'accessibility intro description': 'แอปพลิเคชันต้องการเข้าถึง\nอุปกรณ์ช่วยเหลือการเข้าถึง',
   'location intro description': 'แอปพลิเคชันต้องการเข้าถึง\nตำแหน่งของคุณ',
-  'bluetooth intro description': 'แอปพลิเคชันต้องการเข้าถึงบลูทูธ',
 
-  // data
+  // etc
   'data not found': 'ไม่พบข้อมูล',
+  'loading': 'กำลังโหลด',
 
   // navigation
   'straight ahead': 'ตรงไป',
@@ -96,6 +80,9 @@ const Map<String, String> th = {
 
   // scan text
   'scan results': 'ผลการสแกน',
+
+  // scan marker
+  'scan marker': 'สแกนมาร์กเกอร์',
 
   // settings
   'sound': 'เสียง',
@@ -121,17 +108,23 @@ const Map<String, String> th = {
   'application version': 'เวอร์ชันของแอปพลิเคชัน',
   'confirm': 'ยืนยัน',
   'cancel': 'ยกเลิก',
-  'download seeable app for android and ios': 'ดาวน์โหลดแอปพลิเคชัน Seeable สำหรับ Android และ iOS',
   'user information': 'ข้อมูลผู้ใช้',
   'name': 'ชื่อ',
   'save': 'บันทึก',
   'data update successful': 'อัปเดตข้อมูลสำเร็จ',
   'registered uuid': 'รหัสเครื่องที่ลงทะเบียน',
-  'uuid not match': 'รหัสเครื่องที่ใช้งานไม่ตรงกับรหัสเครื่องที่ลงทะเบียน',
   'do you want to logout': 'คุณต้องการออกจากระบบหรือไม่',
   'no internet connection': 'ไม่มีสัญญาณอินเตอร์เน็ต',
+  'double tap to change': 'กด 2 ครั้งเพื่อเปลี่ยน',
+  'open': 'เปิด',
+  'close': 'ปิด',
 
-  // widget
+  // camera
   'camera': 'กล้อง',
   'gallery': 'คลังรูปภาพ',
+  'take a picture': 'ถ่ายภาพ',
+  'switch camera': 'สลับกล้อง',
+  'select photo from gallery': 'เลือกรูปจากคลังรูปภาพ',
+  'using front camera': 'กำลังใช้กล้องหน้า',
+  'using back camera': 'กำลังใช้กล้องหลัง',
 };

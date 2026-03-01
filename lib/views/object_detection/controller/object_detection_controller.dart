@@ -33,37 +33,9 @@ class ObjectDetectionController extends GetxController {
       FormData formData = FormData.fromMap(reqData);
 
       var response = await RequestService().request(
-        '/upload-object',
+        '/object-detection',
         method: HttpMethod.post,
         data: formData,
-      );
-
-      if (response != null && response.statusCode == 200) {
-        await objectResults();
-      }
-    } catch (e) {
-      log(e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  objectResults() async {
-    bool isOnline = await RequestService().checkInternetConnection();
-
-    if (!isOnline) {
-      showAlert('no internet connection'.tr);
-      isLoading.value = false;
-
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-
-      var response = await RequestService().request(
-        '/object-results',
-        method: HttpMethod.get,
       );
 
       if (response != null && response.statusCode == 200) {

@@ -20,35 +20,39 @@ class _CustomBackButtonState extends State<CustomBackButton> {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Get.back();
+    return Semantics(
+      label: 'back'.tr,
+      button: true,
+      child: InkWell(
+        onTap: () {
+          Get.back();
 
-        if (widget.onTap != null) {
-          widget.onTap;
-        }
-      },
-      child: Padding(
-        padding: const EdgeInsets.only(left: marginX2),
-        child: Container(
-          height: 40.0,
-          width: 40.0,
-          margin: const EdgeInsets.symmetric(vertical: 20.0),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _settingsController.themeMode.value == ThemeMode.light
-                  ? primaryColor
-                  : Colors.white,
+          if (widget.onTap != null) {
+            widget.onTap;
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(left: marginX2),
+          child: Container(
+            height: 40.0,
+            width: 40.0,
+            margin: const EdgeInsets.symmetric(vertical: 20.0),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _settingsController.themeMode.value == ThemeMode.light
+                    ? primaryColor
+                    : Colors.white,
+              ),
+              borderRadius: BorderRadius.circular(20.0),
             ),
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: Center(
-            child: Icon(
-              Icons.arrow_back_rounded,
-              color: _settingsController.themeMode.value == ThemeMode.light
-                  ? primaryColor
-                  : Colors.white,
-              size: 30.0,
+            child: Center(
+              child: Icon(
+                Icons.arrow_back_rounded,
+                color: _settingsController.themeMode.value == ThemeMode.light
+                    ? primaryColor
+                    : Colors.white,
+                size: 30.0,
+              ),
             ),
           ),
         ),
