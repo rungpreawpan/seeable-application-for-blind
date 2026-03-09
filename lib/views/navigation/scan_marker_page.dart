@@ -1,19 +1,14 @@
-import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/utils/camera_service.dart';
-import 'package:seeable/utils/gallery_service.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/widgets/custom_camera_button.dart';
-import 'package:seeable/widgets/custom_gallery_button.dart';
 import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_switch_camera_button.dart';
 import 'package:seeable/widgets/main_template.dart';
@@ -31,9 +26,6 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
   final ttsManager = TtsManager();
 
   late CameraService _cameraService;
-  final GalleryService _galleryService = GalleryService();
-
-  Uint8List? _thumbnailImage;
 
   @override
   void initState() {
@@ -45,7 +37,6 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
 
   Future<void> _initCamera() async {
     await _cameraService.initializeCamera();
-    _thumbnailImage = await _galleryService.loadLatestImage();
 
     if (mounted) setState(() {});
   }
@@ -90,7 +81,10 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _galleryThumbnail(),
+                      const SizedBox(
+                        height: 50.0,
+                        width: 50.0,
+                      ),
                       _cameraButton(),
                       _switchCamera(),
                     ],
@@ -112,12 +106,9 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
 
         HapticFeedback.selectionClick();
 
-        XFile? file = await _cameraService.takePicture();
-
-        if (file != null) {
-          File imageFile = File(file.path);
-          await _navigationController.uploadMarker(imageFile);
-        }
+        CameraImage? cameraImage = await _cameraService.captureFrame();
+        _navigationController.detectARUcoMarker(
+            isAllMarker: false, cameraImage: cameraImage);
       },
     );
   }
@@ -129,22 +120,6 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
         await _cameraService.switchCamera();
         if (mounted) setState(() {});
       },
-    );
-  }
-
-  _galleryThumbnail() {
-    return CustomGalleryButton(
-      onTap: () async {
-        XFile? file = await ImagePicker().pickImage(
-          source: ImageSource.gallery,
-        );
-
-        if (file != null) {
-          File imageFile = File(file.path);
-          await _navigationController.uploadMarker(imageFile);
-        }
-      },
-      thumbnailImage: _thumbnailImage,
     );
   }
 

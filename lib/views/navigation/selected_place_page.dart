@@ -38,6 +38,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
 
   _prepareData() async {
     _navigationController.clearData();
+    await _navigationController.getAllMarkers();
     await _navigationController.getAllFrontDoors();
 
     setState(() {});

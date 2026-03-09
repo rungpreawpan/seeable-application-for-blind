@@ -102,12 +102,8 @@ class _NavigationPageState extends State<NavigationPage> {
     );
   }
 
-  Future<XFile?> _takePicture() async {
-    return await _cameraService.takePicture();
-  }
-
   _obstacle() async {
-    XFile? file = await _takePicture();
+    XFile? file = await  _cameraService.takePicture();
 
     if (file != null) {
       await _navigationController.uploadObstacle(File(file.path));
@@ -160,18 +156,16 @@ class _NavigationPageState extends State<NavigationPage> {
       return;
     }
 
-    XFile? file = await _takePicture();
+    CameraImage? cameraImage = await _cameraService.captureFrame();
+    await _navigationController.detectARUcoMarker(cameraImage: cameraImage);
 
-    if (file != null) {
-      File markerImage = File(file.path);
+    // await _navigationController.updatePosition(
+    //     detectedMarker: _navigationController.detectedMarker?.markerName
+    //         ?.replaceAll('-', ''));
 
-      await _navigationController.updatePosition(markerImage: markerImage);
+    await _speakSafe(_navigationController.updatePositionMessage.value ?? '');
 
-      await _speakSafe(
-          _navigationController.updatePositionMessage.value ?? '');
-
-      HapticFeedback.heavyImpact();
-    }
+    HapticFeedback.heavyImpact();
   }
 
   @override

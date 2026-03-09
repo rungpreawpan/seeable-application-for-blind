@@ -6,13 +6,11 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'package:seeable/service/request_service.dart';
 import 'package:seeable/utils/alert.dart';
-import 'package:seeable/views/ar_test/aruco_detector.dart';
+import 'package:seeable/views/navigation/controller/aruco_detector.dart';
 import 'package:seeable/views/navigation/model/ar_markers_model.dart';
-import 'package:seeable/views/navigation/model/check_marker_model.dart';
 import 'package:seeable/views/navigation/model/navigation_path_model.dart';
 import 'package:seeable/views/navigation/model/obstacle_model.dart';
 import 'package:seeable/views/navigation/model/update_position_model.dart';
-import 'package:seeable/widgets/custom_alert_dialog.dart';
 
 class NavigationController extends GetxController {
   var isLoading = false.obs;
@@ -26,8 +24,6 @@ class NavigationController extends GetxController {
   List<ArMarkersModel> selectedDestinationMarker = [];
 
   ArMarkersModel? detectedMarker;
-
-  CheckMarkerModel? checkedMarker;
 
   File? destinationMarkerImage;
 
@@ -171,17 +167,17 @@ class NavigationController extends GetxController {
           'image': MultipartFile.fromFileSync(markerImage.path,
               filename: 'marker_image'),
         });
+      } else {
+        formData = FormData.fromMap({
+          'session_id': sessionId,
+          'detected_marker': detectedMarker,
+        });
       }
 
       var response = await RequestService().request(
         '/ar-markers/update-position',
         method: HttpMethod.post,
-        data: markerImage != null
-            ? formData
-            : {
-                'session_id': sessionId,
-                'detected_marker': detectedMarker,
-              },
+        data: formData,
       );
 
       if (response != null && response.statusCode == 200) {
@@ -254,79 +250,29 @@ class NavigationController extends GetxController {
     }
   }
 
-  uploadMarker(File marker) async {
-    bool isOnline = await RequestService().checkInternetConnection();
-
-    if (!isOnline) {
-      showAlert('no internet connection'.tr);
-      isLoading.value = false;
-
-      return;
-    }
-
-    try {
-      isLoading.value = true;
-
-      var reqData = {
-        "image":
-            MultipartFile.fromFileSync(marker.path, filename: 'marker_image'),
-      };
-
-      FormData formData = FormData.fromMap(reqData);
-
-      var response = await RequestService().request(
-        '/ar-markers/check',
-        method: HttpMethod.post,
-        data: formData,
-      );
-
-      if (response != null && response.statusCode == 200) {
-        Map<String, dynamic> dataMap = response.data;
-
-        checkedMarker = CheckMarkerModel.fromJSON(dataMap);
-
-        if (checkedMarker?.confidence != null &&
-            checkedMarker!.confidence! >= 0.3) {
-          for (ArMarkersModel marker in markersList) {
-            if (checkedMarker!.markerId == marker.markerId) {
-              selectedStartMarker.clear();
-              selectedStartMarker.add(marker);
-
-              Get.back(result: selectedStartMarker);
-            }
-          }
-        } else {
-          Get.dialog(
-            CustomAlertDialog(
-              title: 'marker not found'.tr,
-              content: 'please scan again'.tr,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      log(e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
   detectARUcoMarker({
     bool isAllMarker = true,
     required CameraImage? cameraImage,
   }) async {
-    selectedStartMarker.clear();
-
     if (cameraImage != null) {
       final markerId = await arDetector.detectMarker(cameraImage);
 
       if (isAllMarker) {
+        detectedMarker = null;
+
         for (ArMarkersModel marker in markersList) {
           if (marker.markerId != null && marker.markerId! == markerId) {
             detectedMarker = marker;
           }
         }
+
+        if (detectedMarker != null) {
+          await updatePosition(
+              detectedMarker: detectedMarker?.markerName?.replaceAll('-', ''));
+        }
       } else {
+        selectedStartMarker.clear();
+
         for (ArMarkersModel marker in frontDoorMarkersList) {
           if (marker.markerId != null && marker.markerId! == markerId) {
             selectedStartMarker.add(marker);
