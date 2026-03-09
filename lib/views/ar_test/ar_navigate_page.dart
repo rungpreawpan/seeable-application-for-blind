@@ -16,17 +16,16 @@ import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:translator/translator.dart';
 
-class NavigationPage extends StatefulWidget {
-  const NavigationPage({super.key});
+class ARNavigatePage extends StatefulWidget {
+  const ARNavigatePage({super.key});
 
   @override
-  State<NavigationPage> createState() => _NavigationPageState();
+  State<ARNavigatePage> createState() => _ARNavigatePageState();
 }
 
-class _NavigationPageState extends State<NavigationPage> {
+class _ARNavigatePageState extends State<ARNavigatePage> {
   final SettingsController _settingsController = Get.find();
-  final NavigationController _navigationController =
-      Get.find();
+  final NavigationController _navigationController = Get.find();
 
   late CameraService _cameraService;
 
@@ -93,21 +92,17 @@ class _NavigationPageState extends State<NavigationPage> {
 
     _scanning = Timer.periodic(
       const Duration(seconds: 1),
-          (_) => _updatePosition(),
+      (_) => _updatePosition(),
     );
 
     _obstacleScanning = Timer.periodic(
       const Duration(seconds: 5),
-          (_) => _obstacle(),
+      (_) => _obstacle(),
     );
   }
 
-  Future<XFile?> _takePicture() async {
-    return await _cameraService.takePicture();
-  }
-
   _obstacle() async {
-    XFile? file = await _takePicture();
+    XFile? file = await _cameraService.takePicture();
 
     if (file != null) {
       await _navigationController.uploadObstacle(File(file.path));
@@ -116,7 +111,7 @@ class _NavigationPageState extends State<NavigationPage> {
         List<String> obstacles = [];
 
         for (ObstacleBoxesModel obstacle
-        in _navigationController.obstacleDetected!.boxes!) {
+            in _navigationController.obstacleDetected!.boxes!) {
           if (obstacle.label != null) {
             obstacles.add(obstacle.label!);
           }
@@ -140,7 +135,8 @@ class _NavigationPageState extends State<NavigationPage> {
 
           translatedText.value = translations.toSet().toList().join(', ');
 
-          if (translatedText.value == 'ถ่วง' || translatedText.value == 'clutter') {
+          if (translatedText.value == 'ถ่วง' ||
+              translatedText.value == 'clutter') {
             translatedText.value = 'สิ่งของที่วางเกลื่อนกลาด';
           }
 
@@ -160,18 +156,16 @@ class _NavigationPageState extends State<NavigationPage> {
       return;
     }
 
-    XFile? file = await _takePicture();
+    CameraImage? cameraImage = await _cameraService.captureFrame();
+    _navigationController.detectARUcoMarker(cameraImage: cameraImage);
 
-    if (file != null) {
-      File markerImage = File(file.path);
+    await _navigationController.updatePosition(
+        detectedMarker: _navigationController.detectedMarker?.markerName
+            ?.replaceAll('-', ''));
 
-      await _navigationController.updatePosition(markerImage: markerImage);
+    await _speakSafe(_navigationController.updatePositionMessage.value ?? '');
 
-      await _speakSafe(
-          _navigationController.updatePositionMessage.value ?? '');
-
-      HapticFeedback.heavyImpact();
-    }
+    HapticFeedback.heavyImpact();
   }
 
   @override
@@ -193,7 +187,7 @@ class _NavigationPageState extends State<NavigationPage> {
         child: Stack(
           children: [
             _cameraService.controller != null &&
-                _cameraService.controller!.value.isInitialized
+                    _cameraService.controller!.value.isInitialized
                 ? CameraPreview(_cameraService.controller!)
                 : const SizedBox(),
             _warning(),
@@ -212,8 +206,7 @@ class _NavigationPageState extends State<NavigationPage> {
           final status =
               _navigationController.updatePositionStatus.value ?? 'ON_PATH';
 
-          final message =
-              _navigationController.updatePositionMessage.value;
+          final message = _navigationController.updatePositionMessage.value;
 
           if (message == null) return const SizedBox();
 

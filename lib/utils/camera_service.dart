@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'package:camera/camera.dart';
 
@@ -67,6 +68,21 @@ class CameraService {
     } catch (e) {
       return null;
     }
+  }
+
+  Future<CameraImage?> captureFrame() async {
+    if (controller == null || !controller!.value.isInitialized) return null;
+
+    final completer = Completer<CameraImage>();
+
+    await controller!.startImageStream((CameraImage image) async {
+      if (!completer.isCompleted) {
+        completer.complete(image);
+        await controller!.stopImageStream();
+      }
+    });
+
+    return completer.future;
   }
 
   void dispose() {

@@ -27,7 +27,6 @@ class ObstacleBoxesModel {
   int? y1;
   int? x2;
   int? y2;
-  double? area;
   String? direction;
   double? priority;
   String? message;
@@ -39,7 +38,6 @@ class ObstacleBoxesModel {
     this.y1,
     this.x2,
     this.y2,
-    this.area,
     this.direction,
     this.priority,
     this.message,
@@ -53,7 +51,6 @@ class ObstacleBoxesModel {
       y1: json['y1'],
       x2: json['x2'],
       y2: json['y2'],
-      area: json['area'],
       direction: json['direction'],
       priority: json['priority'],
       message: json['message'],

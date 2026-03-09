@@ -5,7 +5,9 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
 class ObstacleAlertPopup extends StatelessWidget {
-  const ObstacleAlertPopup({super.key});
+  final String? obstacle;
+
+  const ObstacleAlertPopup({super.key, required this.obstacle});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +15,7 @@ class ObstacleAlertPopup extends StatelessWidget {
       width: Get.width,
       padding:
           const EdgeInsets.symmetric(horizontal: marginX2, vertical: margin),
-      margin: const EdgeInsets.symmetric(horizontal: marginX2),
+      margin:  const EdgeInsets.all(marginX2),
       decoration: BoxDecoration(
         color: Colors.redAccent.shade400.withOpacity(0.7),
         borderRadius: BorderRadius.circular(16.0),
@@ -22,16 +24,17 @@ class ObstacleAlertPopup extends StatelessWidget {
       child: Column(
         children: [
           SvgPicture.asset(
-            // 'assets/icons/arrived_icon.svg',
             'assets/icons/alert_icon.svg',
             height: 50.0,
           ),
           const SizedBox(height: margin),
-          TextFontStyle(
-            'ตรวจพบบุคคล',
-            size: fontSizeXL,
-            weight: FontWeight.bold,
-          )
+          obstacle != null
+              ? TextFontStyle(
+                  obstacle!,
+                  size: fontSizeXL,
+                  weight: FontWeight.bold,
+                )
+              : const SizedBox(),
         ],
       ),
     );

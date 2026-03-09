@@ -55,9 +55,9 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(seconds: 2));
 
     // for dev only
-    await storage.delete(key: 'register');
-    await storage.delete(key: 'login');
-    await storage.delete(key: 'permission');
+    // await storage.delete(key: 'register');
+    // await storage.delete(key: 'login');
+    // await storage.delete(key: 'permission');
 
     // await storage.write(key: 'login', value: 'true');
 

@@ -18,14 +18,14 @@ import 'package:seeable/widgets/custom_loading.dart';
 import 'package:seeable/widgets/custom_switch_camera_button.dart';
 import 'package:seeable/widgets/main_template.dart';
 
-class ScanMarkerPage extends StatefulWidget {
-  const ScanMarkerPage({super.key});
+class ARScanPage extends StatefulWidget {
+  const ARScanPage({super.key});
 
   @override
-  State<ScanMarkerPage> createState() => _ScanMarkerPageState();
+  State<ARScanPage> createState() => _ARScanPageState();
 }
 
-class _ScanMarkerPageState extends State<ScanMarkerPage> {
+class _ARScanPageState extends State<ARScanPage> {
   final NavigationController _navigationController = Get.find();
 
   final ttsManager = TtsManager();
@@ -71,14 +71,14 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
               Stack(
                 children: [
                   _cameraService.controller != null &&
-                          _cameraService.controller!.value.isInitialized
+                      _cameraService.controller!.value.isInitialized
                       ? _cameraService.isFrontCamera
-                          ? Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.identity()..rotateY(math.pi),
-                              child: CameraPreview(_cameraService.controller!),
-                            )
-                          : CameraPreview(_cameraService.controller!)
+                      ? Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(math.pi),
+                    child: CameraPreview(_cameraService.controller!),
+                  )
+                      : CameraPreview(_cameraService.controller!)
                       : const SizedBox(),
                   _loading(),
                 ],
@@ -112,12 +112,10 @@ class _ScanMarkerPageState extends State<ScanMarkerPage> {
 
         HapticFeedback.selectionClick();
 
-        XFile? file = await _cameraService.takePicture();
+        CameraImage? cameraImage = await _cameraService.captureFrame();
+        // _navigationController.detectARUcoMarker(isAllMarker: false, cameraImage: cameraImage);
 
-        if (file != null) {
-          File imageFile = File(file.path);
-          await _navigationController.uploadMarker(imageFile);
-        }
+        _navigationController.detectARUcoMarker(isAllMarker: true, cameraImage: cameraImage);
       },
     );
   }

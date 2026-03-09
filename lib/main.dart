@@ -11,6 +11,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/firebase_options.dart';
 import 'package:seeable/localization/localize.dart';
+import 'package:seeable/views/ar_marker/ar_main.dart';
+import 'package:seeable/views/ar_test/select_destination_page.dart';
 import 'package:seeable/views/splash_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'views/settings/controller/settings_controller.dart';
@@ -67,7 +69,9 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: _lightTheme,
       darkTheme: _darkTheme,
-      home: const SplashPage(),
+      // home: const SplashPage(),
+      // home: ArMain(),
+      home: SelectDestinationPage(),
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(

@@ -5,10 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
+import 'package:seeable/views/ar_test/ar_navigate_page.dart';
+import 'package:seeable/views/ar_test/ar_scan_page.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/ar_markers_model.dart';
-import 'package:seeable/views/navigation/navigation_page.dart';
-import 'package:seeable/views/navigation/scan_marker_page.dart';
 import 'package:seeable/widgets/custom_item_picker.dart';
 import 'package:seeable/widgets/custom_item_picker_cell.dart';
 import 'package:seeable/widgets/custom_loading.dart';
@@ -16,16 +16,16 @@ import 'package:seeable/widgets/custom_submit_button.dart';
 import 'package:seeable/widgets/main_template.dart';
 import 'package:seeable/widgets/text_font_style.dart';
 
-class SelectedPlacePage extends StatefulWidget {
-  const SelectedPlacePage({super.key});
+class SelectDestinationPage extends StatefulWidget {
+  const SelectDestinationPage({super.key});
 
   @override
-  State<SelectedPlacePage> createState() => _SelectedPlacePageState();
+  State<SelectDestinationPage> createState() => _SelectDestinationPageState();
 }
 
-class _SelectedPlacePageState extends State<SelectedPlacePage> {
+class _SelectDestinationPageState extends State<SelectDestinationPage> {
   final NavigationController _navigationController =
-      Get.put(NavigationController());
+  Get.put(NavigationController());
 
   final ttsManager = TtsManager();
 
@@ -38,6 +38,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
 
   _prepareData() async {
     _navigationController.clearData();
+    await _navigationController.getAllMarkers();
     await _navigationController.getAllFrontDoors();
 
     setState(() {});
@@ -148,8 +149,8 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
             TextFontStyle(
               _navigationController.selectedStartMarker.isNotEmpty
                   ? _navigationController.selectedStartMarker.first.markerName
-                          ?.substring(0, 4) ??
-                      '-'
+                  ?.substring(0, 4) ??
+                  '-'
                   : 'your location'.tr,
               size: fontSizeL,
             ),
@@ -169,7 +170,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
         await ttsManager.speak('choose your location'.tr);
 
         List? result = await Get.to(
-          () => CustomItemPicker(
+              () => CustomItemPicker(
             title: 'location'.tr,
             hintText: 'search locations'.tr,
             items: _navigationController.frontDoorMarkersList,
@@ -179,9 +180,9 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
                 return _navigationController.frontDoorMarkersList
                     .where(
                       (marker) => marker.markerName!
-                          .toLowerCase()
-                          .contains(searchText.toLowerCase()),
-                    )
+                      .toLowerCase()
+                      .contains(searchText.toLowerCase()),
+                )
                     .toList();
               } else {
                 return _navigationController.frontDoorMarkersList;
@@ -210,15 +211,26 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
       onIconTap: () async {
         await ttsManager.speak('marker scan'.tr);
 
-        List? result = await Get.to(() => const ScanMarkerPage());
+        // List? result = await Get.to(() => const ScanMarkerPage()); //TODO
+        //
+        // if (result != null) {
+        //   await Future.delayed(const Duration(milliseconds: 500));
+        //   await ttsManager.speak(_navigationController
+        //       .selectedStartMarker.first.markerName!
+        //       .substring(0, 4));
+        //
+        //   setState(() {});
+        // }
+
+        List? result = await Get.to(() => const ARScanPage());
 
         if (result != null) {
-          await Future.delayed(const Duration(milliseconds: 500));
-          await ttsManager.speak(_navigationController
-              .selectedStartMarker.first.markerName!
-              .substring(0, 4));
+            await Future.delayed(const Duration(milliseconds: 500));
+            await ttsManager.speak(_navigationController
+                .selectedStartMarker.first.markerName!
+                .substring(0, 4));
 
-          setState(() {});
+            setState(() {});
         }
       },
     );
@@ -234,8 +246,8 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
         child: TextFontStyle(
           _navigationController.selectedDestinationMarker.isNotEmpty
               ? _navigationController.selectedDestinationMarker.first.markerName
-                      ?.substring(0, 4) ??
-                  '-'
+              ?.substring(0, 4) ??
+              '-'
               : 'choose destination'.tr,
           size: fontSizeL,
         ),
@@ -245,7 +257,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
         await ttsManager.speak('choose destination'.tr);
 
         List? result = await Get.to(
-          () => CustomItemPicker(
+              () => CustomItemPicker(
             title: 'location'.tr,
             hintText: 'search locations'.tr,
             items: _navigationController.frontDoorMarkersList,
@@ -255,9 +267,9 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
                 return _navigationController.frontDoorMarkersList
                     .where(
                       (marker) => marker.markerName!
-                          .toLowerCase()
-                          .contains(searchText.toLowerCase()),
-                    )
+                      .toLowerCase()
+                      .contains(searchText.toLowerCase()),
+                )
                     .toList();
               } else {
                 return _navigationController.frontDoorMarkersList;
@@ -373,7 +385,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
                 _navigationController.selectedStartMarker.first.markerName ??
                     '-';
             String destinationMarker = _navigationController
-                    .selectedDestinationMarker.first.markerName ??
+                .selectedDestinationMarker.first.markerName ??
                 '-';
 
             if (kDebugMode) {
@@ -386,7 +398,7 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
               destination: destinationMarker,
             );
 
-            Get.to(() => const NavigationPage());
+            Get.to(() => const ARNavigatePage());
           }
         },
         title: 'start navigation'.tr,

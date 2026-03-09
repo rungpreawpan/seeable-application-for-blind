@@ -35,6 +35,7 @@ const Map<String, String> en = {
   'location': 'Locations',
   'start navigation': 'Start Navigation',
   'your location': 'Your location',
+  'choose your location': 'Choose your location',
   'choose destination': 'Choose destination',
   'search locations': 'Search locations',
   'marker not found': 'Marker not found',
@@ -43,6 +44,18 @@ const Map<String, String> en = {
   'start': 'Start',
   'destination': 'Destination',
   'swap location': 'Swap location',
+  'from': 'From',
+  'to': 'To',
+  'meter': 'Meter',
+  'total distance': 'The total distance is',
+  'destination will be on':  'The destination will be on the',
+  'left': 'Left',
+  'right': 'Right',
+  'continue walking': 'Continue walking',
+  'meter_remaining': '@distance Meter remaining',
+  'you are arrived': 'You have arrived at your destination',
+  'you are off path': 'You are off the path. Please return to the route.',
+  'you have passed the destination': 'You have passed the destination. Please walk back.',
 
   // application page
   'main page': 'Main Page',
@@ -80,9 +93,6 @@ const Map<String, String> en = {
 
   // scan text
   'scan results': 'Scan Results',
-
-  // scan marker
-  'scan marker': 'Scan marker',
 
   // settings
   'sound': 'Sound',
