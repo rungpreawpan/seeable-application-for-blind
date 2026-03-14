@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:seeable/constant/value_constant.dart';
+import 'package:seeable/controller/voice_action_controller.dart';
 import 'package:seeable/utils/camera_service.dart';
 import 'package:seeable/utils/gallery_service.dart';
 import 'package:seeable/views/scan_text/controller/ocr_controller.dart';
@@ -41,6 +42,29 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
     _cameraService = CameraService();
     _initCamera();
+
+    final voiceAction = Get.find<VoiceActionController>();
+    voiceAction.onCaptureScanText = () async {
+      XFile? file = await _cameraService.takePicture();
+      if (file != null) {
+        _imageFile = File(file.path);
+        await _ocrController.uploadText(_imageFile!);
+        if (_ocrController.ocrText != null) {
+          Get.to(() => ScanTextResultPage(imageFile: _imageFile!));
+        }
+      }
+    };
+    voiceAction.onSwitchCamera = () async {
+      await _cameraService.switchCamera();
+      if (mounted) setState(() {});
+    };
+    voiceAction.onOpenGallery = () async {
+      XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        await _ocrController.uploadText(File(file.path));
+        Get.to(() => ScanTextResultPage(imageFile: File(file.path)));
+      }
+    };
   }
 
   Future<void> _initCamera() async {
@@ -52,6 +76,7 @@ class _ScanTextPageState extends State<ScanTextPage> {
 
   @override
   void dispose() {
+    Get.find<VoiceActionController>().clear();
     _cameraService.dispose();
     super.dispose();
   }

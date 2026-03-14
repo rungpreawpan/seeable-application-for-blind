@@ -13,7 +13,13 @@ import 'package:seeable/firebase_options.dart';
 import 'package:seeable/localization/localize.dart';
 import 'package:seeable/views/splash_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:seeable/controller/bottom_nav_controller.dart';
+import 'package:seeable/controller/voice_action_controller.dart';
+import 'package:seeable/controller/voice_command_controller.dart';
 import 'views/settings/controller/settings_controller.dart';
+
+final RouteObserver<ModalRoute> routeObserver = RouteObserver<ModalRoute>();
+late final VoiceNavigatorObserver voiceNavigatorObserver;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +41,10 @@ Future<void> main() async {
   };
 
   Get.put(SettingsController());
+  Get.put(BottomNavController());
+  Get.put(VoiceActionController());
+  final voiceController = Get.put(VoiceCommandController());
+  voiceNavigatorObserver = VoiceNavigatorObserver(voiceController);
 
   SystemChrome.setPreferredOrientations(
     [DeviceOrientation.portraitUp],
@@ -65,6 +75,7 @@ class _MyAppState extends State<MyApp> {
         Locale('en'),
       ],
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver, voiceNavigatorObserver],
       theme: _lightTheme,
       darkTheme: _darkTheme,
       home: const SplashPage(),

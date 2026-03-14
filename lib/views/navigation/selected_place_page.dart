@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
+import 'package:seeable/controller/voice_action_controller.dart';
 import 'package:seeable/views/navigation/controller/navigation_controller.dart';
 import 'package:seeable/views/navigation/model/ar_markers_model.dart';
 import 'package:seeable/views/navigation/navigation_page.dart';
@@ -34,6 +35,13 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
     super.initState();
 
     _prepareData();
+
+    final voiceAction = Get.find<VoiceActionController>();
+    voiceAction.onSelectLocation = _selectLocationVoice;
+    voiceAction.onSelectDestination = _selectDestinationVoice;
+    voiceAction.onScanMarker = _scanMarkerVoice;
+    voiceAction.onSwapLocation = _swapLocation;
+    voiceAction.onStartNavigation = _startNavigationVoice;
   }
 
   _prepareData() async {
@@ -46,9 +54,98 @@ class _SelectedPlacePageState extends State<SelectedPlacePage> {
 
   @override
   void dispose() {
-    super.dispose();
-
+    Get.find<VoiceActionController>().clear();
     ttsManager.stop();
+    super.dispose();
+  }
+
+  Future<void> _selectLocationVoice() async {
+    await ttsManager.speak('choose your location'.tr);
+    List? result = await Get.to(() => CustomItemPicker(
+          title: 'location'.tr,
+          hintText: 'search locations'.tr,
+          items: _navigationController.frontDoorMarkersList,
+          selectedItems: _navigationController.selectedStartMarker,
+          onSearch: (searchText) => searchText.isEmpty
+              ? _navigationController.frontDoorMarkersList
+              : _navigationController.frontDoorMarkersList
+                  .where((m) => m.markerName!
+                      .toLowerCase()
+                      .contains(searchText.toLowerCase()))
+                  .toList(),
+          itemWidget: (item, isSelected) {
+            ArMarkersModel casted = item;
+            return CustomItemPickerCell(
+                title: casted.markerName?.substring(0, 4) ?? '-',
+                isSelected: isSelected);
+          },
+          pickMultipleItem: false,
+        ));
+    if (result != null) {
+      await ttsManager.speak(_navigationController
+          .selectedStartMarker.first.markerName!
+          .substring(0, 4));
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _selectDestinationVoice() async {
+    await ttsManager.speak('choose destination'.tr);
+    List? result = await Get.to(() => CustomItemPicker(
+          title: 'location'.tr,
+          hintText: 'search locations'.tr,
+          items: _navigationController.frontDoorMarkersList,
+          selectedItems: _navigationController.selectedDestinationMarker,
+          onSearch: (searchText) => searchText.isEmpty
+              ? _navigationController.frontDoorMarkersList
+              : _navigationController.frontDoorMarkersList
+                  .where((m) => m.markerName!
+                      .toLowerCase()
+                      .contains(searchText.toLowerCase()))
+                  .toList(),
+          itemWidget: (item, isSelected) {
+            ArMarkersModel casted = item;
+            return CustomItemPickerCell(
+                title: casted.markerName?.substring(0, 4) ?? '-',
+                isSelected: isSelected);
+          },
+          pickMultipleItem: false,
+        ));
+    if (result != null) {
+      await ttsManager.speak(_navigationController
+          .selectedDestinationMarker.first.markerName!
+          .substring(0, 4));
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _scanMarkerVoice() async {
+    await ttsManager.speak('marker scan'.tr);
+    List? result = await Get.to(() => const ScanMarkerPage());
+    if (result != null) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      await ttsManager.speak(_navigationController
+          .selectedStartMarker.first.markerName!
+          .substring(0, 4));
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _startNavigationVoice() async {
+    if (_navigationController.selectedStartMarker.isNotEmpty &&
+        _navigationController.selectedDestinationMarker.isNotEmpty) {
+      final startMarker =
+          _navigationController.selectedStartMarker.first.markerName ?? '-';
+      final destination =
+          _navigationController.selectedDestinationMarker.first.markerName ??
+              '-';
+      await _navigationController.detectAndNavigate(
+          startMarker: startMarker, destination: destination);
+      Get.to(() => const NavigationPage());
+    } else {
+      await ttsManager.speak(
+          'please select location and destination first'.tr);
+    }
   }
 
   @override

@@ -89,15 +89,15 @@ class _NavigationPageState extends State<NavigationPage> {
       await _speakSafe(navigationMessage);
     }
 
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 1));
 
     _scanning = Timer.periodic(
-      const Duration(seconds: 1),
+      const Duration(seconds: 2),
           (_) => _updatePosition(),
     );
 
     _obstacleScanning = Timer.periodic(
-      const Duration(seconds: 5),
+      const Duration(seconds: 4),
           (_) => _obstacle(),
     );
   }
@@ -150,11 +150,16 @@ class _NavigationPageState extends State<NavigationPage> {
   }
 
   _updatePosition() async {
+    _navigationController.detectedMarker = null;
+
     if (_navigationController.stopUpdatePosition == true) {
       _scanning?.cancel();
       _obstacleScanning?.cancel();
       return;
     }
+
+    _navigationController.updatePositionMessage.value = null;
+    _navigationController.updatePositionStatus.value = null;
 
     CameraImage? cameraImage = await _cameraService.captureFrame();
     await _navigationController.detectARUcoMarker(cameraImage: cameraImage);

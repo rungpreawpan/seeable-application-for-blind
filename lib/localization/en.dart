@@ -128,6 +128,10 @@ const Map<String, String> en = {
   'open': 'Open',
   'close': 'Close',
 
+  // voice commands
+  'voice command list': 'Voice Commands',
+  'wake word hint': 'Say @wakeWord to activate',
+
   // camera
   'camera': 'Camera',
   'gallery': 'Gallery',

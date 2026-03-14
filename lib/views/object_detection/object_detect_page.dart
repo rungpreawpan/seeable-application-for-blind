@@ -12,6 +12,7 @@ import 'package:seeable/constant/value_constant.dart';
 import 'package:seeable/controller/tts_manager.dart';
 import 'package:seeable/utils/camera_service.dart';
 import 'package:seeable/utils/gallery_service.dart';
+import 'package:seeable/controller/voice_action_controller.dart';
 import 'package:seeable/views/object_detection/controller/object_detection_controller.dart';
 import 'package:seeable/views/object_detection/model/object_detection_model.dart';
 import 'package:seeable/views/object_detection/object_detection_result_page.dart';
@@ -61,6 +62,26 @@ class _ObjectDetectPageState extends State<ObjectDetectPage> {
 
     _cameraService = CameraService();
     _initCamera();
+
+    final voiceAction = Get.find<VoiceActionController>();
+    voiceAction.onToggleDetection = () {
+      if (_isCapturing) {
+        _stopAutoCapture();
+      } else {
+        _startAutoCapture();
+      }
+    };
+    voiceAction.onSwitchCamera = () async {
+      await _cameraService.switchCamera();
+      if (mounted) setState(() {});
+    };
+    voiceAction.onOpenGallery = () async {
+      XFile? file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        await _objectDetectionController.uploadObject(File(file.path));
+        Get.to(() => ObjectDetectionResultPage(imageFile: File(file.path)));
+      }
+    };
   }
 
   Future<void> _initCamera() async {
@@ -108,13 +129,12 @@ class _ObjectDetectPageState extends State<ObjectDetectPage> {
 
   @override
   void dispose() {
-    super.dispose();
-
+    Get.find<VoiceActionController>().clear();
     ttsManager.stop();
-
     _cameraService.dispose();
     _autoCaptureTimer?.cancel();
     _autoCaptureTimer = null;
+    super.dispose();
   }
 
   @override

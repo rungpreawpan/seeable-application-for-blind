@@ -132,6 +132,10 @@ const Map<String, String> th = {
   'open': 'เปิด',
   'close': 'ปิด',
 
+  // voice commands
+  'voice command list': 'รายการคำสั่งเสียง',
+  'wake word hint': 'พูด @wakeWord เพื่อเปิดใช้งาน',
+
   // camera
   'camera': 'กล้อง',
   'gallery': 'คลังรูปภาพ',
