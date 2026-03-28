@@ -1,15 +1,8 @@
-import 'dart:developer';
-
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:seeable/constant/value_constant.dart';
-import 'package:seeable/firebase_options.dart';
 import 'package:seeable/localization/localize.dart';
 import 'package:seeable/views/splash_page.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -24,22 +17,6 @@ late final VoiceNavigatorObserver voiceNavigatorObserver;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
-  } catch (e) {
-    log('Failed to initailize Firebase: $e');
-  }
-
-  FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
-
   Get.put(SettingsController());
   Get.put(BottomNavController());
   Get.put(VoiceActionController());
@@ -53,10 +30,6 @@ Future<void> main() async {
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
-
-  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  static FirebaseAnalyticsObserver observer =
-      FirebaseAnalyticsObserver(analytics: analytics);
 
   @override
   State<MyApp> createState() => _MyAppState();
